@@ -1,9 +1,9 @@
 import os
 import smtplib
 import tempfile
-from datetime import date
+from datetime import date, datetime
 from email.message import EmailMessage
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 import streamlit as st
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
@@ -13,6 +13,7 @@ from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
+from reportlab.pdfgen import canvas
 
 # =========================
 # SECRETS
@@ -36,7 +37,7 @@ st.markdown(
     <style>
     .main .block-container {
         max-width: 980px;
-        padding-top: 1.2rem;
+        padding-top: 1.1rem;
         padding-bottom: 2rem;
     }
     .top-card {
@@ -54,7 +55,7 @@ st.markdown(
     }
     .doctor-center {
         text-align: center;
-        margin-top: -0.3rem;
+        margin-top: -0.2rem;
         margin-bottom: 0.8rem;
     }
     </style>
@@ -65,7 +66,7 @@ st.markdown(
 # =========================
 # FUNKCJE POMOCNICZE
 # =========================
-def nonempty(value) -> bool:
+def nonempty(value: Any) -> bool:
     if value is None:
         return False
     if isinstance(value, str):
@@ -75,8 +76,20 @@ def nonempty(value) -> bool:
     return True
 
 
+def safe(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, date):
+        return value.strftime("%d.%m.%Y")
+    return str(value).strip()
+
+
 def list_text(values: List[str]) -> str:
     return ", ".join([v for v in values if v])
+
+
+def lines_from_text(text: str) -> List[str]:
+    return [x.strip() for x in text.splitlines() if x.strip()]
 
 
 def initials(full_name: str) -> str:
@@ -108,12 +121,45 @@ def bmi_label(bmi):
     return "otyłość III stopnia"
 
 
-def safe(value: Any) -> str:
-    if value is None:
-        return ""
-    if isinstance(value, date):
-        return value.isoformat()
-    return str(value).strip()
+def register_fonts():
+    regular_font = "Helvetica"
+    bold_font = "Helvetica-Bold"
+
+    if os.path.exists("DejaVuSans.ttf"):
+        pdfmetrics.registerFont(TTFont("DejaVuSans", "DejaVuSans.ttf"))
+        regular_font = "DejaVuSans"
+
+    if os.path.exists("DejaVuSans-Bold.ttf"):
+        pdfmetrics.registerFont(TTFont("DejaVuSans-Bold", "DejaVuSans-Bold.ttf"))
+        bold_font = "DejaVuSans-Bold"
+    elif regular_font == "DejaVuSans":
+        bold_font = "DejaVuSans"
+
+    return regular_font, bold_font
+
+
+class NumberedCanvas(canvas.Canvas):
+    def __init__(self, *args, **kwargs):
+        self._font_name = kwargs.pop("font_name", "Helvetica")
+        super().__init__(*args, **kwargs)
+        self._saved_page_states = []
+
+    def showPage(self):
+        self._saved_page_states.append(dict(self.__dict__))
+        self._startPage()
+
+    def save(self):
+        num_pages = len(self._saved_page_states) + 1
+        for state in self._saved_page_states:
+            self.__dict__.update(state)
+            self.draw_page_number(num_pages)
+            super().showPage()
+        self.draw_page_number(num_pages)
+        super().save()
+
+    def draw_page_number(self, page_count: int):
+        self.setFont(self._font_name, 9)
+        self.drawCentredString(A4[0] / 2, 10 * mm, f"Strona {self._pageNumber} / {page_count}")
 
 
 def add_pdf_section(story, title: str, rows: List[str], styles_dict):
@@ -121,33 +167,11 @@ def add_pdf_section(story, title: str, rows: List[str], styles_dict):
     if not clean_rows:
         return
     story.append(Paragraph(title, styles_dict["section"]))
-    story.append(Spacer(1, 3 * mm))
+    story.append(Spacer(1, 2.2 * mm))
     for row in clean_rows:
         story.append(Paragraph(row.replace("\n", "<br/>"), styles_dict["body"]))
-        story.append(Spacer(1, 1.5 * mm))
-    story.append(Spacer(1, 3 * mm))
-
-
-def register_fonts():
-    regular_font = "Helvetica"
-    bold_font = "Helvetica-Bold"
-
-    if os.path.exists("DejaVuSans.ttf"):
-        try:
-            pdfmetrics.registerFont(TTFont("DejaVuSans", "DejaVuSans.ttf"))
-            regular_font = "DejaVuSans"
-        except Exception:
-            pass
-
-    if os.path.exists("DejaVuSans-Bold.ttf"):
-        try:
-            pdfmetrics.registerFont(TTFont("DejaVuSans-Bold", "DejaVuSans-Bold.ttf"))
-            bold_font = "DejaVuSans-Bold"
-        except Exception:
-            if regular_font == "DejaVuSans":
-                bold_font = "DejaVuSans"
-
-    return regular_font, bold_font
+        story.append(Spacer(1, 1.2 * mm))
+    story.append(Spacer(1, 2.5 * mm))
 
 
 def make_pdf(data: Dict[str, Any]) -> str:
@@ -162,41 +186,50 @@ def make_pdf(data: Dict[str, Any]) -> str:
         rightMargin=16 * mm,
         leftMargin=16 * mm,
         topMargin=14 * mm,
-        bottomMargin=14 * mm,
+        bottomMargin=18 * mm,
     )
 
     base = getSampleStyleSheet()
     styles_dict = {
-        "title": ParagraphStyle(
-            "TitleCentered",
+        "title_big": ParagraphStyle(
+            "TitleBig",
             parent=base["Title"],
             alignment=TA_CENTER,
             fontName=bold_font,
-            fontSize=15,
-            leading=18,
-            spaceAfter=4 * mm,
+            fontSize=16,
+            leading=19,
+            spaceAfter=1.5 * mm,
         ),
-        "doctor": ParagraphStyle(
-            "DoctorCentered",
-            parent=base["Normal"],
+        "title_mid": ParagraphStyle(
+            "TitleMid",
+            parent=base["Title"],
             alignment=TA_CENTER,
             fontName=bold_font,
-            fontSize=11,
-            leading=14,
-            spaceAfter=5 * mm,
+            fontSize=12,
+            leading=15,
+            spaceAfter=2 * mm,
+        ),
+        "doctor": ParagraphStyle(
+            "Doctor",
+            parent=base["Normal"],
+            alignment=TA_CENTER,
+            fontName=regular_font,
+            fontSize=10.5,
+            leading=13,
+            spaceAfter=4 * mm,
         ),
         "section": ParagraphStyle(
-            "SectionBold",
+            "Section",
             parent=base["Heading2"],
             alignment=TA_LEFT,
             fontName=bold_font,
             fontSize=11,
             leading=14,
             spaceBefore=2 * mm,
-            spaceAfter=2 * mm,
+            spaceAfter=1.5 * mm,
         ),
         "body": ParagraphStyle(
-            "BodyNormal",
+            "Body",
             parent=base["Normal"],
             alignment=TA_LEFT,
             fontName=regular_font,
@@ -206,9 +239,10 @@ def make_pdf(data: Dict[str, Any]) -> str:
     }
 
     story = []
-    story.append(Paragraph("Ocena stanu zdrowia - wywiad lekarski", styles_dict["title"]))
+    story.append(Paragraph("OCENA STANU ZDROWIA", styles_dict["title_big"]))
+    story.append(Paragraph("Wywiad lekarski", styles_dict["title_mid"]))
     story.append(Paragraph("dr n. med. Piotr Niedziałkowski", styles_dict["doctor"]))
-    story.append(Spacer(1, 2 * mm))
+    story.append(Spacer(1, 1 * mm))
 
     add_pdf_section(
         story,
@@ -218,6 +252,7 @@ def make_pdf(data: Dict[str, Any]) -> str:
             f"Telefon kontaktowy: {data['phone']}",
             f"Data urodzenia: {data['birth_date']}",
             f"Rodzaj wizyty: {data['visit_type']}",
+            f"Data i godzina wypełnienia formularza: {data['submitted_at']}",
         ],
         styles_dict,
     )
@@ -230,7 +265,7 @@ def make_pdf(data: Dict[str, Any]) -> str:
     add_pdf_section(story, "Charakter objawów", data["sec_symptom_character"], styles_dict)
     add_pdf_section(story, "Chronologia zdrowia i leki", data["sec_timeline_meds"], styles_dict)
     add_pdf_section(story, "Tryb życia", data["sec_lifestyle"], styles_dict)
-    add_pdf_section(story, "Podróże, zwierzęta, urazy, COVID, stres", data["sec_exposures"], styles_dict)
+    add_pdf_section(story, "Podróże, zwierzęta, urazy, COVID-19, stres", data["sec_exposures"], styles_dict)
     add_pdf_section(story, "Urodzenie i dzieciństwo", data["sec_birth_childhood"], styles_dict)
     add_pdf_section(story, "Objawy ogólne i neurologiczne", data["sec_general_neuro"], styles_dict)
     add_pdf_section(story, "Układ oddechowy", data["sec_respiratory"], styles_dict)
@@ -247,7 +282,10 @@ def make_pdf(data: Dict[str, Any]) -> str:
     add_pdf_section(story, "Dotychczasowe rozpoznania, operacje i ważne informacje", data["sec_history_final"], styles_dict)
     add_pdf_section(story, "Najważniejsze pytanie do lekarza", data["sec_question"], styles_dict)
 
-    doc.build(story)
+    doc.build(
+        story,
+        canvasmaker=lambda *args, **kwargs: NumberedCanvas(*args, font_name=regular_font, **kwargs),
+    )
     return tmp.name
 
 
@@ -271,10 +309,6 @@ def send_email_with_pdf(subject: str, body_text: str, pdf_path: str):
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
         smtp.login(EMAIL_NADAWCA, HASLO_APLIKACJI)
         smtp.send_message(msg)
-
-
-def lines_from_text(text: str) -> List[str]:
-    return [x.strip() for x in text.splitlines() if x.strip()]
 
 
 # =========================
@@ -367,6 +401,7 @@ with st.form("pelny_wywiad_lekarski"):
                 "Densytometria",
                 "Scyntygrafia",
             ],
+            placeholder="Wybierz badania",
             key="performed_tests",
         )
 
@@ -390,12 +425,14 @@ with st.form("pelny_wywiad_lekarski"):
         aggravating_factors = st.multiselect(
             "Co nasila objawy?",
             ["po wysiłku", "na czczo", "po posiłku", "podczas mówienia", "podczas śmiechu", "rano", "w ciągu dnia", "wieczorem", "wybudzenie ze snu", "inne"],
+            placeholder="Wybierz czynniki nasilające",
             key="aggravating_factors",
         )
         aggravating_other = st.text_input("Jeśli zaznaczono inne, napisz jakie", key="aggravating_other")
         relieving_factors = st.multiselect(
             "Co osłabia objawy?",
             ["podczas wypoczynku", "po wysiłku", "na czczo", "po posiłku", "rano", "w ciągu dnia", "wieczorem", "inne"],
+            placeholder="Wybierz czynniki zmniejszające",
             key="relieving_factors",
         )
         relieving_other = st.text_input("Jeśli zaznaczono inne, napisz jakie", key="relieving_other")
@@ -406,18 +443,22 @@ with st.form("pelny_wywiad_lekarski"):
 
     with st.expander("7. Tryb życia"):
         lifestyle = st.selectbox("Tryb życia", ["leżący", "siedzący", "nisko aktywny", "średnio aktywny", "bardzo aktywny", "inne"], key="lifestyle")
-        stimulants = st.multiselect("Używki i codzienne nawyki", ["kawa", "herbata", "papierosy", "alkohol", "narkotyki", "słodycze", "inne"], key="stimulants")
+        stimulants = st.multiselect(
+            "Używki i codzienne nawyki",
+            ["kawa", "herbata", "papierosy", "alkohol", "narkotyki", "słodycze", "inne"],
+            placeholder="Wybierz używki i nawyki",
+            key="stimulants",
+        )
         stimulants_other = st.text_input("Jeśli zaznaczono inne, napisz jakie", key="stimulants_other")
         sleep_hours = st.selectbox("Ile średnio trwa sen na dobę?", [3, 4, 5, 6, 7, 8, 9, 10, 11, 12], key="sleep_hours")
-        contact_consent = st.checkbox("Wyrażam zgodę na kontakt telefoniczny lub mailowy w sprawach organizacyjnych związanych z wizytą", key="contact_consent")
 
-    with st.expander("8. Podróże, zwierzęta, urazy, COVID, stres"):
+    with st.expander("8. Podróże, zwierzęta, urazy, COVID-19, stres"):
         travel_abroad = st.radio("Czy w ciągu ostatnich 3 miesięcy był wyjazd za granicę?", ["tak", "nie"], key="travel_abroad")
         travel_where = st.text_input("Jeśli tak, to gdzie?", key="travel_where") if travel_abroad == "tak" else ""
         animal_contact = st.radio("Czy w ostatnich miesiącach było pogryzienie, zadrapanie lub bliski kontakt ze zwierzęciem?", ["tak", "nie"], key="animal_contact")
         animal_contact_details = st.text_area("Jeśli tak, opisz kiedy i jakie zwierzę", key="animal_contact_details") if animal_contact == "tak" else ""
         major_injuries = st.text_area("Czy były duże urazy ciała? Podaj rok i opisz, np. upadek z wysokości, uraz komunikacyjny, pobicie, tonięcie, operacja", key="major_injuries")
-        covid = st.radio("Czy było przechorowanie COVID-19?", ["tak", "nie", "nie wiem"], key="covid")
+        covid = st.radio("Czy i kiedy wystąpiło zachorowanie na COVID-19?", ["tak", "nie", "nie wiem"], key="covid")
         covid_details = st.text_area("Jeśli tak, opisz kiedy i jaki był przebieg", key="covid_details") if covid == "tak" else ""
         strong_stress = st.text_area("Czy w ciągu życia były silne reakcje stresowe lub trudne wydarzenia? Jeśli tak, opisz i podaj rok", key="strong_stress")
 
@@ -425,6 +466,7 @@ with st.form("pelny_wywiad_lekarski"):
         birth_info = st.multiselect(
             "Informacje o urodzeniu",
             ["poród naturalny", "poród przez cesarskie cięcie", "poród przedwczesny", "poród o czasie", "poród po terminie", "zielone wody płodowe", "nie wiem", "inne"],
+            placeholder="Wybierz informacje o urodzeniu",
             key="birth_info",
         )
         birth_info_other = st.text_input("Jeśli zaznaczono inne, napisz jakie", key="birth_info_other")
@@ -436,6 +478,7 @@ with st.form("pelny_wywiad_lekarski"):
         childhood_diseases = st.multiselect(
             "Poważne choroby w dzieciństwie",
             ["astma", "atopowe zapalenie skóry", "skaza białkowa", "częste przeziębienia", "pobyty w szpitalu", "częste zapalenia płuc", "problemy jelitowe", "choroby psychiczne", "problemy ze śledzioną", "problemy z trzustką", "inne"],
+            placeholder="Wybierz choroby dzieciństwa",
             key="childhood_diseases",
         )
         childhood_diseases_other = st.text_input("Jeśli zaznaczono inne, napisz jakie", key="childhood_diseases_other")
@@ -468,7 +511,12 @@ with st.form("pelny_wywiad_lekarski"):
         night_breath = st.text_area("Czy dochodzi do wybudzania w nocy z powodu braku tchu?", key="night_breath")
         chest_heaviness = st.text_area("Czy występuje ciężkość w klatce piersiowej? Jeśli tak, opisz nasilenie.", key="chest_heaviness")
         breathing_type = st.selectbox("Czy są trudności z oddychaniem?", ["nie mam takich trudności", "z nabieraniem powietrza", "z wypuszczaniem powietrza", "z oboma"], key="breathing_type")
-        wheezing = st.multiselect("Czy występuje świszczący oddech?", ["nie", "podczas wysiłku", "podczas infekcji", "w nocy", "rano", "podczas alergii", "w zimnej pogodzie"], key="wheezing")
+        wheezing = st.multiselect(
+            "Czy występuje świszczący oddech?",
+            ["nie", "podczas wysiłku", "podczas infekcji", "w nocy", "rano", "podczas alergii", "w zimnej pogodzie"],
+            placeholder="Wybierz okoliczności świszczącego oddechu",
+            key="wheezing",
+        )
         cough = st.text_area("Czy jest kaszel? Jeśli tak, od kiedy, czy jest suchy czy z wydzieliną, jakiego koloru?", key="cough")
 
     with st.expander("12. Układ sercowo-naczyniowy"):
@@ -485,6 +533,7 @@ with st.form("pelny_wywiad_lekarski"):
         gi_symptoms = st.multiselect(
             "Zaznacz problemy",
             ["zgaga", "wzdęcia", "biegunki", "zaparcia", "hemoroidy", "gazy", "skurcze", "wymioty", "nudności"],
+            placeholder="Wybierz objawy przewodu pokarmowego",
             key="gi_symptoms",
         ) if gi_problem == "tak" else []
         worsening_foods = st.text_area("Czy są potrawy, po których samopoczucie się pogarsza?", key="worsening_foods")
@@ -513,6 +562,7 @@ with st.form("pelny_wywiad_lekarski"):
         sleep_problem_types = st.multiselect(
             "Jakie problemy ze snem występują?",
             ["trudności z zasypianiem", "wybudzanie w nocy", "wstawanie zmęczony lub zmęczona", "chrapanie", "zbyt krótki sen", "bardzo głęboki sen"],
+            placeholder="Wybierz rodzaj problemów ze snem",
             key="sleep_problem_types",
         ) if sleep_problem == "tak" else []
         psych_contact = st.selectbox("Czy kiedykolwiek była porada psychologa lub psychiatry?", ["nie", "psycholog", "psychiatra", "oba"], key="psych_contact")
@@ -530,6 +580,7 @@ with st.form("pelny_wywiad_lekarski"):
         anal_problems = st.multiselect(
             "Czy występują problemy ze śluzówką odbytu?",
             ["nie", "hemoroidy", "stany zapalne błony śluzowej odbytu", "pieczenie", "świąd", "grzybica", "inne"],
+            placeholder="Wybierz problemy w okolicy odbytu",
             key="anal_problems",
         )
         anal_other = st.text_input("Jeśli zaznaczono inne, opisz", key="anal_other")
@@ -587,6 +638,7 @@ Proszę również przynieść na wizytę posiadane wyniki badań w formie papier
         consent_true = st.checkbox("Oświadczam, że podane informacje są prawdziwe.", key="consent_true")
         consent_visit = st.checkbox("Wyrażam zgodę na wykorzystanie tych informacji wyłącznie przez lekarza do przygotowania wizyty.", key="consent_visit")
         consent_privacy = st.checkbox("Przyjmuję do wiadomości, że formularz nie zapisuje danych w bazie aplikacji, a dokument wysyłany do lekarza zawiera ograniczone dane identyfikacyjne.", key="consent_privacy")
+        contact_consent = st.checkbox("Wyrażam zgodę na kontakt telefoniczny lub mailowy w sprawach organizacyjnych związanych z wizytą.", key="contact_consent")
 
     submitted = st.form_submit_button("Wyślij")
 
@@ -609,6 +661,7 @@ if submitted:
             st.error(err)
     else:
         patient_initials = initials(full_name)
+        submitted_at = datetime.now().strftime("%d.%m.%Y, %H:%M")
 
         main_symptom_rows = []
         if nonempty(symptom_1):
@@ -625,12 +678,12 @@ if submitted:
         pdf_data = {
             "initials": patient_initials,
             "phone": phone,
-            "birth_date": birth_date.isoformat(),
+            "birth_date": birth_date.strftime("%d.%m.%Y"),
             "visit_type": visit_type,
+            "submitted_at": submitted_at,
             "sec_basic": [
-                f"Adres e-mail: {email}" if nonempty(email) else "",
-                f"Narodowość: {nationality}" if nonempty(nationality) else "",
                 f"Płeć: {sex}",
+                f"Narodowość: {nationality}" if nonempty(nationality) else "",
                 f"Aktualny status: {current_status}",
                 f"Zawód: {profession}" if nonempty(profession) else "",
                 f"Wzrost: {height_cm:.0f} cm",
@@ -664,13 +717,12 @@ if submitted:
                 f"Używki i nawyki: {list_text(stimulants)}" if stimulants else "",
                 f"Inne używki lub nawyki: {stimulants_other}" if nonempty(stimulants_other) else "",
                 f"Sen: {sleep_hours} godzin na dobę",
-                f"Zgoda na kontakt organizacyjny: {'tak' if contact_consent else 'nie'}",
             ],
             "sec_exposures": [
                 f"Wyjazd za granicę: {travel_abroad}" + (f", {travel_where}" if nonempty(travel_where) else ""),
                 f"Kontakt lub uraz od zwierzęcia: {animal_contact}" + (f", {animal_contact_details}" if nonempty(animal_contact_details) else ""),
                 f"Duże urazy: {major_injuries}" if nonempty(major_injuries) else "",
-                f"COVID-19: {covid}" + (f", {covid_details}" if nonempty(covid_details) else ""),
+                f"Zachorowanie na COVID-19: {covid}" + (f", {covid_details}" if nonempty(covid_details) else ""),
                 f"Silne reakcje stresowe: {strong_stress}" if nonempty(strong_stress) else "",
             ],
             "sec_birth_childhood": [
@@ -786,8 +838,10 @@ if submitted:
 Imię i nazwisko: {full_name}
 Telefon kontaktowy: {phone}
 Adres e-mail: {email}
-Data urodzenia: {birth_date.isoformat()}
+Data urodzenia: {birth_date.strftime("%d.%m.%Y")}
 Rodzaj wizyty: {visit_type}
+Data i godzina wypełnienia formularza: {submitted_at}
+Zgoda na kontakt organizacyjny: {"tak" if contact_consent else "nie"}
 """
 
         try:
