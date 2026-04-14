@@ -16,8 +16,8 @@ from reportlab.pdfgen import canvas
 # =========================
 # KONFIGURACJA MAILA
 # =========================
-EMAIL_NADAWCA = "twoj_gmail@gmail.com"
-HASLO_APLIKACJI = "tu_wklej_haslo_aplikacji"
+EMAIL_NADAWCA = "niedzialkowskiocenazdrowia@gmail.com"
+HASLO_APLIKACJI = "qtoj kexy ignp ohce"
 EMAIL_ODBIORCA = "piotr@spirometria.pl"
 
 # =========================
