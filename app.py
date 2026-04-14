@@ -12,16 +12,104 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 from reportlab.pdfgen import canvas
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
+
+
+# =========================
+# UKRYCIE ELEMENTÓW STREAMLIT
+# =========================
+st.markdown(
+    """
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+
+    .main .block-container {
+        max-width: 980px;
+        padding-top: 0.8rem;
+        padding-bottom: 2rem;
+    }
+
+    .top-card {
+        padding: 18px 18px;
+        border-radius: 18px;
+        border: 1px solid rgba(120,120,120,0.20);
+        margin-bottom: 16px;
+        background: rgba(250,250,250,0.03);
+    }
+
+    .site-url {
+        text-align: center;
+        font-size: 18px;
+        margin-top: -10px;
+        margin-bottom: 8px;
+        opacity: 0.95;
+    }
+
+    .doctor-line {
+        text-align: center;
+        font-size: 17px;
+        margin-top: 0px;
+        margin-bottom: 8px;
+    }
+
+    .contact-line {
+        text-align: center;
+        font-size: 15px;
+        margin-top: 0px;
+        margin-bottom: 16px;
+        opacity: 0.95;
+    }
+
+    .stFormSubmitButton button {
+        width: 100%;
+        height: 3.2rem;
+        font-size: 1.05rem;
+        font-weight: 700;
+        border-radius: 12px;
+    }
+
+    @media (max-width: 768px) {
+        .main .block-container {
+            padding-top: 0.5rem;
+            padding-left: 0.8rem;
+            padding-right: 0.8rem;
+        }
+        .site-url {
+            font-size: 15px;
+        }
+        .doctor-line {
+            font-size: 15px;
+        }
+        .contact-line {
+            font-size: 14px;
+        }
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 
 # =========================
 # SECRETS
 # =========================
-EMAIL_NADAWCA = st.secrets["EMAIL_NADAWCA"]
-HASLO_APLIKACJI = st.secrets["HASLO_APLIKACJI"]
-EMAIL_ODBIORCA1 = st.secrets["EMAIL_ODBIORCA1"]
-EMAIL_ODBIORCA2 = st.secrets["EMAIL_ODBIORCA2"]
+def get_secret(name: str) -> str:
+    if name not in st.secrets:
+        st.error(
+            f"Brakuje sekretu: {name}. Wejdź do Streamlit → Settings / Manage app → Secrets i dodaj wszystkie wymagane pola."
+        )
+        st.stop()
+    return st.secrets[name]
+
+
+EMAIL_NADAWCA = get_secret("EMAIL_NADAWCA")
+HASLO_APLIKACJI = get_secret("HASLO_APLIKACJI")
+EMAIL_ODBIORCA1 = get_secret("EMAIL_ODBIORCA1")
+EMAIL_ODBIORCA2 = get_secret("EMAIL_ODBIORCA2")
+
 
 # =========================
 # KONFIGURACJA STRONY
@@ -32,36 +120,6 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-st.markdown(
-    """
-    <style>
-    .main .block-container {
-        max-width: 980px;
-        padding-top: 1.1rem;
-        padding-bottom: 2rem;
-    }
-    .top-card {
-        padding: 16px 18px;
-        border-radius: 14px;
-        border: 1px solid rgba(120,120,120,0.22);
-        margin-bottom: 14px;
-        background: rgba(250,250,250,0.03);
-    }
-    .stFormSubmitButton button {
-        width: 100%;
-        height: 3rem;
-        font-size: 1.05rem;
-        font-weight: 600;
-    }
-    .doctor-center {
-        text-align: center;
-        margin-top: -0.2rem;
-        margin-bottom: 0.8rem;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
 
 # =========================
 # FUNKCJE POMOCNICZE
@@ -149,12 +207,12 @@ class NumberedCanvas(canvas.Canvas):
         self._startPage()
 
     def save(self):
-        num_pages = len(self._saved_page_states) + 1
+        page_count = len(self._saved_page_states) + 1
         for state in self._saved_page_states:
             self.__dict__.update(state)
-            self.draw_page_number(num_pages)
+            self.draw_page_number(page_count)
             super().showPage()
-        self.draw_page_number(num_pages)
+        self.draw_page_number(page_count)
         super().save()
 
     def draw_page_number(self, page_count: int):
@@ -164,13 +222,17 @@ class NumberedCanvas(canvas.Canvas):
 
 def add_pdf_section(story, title: str, rows: List[str], styles_dict):
     clean_rows = [r for r in rows if nonempty(r)]
-    if not clean_rows:
-        return
     story.append(Paragraph(title, styles_dict["section"]))
     story.append(Spacer(1, 2.2 * mm))
-    for row in clean_rows:
-        story.append(Paragraph(row.replace("\n", "<br/>"), styles_dict["body"]))
+
+    if clean_rows:
+        for row in clean_rows:
+            story.append(Paragraph(row.replace("\n", "<br/>"), styles_dict["body"]))
+            story.append(Spacer(1, 1.2 * mm))
+    else:
+        story.append(Paragraph("Brak danych.", styles_dict["body"]))
         story.append(Spacer(1, 1.2 * mm))
+
     story.append(Spacer(1, 2.5 * mm))
 
 
@@ -312,11 +374,13 @@ def send_email_with_pdf(subject: str, body_text: str, pdf_path: str):
 
 
 # =========================
-# NAGŁÓWEK
+# GÓRA APLIKACJI
 # =========================
-st.markdown("<h2 style='text-align:center;'>Ocena stanu zdrowia - wywiad lekarski</h2>", unsafe_allow_html=True)
-st.markdown("<div class='doctor-center'><b>dr n. med. Piotr Niedziałkowski</b></div>", unsafe_allow_html=True)
-st.markdown("<div class='doctor-center'>W sprawie pytań proszę kontaktować się z recepcją: +48 690 584 584</div>", unsafe_allow_html=True)
+if os.path.exists("logo.png"):
+    st.image("logo.png", use_container_width=True)
+
+st.markdown("<div class='site-url'>www.ocenazdrowia.pl</div>", unsafe_allow_html=True)
+st.markdown("<div class='contact-line'>W sprawie pytań proszę kontaktować się z recepcją: +48 690 584 584</div>", unsafe_allow_html=True)
 
 st.markdown(
     """
