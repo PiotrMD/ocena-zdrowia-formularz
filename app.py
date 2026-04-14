@@ -1,23 +1,14 @@
 import io
-import os
-import re
-from datetime import date, datetime, timedelta
-from typing import List, Dict, Any, Optional
+import textwrap
+from datetime import date
+from typing import List
 
-import pandas as pd
 import streamlit as st
-import fitz
-from PIL import Image
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
-APP_TITLE = "Asystent kliniczny - czerwienica prawdziwa"
-DATA_FILE = "patients.csv"
-TARGET_HCT = 45.0
-MAX_SINGLE_PHLEB_ML = 300
-
 st.set_page_config(
-    page_title=APP_TITLE,
+    page_title="Ocena stanu zdrowia",
     layout="centered",
     initial_sidebar_state="collapsed",
 )
@@ -31,147 +22,43 @@ st.markdown(
     """
     <style>
     .main .block-container {
-        max-width: 1050px;
-        padding-top: 1.6rem;
-        padding-bottom: 2.4rem;
+        max-width: 980px;
+        padding-top: 1.2rem;
+        padding-bottom: 2.5rem;
     }
-    .ak-card {
-        padding: 14px 16px;
+    .top-card {
+        padding: 16px 18px;
         border-radius: 14px;
         border: 1px solid rgba(120,120,120,0.22);
+        margin-bottom: 14px;
         background: rgba(250,250,250,0.03);
-        margin-bottom: 12px;
     }
-    .ak-kpi-title {
-        font-size: 0.92rem;
-        opacity: 0.78;
-        margin-bottom: 4px;
-    }
-    .ak-kpi-value {
-        font-size: 1.35rem;
-        font-weight: 700;
-        line-height: 1.2;
-    }
-    .ak-section {
-        margin-top: 1.25rem;
-        margin-bottom: 0.55rem;
-        font-size: 1.16rem;
-        font-weight: 700;
+    .stDownloadButton button, .stFormSubmitButton button {
+        width: 100%;
     }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-DEFAULTS = {
-    "patient_id": "",
-    "age": 55,
-    "sex": "M",
-    "weight": 80.0,
-    "height": 175.0,
-    "diagnoses_text": "",
-    "history_text": "",
-    "treatment_text": "",
-    "hx_thrombosis": False,
-    "hx_bleeding": False,
-    "hx_spleen": False,
-    "hx_smoking": False,
-    "other_events_text": "",
-    "symptom_itch": False,
-    "symptom_headache": False,
-    "symptom_erythromelalgia": False,
-    "symptom_dizziness": False,
-    "symptom_micro": False,
-    "symptom_nightsweats": False,
-    "symptom_weightloss": False,
-    "other_symptoms_text": "",
-    "labs_n": 4,
-    "phleb_n": 4,
-}
 
-for i in range(10):
-    DEFAULTS[f"cbc_date_{i}"] = date.today()
-    DEFAULTS[f"cbc_hct_{i}"] = 45.0
-    DEFAULTS[f"cbc_hb_{i}"] = 15.0
-    DEFAULTS[f"cbc_wbc_{i}"] = 10.0
-    DEFAULTS[f"cbc_plt_{i}"] = 400.0
-    DEFAULTS[f"cbc_ldh_{i}"] = 250.0
-    DEFAULTS[f"cbc_uric_{i}"] = 6.0
-    DEFAULTS[f"cbc_ferr_{i}"] = 50.0
-    DEFAULTS[f"cbc_creat_{i}"] = 1.0
-    DEFAULTS[f"cbc_rdw_{i}"] = 13.0
-    DEFAULTS[f"cbc_b2m_{i}"] = 2.0
-    DEFAULTS[f"cbc_glu_{i}"] = 90.0
-    DEFAULTS[f"cbc_alt_{i}"] = 25.0
-    DEFAULTS[f"cbc_ast_{i}"] = 25.0
-    DEFAULTS[f"cbc_ggtp_{i}"] = 30.0
-    DEFAULTS[f"cbc_bili_{i}"] = 0.8
-
-for i in range(12):
-    DEFAULTS[f"ph_date_{i}"] = date.today()
-    DEFAULTS[f"ph_ml_{i}"] = 300
-
-
-def init_state():
-    for key, value in DEFAULTS.items():
-        if key not in st.session_state:
-            st.session_state[key] = value
-
-
-def clear_form():
-    for key, value in DEFAULTS.items():
-        st.session_state[key] = value
-
-    for key in [
-        "analysis_ready",
-        "last_summary",
-        "last_note",
-        "last_flags",
-        "last_drug_alerts",
-        "last_next_ml",
-        "last_current_hct",
-        "last_current_status",
-        "last_compare_rows",
-        "last_phleb_table",
-        "last_phleb_count_year",
-        "last_phleb_ml_year",
-        "last_phleb_avg_interval",
-        "last_data",
-        "imported_labs_preview",
-    ]:
-        if key in st.session_state:
-            del st.session_state[key]
-
-    st.rerun()
-
-
-def safe_float(value):
+def nonempty(value) -> bool:
     if value is None:
-        return None
-    try:
-        return float(str(value).replace(",", "."))
-    except Exception:
-        return None
+        return False
+    if isinstance(value, str):
+        return value.strip() != ""
+    if isinstance(value, list):
+        return len(value) > 0
+    return True
 
 
-def text_lines(text: str) -> List[str]:
-    if not text:
-        return []
-    return [line.strip() for line in text.splitlines() if line.strip()]
-
-
-def numbered_lines(text: str) -> List[str]:
-    lines = text_lines(text)
-    return [f"{i+1}. {line}" for i, line in enumerate(lines)]
-
-
-def bmi_calc(weight_kg, height_cm):
+def bmi_calc(weight_kg: float, height_cm: float):
     if not weight_kg or not height_cm or height_cm <= 0:
         return None
     return weight_kg / ((height_cm / 100.0) ** 2)
 
 
-def bmi_class(bmi):
+def bmi_label(bmi):
     if bmi is None:
         return "brak danych"
     if bmi < 18.5:
@@ -181,491 +68,57 @@ def bmi_class(bmi):
     if bmi < 30:
         return "nadwaga"
     if bmi < 35:
-        return "otyłość I°"
+        return "otyłość I stopnia"
     if bmi < 40:
-        return "otyłość II°"
-    return "otyłość III°"
+        return "otyłość II stopnia"
+    return "otyłość III stopnia"
 
 
-def round_to_25(value):
-    return int(round(value / 25.0) * 25)
+def add_section(summary: List[str], title: str, rows: List[str]):
+    cleaned = [r for r in rows if nonempty(r)]
+    if cleaned:
+        summary.append(title)
+        summary.extend(cleaned)
+        summary.append("")
 
 
-def estimate_blood_volume_liters(sex: str, height_cm, weight_kg):
-    if height_cm is None or weight_kg is None:
-        return None
-    h = height_cm / 100.0
-    w = weight_kg
-
-    if sex == "M":
-        return (0.3669 * (h ** 3)) + (0.03219 * w) + 0.6041
-    if sex == "K":
-        return (0.3561 * (h ** 3)) + (0.03308 * w) + 0.1833
-    return (0.3615 * (h ** 3)) + (0.03264 * w) + 0.3937
-
-
-def trend_label(values):
-    vals = [v for v in values if v is not None]
-    if len(vals) < 2:
-        return "za mało danych"
-    if vals[-1] > vals[0]:
-        return "trend wzrostowy"
-    if vals[-1] < vals[0]:
-        return "trend spadkowy"
-    return "bez wyraźnej zmiany"
-
-
-def last_two_monthly_slope(values, dates):
-    paired = [(d, v) for d, v in zip(dates, values) if d is not None and v is not None]
-    if len(paired) < 2:
-        return None
-    d1, v1 = paired[-2]
-    d2, v2 = paired[-1]
-    delta_days = (d2 - d1).days
-    if delta_days <= 0:
-        return None
-    return (v2 - v1) / delta_days * 30.0
-
-
-def linear_projection_days_to_target(current_value, slope_per_month, target_value):
-    if current_value is None or slope_per_month is None:
-        return None
-    if slope_per_month <= 0:
-        return None
-    if current_value >= target_value:
-        return 0
-    delta = target_value - current_value
-    months = delta / slope_per_month
-    if months < 0:
-        return None
-    return int(round(months * 30))
-
-
-def average_phleb_interval_days(phleb_rows):
-    valid_dates = [r["date"] for r in phleb_rows if r["date"] is not None]
-    if len(valid_dates) < 2:
-        return None
-    valid_dates.sort()
-    intervals = []
-    for i in range(1, len(valid_dates)):
-        intervals.append((valid_dates[i] - valid_dates[i - 1]).days)
-    return sum(intervals) / len(intervals) if intervals else None
-
-
-def phleb_frequency_text(avg_days):
-    if avg_days is None:
-        return "za mało danych"
-    if avg_days <= 21:
-        return f"bardzo częste upusty, średnio co ok. {avg_days:.0f} dni"
-    if avg_days <= 42:
-        return f"częste upusty, średnio co ok. {avg_days:.0f} dni"
-    return f"średnio co ok. {avg_days:.0f} dni"
-
-
-def persistent_above_target(values, n_needed=2):
-    vals = [v for v in values if v is not None]
-    if len(vals) < n_needed:
-        return False
-    return all(v > TARGET_HCT for v in vals[-n_needed:])
-
-
-def parse_treatment_flags(text: str):
-    t = (text or "").lower()
-    flags = {
-        "asa": any(x in t for x in ["asa", "acard", "aspir", "aspiryna", "polopiryna"]),
-        "hydroxyurea": any(x in t for x in ["hydroksy", "hydroxy", "hydrea", "hu"]),
-        "interferon": any(x in t for x in ["interfer", "ropeg", "peginterfer"]),
-        "ruxolitinib": any(x in t for x in ["ruxo", "jakavi", "ruxolitinib"]),
-        "anticoagulant": any(
-            x in t for x in [
-                "apiks", "apix", "eliquis", "rivar", "xarelto",
-                "dabig", "pradaxa", "warf", "warfar", "acenok", "syncumar"
-            ]
-        ),
-        "allopurinol": "allopur" in t,
-        "statin": any(x in t for x in ["statyn", "atorwa", "rosuwa", "simwa", "atorvast", "rosuvast"]),
-    }
-    flags["cytoreduction"] = (
-        flags["hydroxyurea"] or flags["interferon"] or flags["ruxolitinib"]
-    )
-    return flags
-
-
-def build_drug_alerts(treatment_flags, current_plt):
-    alerts = []
-
-    if treatment_flags["asa"] and treatment_flags["anticoagulant"]:
-        alerts.append("ASA + antykoagulant: zwiększone ryzyko krwawienia.")
-    if treatment_flags["ruxolitinib"]:
-        alerts.append("Ruxolitinib: sprawdź interakcje z silnymi inhibitorami CYP3A4.")
-    if treatment_flags["anticoagulant"]:
-        alerts.append("Antykoagulant: sprawdź interakcje z inhibitorami i induktorami CYP3A4/P-gp.")
-    if current_plt is not None and current_plt >= 1000 and treatment_flags["asa"]:
-        alerts.append("PLT ≥1000 i ASA: rozważ ocenę ryzyka nabytego vWD.")
-
-    return alerts
-
-
-def estimate_next_phleb_ml(
-    current_hct,
-    current_hb,
-    current_wbc,
-    current_plt,
-    hct_slope_month,
-    ebv_liters,
-    bmi,
-    age,
-    treatment_flags,
-    avg_phleb_interval,
-):
-    if current_hct is None or current_hct <= TARGET_HCT or ebv_liters is None:
-        return 0
-
-    ebv_ml = ebv_liters * 1000.0
-    raw_ml = ebv_ml * ((current_hct - TARGET_HCT) / current_hct)
-
-    factor = 1.0
-
-    if current_hb is not None and current_hb >= 18:
-        factor += 0.10
-    elif current_hb is not None and current_hb < 14:
-        factor -= 0.15
-
-    if current_wbc is not None and current_wbc > 15:
-        factor += 0.05
-
-    if current_plt is not None and current_plt >= 1000:
-        factor += 0.05
-
-    if hct_slope_month is not None and hct_slope_month > 2:
-        factor += 0.10
-    elif hct_slope_month is not None and hct_slope_month < 0:
-        factor -= 0.05
-
-    if avg_phleb_interval is not None and avg_phleb_interval <= 21:
-        factor -= 0.10
-    elif avg_phleb_interval is not None and avg_phleb_interval <= 42:
-        factor -= 0.05
-
-    if bmi is not None and bmi < 20:
-        factor -= 0.15
-    elif bmi is not None and bmi >= 30:
-        factor += 0.05
-
-    if age >= 75:
-        factor -= 0.15
-    elif age >= 65:
-        factor -= 0.05
-
-    if treatment_flags["cytoreduction"]:
-        factor -= 0.05
-
-    estimated = raw_ml * factor
-    estimated = max(100, estimated)
-    estimated = round_to_25(estimated)
-    return min(estimated, MAX_SINGLE_PHLEB_ML)
-
-
-def assess_cytoreduction_need(age, hx_thrombosis, treatment_flags, cbc_rows, avg_phleb_interval, symptom_burden):
-    reasons = []
-
-    recent_hct = [r["hct"] for r in cbc_rows if r["hct"] is not None]
-    recent_wbc = [r["wbc"] for r in cbc_rows if r["wbc"] is not None]
-    recent_plt = [r["plt"] for r in cbc_rows if r["plt"] is not None]
-
-    if age >= 60:
-        reasons.append("wiek ≥60 lat")
-    if hx_thrombosis:
-        reasons.append("przebyta zakrzepica")
-    if len(recent_hct) >= 2 and all(v > TARGET_HCT for v in recent_hct[-2:]):
-        reasons.append("utrzymywanie Hct >45%")
-    if len(recent_hct) >= 3 and all(v > TARGET_HCT for v in recent_hct[-3:]):
-        reasons.append("utrwalony brak kontroli Hct")
-    if avg_phleb_interval is not None and avg_phleb_interval <= 42:
-        reasons.append("częsta potrzeba upustów")
-    if len(recent_wbc) >= 2 and max(recent_wbc[-2:]) > 15:
-        reasons.append("utrzymująca się leukocytoza >15")
-    if len(recent_plt) >= 2 and max(recent_plt[-2:]) >= 1000:
-        reasons.append("bardzo wysokie PLT")
-    if symptom_burden >= 2:
-        reasons.append("istotne obciążenie objawami")
-
-    reasons = list(dict.fromkeys(reasons))
-
-    if treatment_flags["cytoreduction"]:
-        if reasons:
-            conclusion = "obraz przemawia za oceną skuteczności lub optymalizacji cytoredukcji"
-        else:
-            conclusion = "brak silnych przesłanek do zmiany cytoredukcji"
-    else:
-        if reasons:
-            conclusion = "obraz przemawia za rozważeniem cytoredukcji"
-        else:
-            conclusion = "brak wyraźnych przesłanek do cytoredukcji"
-
-    return conclusion, reasons
-
-
-LOCAL_NORMS = {
-    "hct": "K: 37-47%, M: 40-54%",
-    "hb": "K: 12-16 g/dl, M: 14-18 g/dl",
-    "wbc": "4.0-10.0",
-    "plt": "150-400",
-    "ldh": "<250",
-    "uric_acid": "K: 2.4-5.7, M: 3.4-7.0",
-    "ferritin": "K: 13-150, M: 30-400",
-    "creatinine": "ok. 0.6-1.3",
-    "rdw": "11.5-14.5%",
-    "beta2m": "0.8-2.2",
-    "glucose": "70-99",
-    "alt": "<41",
-    "ast": "<40",
-    "ggtp": "K <40, M <60",
-    "bilirubin": "0.2-1.2",
-}
-
-ANALYTE_PATTERNS = {
-    "hct": r"(?:hct|hematokryt)[^\d]{0,20}(\d+[.,]?\d*)",
-    "hb": r"(?:hb|hgb|hemoglobina)[^\d]{0,20}(\d+[.,]?\d*)",
-    "wbc": r"(?:wbc|leukocyty)[^\d]{0,20}(\d+[.,]?\d*)",
-    "plt": r"(?:plt|płytki|plytki|trombocyty)[^\d]{0,20}(\d+[.,]?\d*)",
-    "ldh": r"(?:ldh)[^\d]{0,20}(\d+[.,]?\d*)",
-    "uric_acid": r"(?:kwas moczowy|uric acid)[^\d]{0,20}(\d+[.,]?\d*)",
-    "ferritin": r"(?:ferrytyna|ferritin)[^\d]{0,20}(\d+[.,]?\d*)",
-    "creatinine": r"(?:kreatynina|creatinine)[^\d]{0,20}(\d+[.,]?\d*)",
-    "rdw": r"(?:rdw)[^\d]{0,20}(\d+[.,]?\d*)",
-    "beta2m": r"(?:beta[\s-]*2[\s-]*mikroglobulina|beta[\s-]*2[\s-]*microglobulin|b2m)[^\d]{0,20}(\d+[.,]?\d*)",
-    "glucose": r"(?:glukoza|glucose)[^\d]{0,20}(\d+[.,]?\d*)",
-    "alt": r"(?:alat|alt)[^\d]{0,20}(\d+[.,]?\d*)",
-    "ast": r"(?:aspat|ast)[^\d]{0,20}(\d+[.,]?\d*)",
-    "ggtp": r"(?:ggtp|ggt)[^\d]{0,20}(\d+[.,]?\d*)",
-    "bilirubin": r"(?:bilirubina|bilirubin)[^\d]{0,20}(\d+[.,]?\d*)",
-}
-
-
-def parse_date_from_text(text: str) -> Optional[date]:
-    patterns = [
-        r"(\d{4}[-/.]\d{2}[-/.]\d{2})",
-        r"(\d{2}[-/.]\d{2}[-/.]\d{4})",
-    ]
-    for pattern in patterns:
-        m = re.search(pattern, text)
-        if m:
-            raw = m.group(1).replace("/", "-").replace(".", "-")
-            for fmt in ("%Y-%m-%d", "%d-%m-%Y"):
-                try:
-                    return datetime.strptime(raw, fmt).date()
-                except Exception:
-                    pass
-    return None
-
-
-def extract_text_from_pdf(file_bytes: bytes) -> str:
-    text = []
-    doc = fitz.open(stream=file_bytes, filetype="pdf")
-    for page in doc:
-        text.append(page.get_text("text"))
-    return "\n".join(text)
-
-
-def extract_text_from_image(uploaded_file) -> str:
-    try:
-        import pytesseract
-        img = Image.open(uploaded_file)
-        return pytesseract.image_to_string(img, lang="eng")
-    except Exception:
-        return ""
-
-
-def parse_labs_from_text(text: str) -> Dict[str, Any]:
-    result = {
-        "date": parse_date_from_text(text) or date.today(),
-        "hct": None,
-        "hb": None,
-        "wbc": None,
-        "plt": None,
-        "ldh": None,
-        "uric_acid": None,
-        "ferritin": None,
-        "creatinine": None,
-        "rdw": None,
-        "beta2m": None,
-        "glucose": None,
-        "alt": None,
-        "ast": None,
-        "ggtp": None,
-        "bilirubin": None,
-    }
-    lowered = text.lower()
-
-    for key, pattern in ANALYTE_PATTERNS.items():
-        m = re.search(pattern, lowered, re.IGNORECASE)
-        if m:
-            result[key] = safe_float(m.group(1))
-
-    return result
-
-
-def import_uploaded_files(files) -> List[Dict[str, Any]]:
-    imported = []
-    for f in files:
-        text = ""
-        filetype = f.type or ""
-
-        if filetype == "application/pdf":
-            try:
-                text = extract_text_from_pdf(f.read())
-            except Exception:
-                text = ""
-        elif filetype in ["image/jpeg", "image/png"]:
-            try:
-                text = extract_text_from_image(f)
-            except Exception:
-                text = ""
-
-        if text.strip():
-            imported.append(parse_labs_from_text(text))
-
-    imported = [x for x in imported if any(v is not None for k, v in x.items() if k != "date")]
-    imported.sort(key=lambda x: x["date"])
-    return imported
-
-
-def apply_imported_labs(imported_labs: List[Dict[str, Any]]):
-    if not imported_labs:
-        return
-    n = min(len(imported_labs), 10)
-    st.session_state["labs_n"] = max(st.session_state["labs_n"], n)
-
-    for i, lab in enumerate(imported_labs[:10]):
-        st.session_state[f"cbc_date_{i}"] = lab.get("date", date.today())
-        for key, state_key in [
-            ("hct", f"cbc_hct_{i}"),
-            ("hb", f"cbc_hb_{i}"),
-            ("wbc", f"cbc_wbc_{i}"),
-            ("plt", f"cbc_plt_{i}"),
-            ("ldh", f"cbc_ldh_{i}"),
-            ("uric_acid", f"cbc_uric_{i}"),
-            ("ferritin", f"cbc_ferr_{i}"),
-            ("creatinine", f"cbc_creat_{i}"),
-            ("rdw", f"cbc_rdw_{i}"),
-            ("beta2m", f"cbc_b2m_{i}"),
-            ("glucose", f"cbc_glu_{i}"),
-            ("alt", f"cbc_alt_{i}"),
-            ("ast", f"cbc_ast_{i}"),
-            ("ggtp", f"cbc_ggtp_{i}"),
-            ("bilirubin", f"cbc_bili_{i}"),
-        ]:
-            if lab.get(key) is not None:
-                st.session_state[state_key] = float(lab[key])
-
-
-def append_visit_to_csv(record):
-    df = pd.DataFrame([record])
-    if os.path.exists(DATA_FILE):
-        old = pd.read_csv(DATA_FILE)
-        all_df = pd.concat([old, df], ignore_index=True)
-        all_df.to_csv(DATA_FILE, index=False)
-    else:
-        df.to_csv(DATA_FILE, index=False)
-
-
-def load_patient_history(patient_id):
-    if not patient_id or not os.path.exists(DATA_FILE):
-        return pd.DataFrame()
-    df = pd.read_csv(DATA_FILE)
-    if "patient_id" not in df.columns:
-        return pd.DataFrame()
-    df = df[df["patient_id"].astype(str) == str(patient_id)]
-    if not df.empty and "visit_date" in df.columns:
-        df = df.sort_values("visit_date")
-    return df
-
-
-def compare_with_previous_visit(history_df):
-    if history_df.empty or len(history_df) < 2:
-        return []
-    last = history_df.iloc[-1]
-    prev = history_df.iloc[-2]
-
-    lines = []
-    for col, label in [
-        ("hct", "Hct"),
-        ("hb", "Hb"),
-        ("wbc", "WBC"),
-        ("plt", "PLT"),
-        ("ldh", "LDH"),
-        ("uric_acid", "Kwas moczowy"),
-        ("ferritin", "Ferrytyna"),
-        ("glucose", "Glukoza"),
-        ("alt", "ALT"),
-        ("ast", "AST"),
-        ("ggtp", "GGTP"),
-        ("bilirubin", "Bilirubina"),
-    ]:
-        try:
-            diff = float(last[col]) - float(prev[col])
-            lines.append(f"{label}: {diff:+.2f}")
-        except Exception:
-            pass
-    return lines
-
-
-def prepare_pdf_font():
-    try:
-        import reportlab
-        from reportlab.pdfbase import pdfmetrics
-        from reportlab.pdfbase.ttfonts import TTFont
-        vera_path = os.path.join(os.path.dirname(reportlab.__file__), "fonts", "Vera.ttf")
-        pdfmetrics.registerFont(TTFont("Vera", vera_path))
-        return "Vera"
-    except Exception:
-        return "Helvetica"
-
-
-def wrap_text(text, width, font_name="Helvetica", font_size=10):
-    from reportlab.pdfbase.pdfmetrics import stringWidth
-    lines = []
+def wrap_lines_for_pdf(text: str, width: int = 105) -> List[str]:
+    lines: List[str] = []
     for paragraph in text.split("\n"):
-        words = paragraph.split()
-        if not words:
+        if not paragraph.strip():
             lines.append("")
-            continue
-        current = words[0]
-        for word in words[1:]:
-            test = current + " " + word
-            if stringWidth(test, font_name, font_size) <= width:
-                current = test
-            else:
-                lines.append(current)
-                current = word
-        lines.append(current)
+        else:
+            lines.extend(textwrap.wrap(paragraph, width=width))
     return lines
 
 
-def make_pdf_bytes(title, body):
+def simplify_polish(text: str) -> str:
+    return (
+        text.replace("ą", "a").replace("ć", "c").replace("ę", "e").replace("ł", "l")
+        .replace("ń", "n").replace("ó", "o").replace("ś", "s").replace("ź", "z").replace("ż", "z")
+        .replace("Ą", "A").replace("Ć", "C").replace("Ę", "E").replace("Ł", "L")
+        .replace("Ń", "N").replace("Ó", "O").replace("Ś", "S").replace("Ź", "Z").replace("Ż", "Z")
+    )
+
+
+def make_pdf(title: str, body: str) -> bytes:
     buffer = io.BytesIO()
     pdf = canvas.Canvas(buffer, pagesize=A4)
-    page_width, page_height = A4
-    margin = 40
+    _, page_height = A4
     y = page_height - 40
+    margin = 40
 
-    font_name = prepare_pdf_font()
+    pdf.setFont("Helvetica-Bold", 14)
+    pdf.drawString(margin, y, simplify_polish(title))
+    y -= 22
 
-    pdf.setFont(font_name, 14)
-    pdf.drawString(margin, y, title)
-    y -= 24
-
-    pdf.setFont(font_name, 10)
-    max_width = page_width - 2 * margin
-    lines = wrap_text(body, max_width, font_name, 10)
-
-    for line in lines:
+    pdf.setFont("Helvetica", 10)
+    for line in wrap_lines_for_pdf(body, width=105):
         if y < 50:
             pdf.showPage()
-            pdf.setFont(font_name, 10)
+            pdf.setFont("Helvetica", 10)
             y = page_height - 40
-        pdf.drawString(margin, y, line)
+        pdf.drawString(margin, y, simplify_polish(line))
         y -= 14
 
     pdf.save()
@@ -673,780 +126,650 @@ def make_pdf_bytes(title, body):
     return buffer.getvalue()
 
 
-def build_compare_four_entered(cbc_rows):
-    rows = []
-    last_four = sorted(cbc_rows, key=lambda x: x["date"])[-4:]
-
-    for key, label in [
-        ("hct", "Hct"),
-        ("hb", "Hb"),
-        ("wbc", "WBC"),
-        ("plt", "PLT"),
-        ("ldh", "LDH"),
-        ("uric_acid", "Kwas moczowy"),
-        ("ferritin", "Ferrytyna"),
-        ("creatinine", "Kreatynina"),
-        ("rdw", "RDW"),
-        ("beta2m", "Beta-2-mikroglobulina"),
-        ("glucose", "Glukoza"),
-        ("alt", "ALT"),
-        ("ast", "AST"),
-        ("ggtp", "GGTP"),
-        ("bilirubin", "Bilirubina"),
-    ]:
-        row = {"Parametr": label}
-        for i, item in enumerate(last_four, start=1):
-            row[f"{i} ({item['date'].isoformat()})"] = item.get(key)
-            row[f"Norma {i}"] = LOCAL_NORMS.get(key, "")
-        rows.append(row)
-
-    return pd.DataFrame(rows)
+def list_text(values: List[str]) -> str:
+    return ", ".join([v for v in values if v])
 
 
-def build_phleb_year_stats(phleb_rows):
-    if not phleb_rows:
-        return 0, 0, None, pd.DataFrame()
+st.title("Ocena stanu zdrowia")
+st.caption("dr n. med. Piotr Działkowski")
 
-    current_year = date.today().year
-    year_rows = [r for r in phleb_rows if r["date"] is not None and r["date"].year == current_year]
-
-    count_year = len(year_rows)
-    total_ml_year = sum(int(r["ml"]) for r in year_rows if r["ml"] is not None)
-
-    avg_interval = average_phleb_interval_days(phleb_rows)
-
-    table_rows = []
-    valid_sorted = sorted([r for r in phleb_rows if r["date"] is not None], key=lambda x: x["date"])
-
-    prev_date = None
-    for row in valid_sorted:
-        interval = None
-        if prev_date is not None:
-            interval = (row["date"] - prev_date).days
-        table_rows.append({
-            "Data upustu": row["date"].isoformat(),
-            "Objętość (ml)": row["ml"],
-            "Odstęp od poprzedniego (dni)": interval
-        })
-        prev_date = row["date"]
-
-    return count_year, total_ml_year, avg_interval, pd.DataFrame(table_rows)
-
-
-def visit_to_record(data, summary, next_ml):
-    current = data["cbc_rows"][-1]
-    return {
-        "patient_id": data["patient_id"],
-        "visit_date": date.today().isoformat(),
-        "age": data["age"],
-        "sex": data["sex"],
-        "weight": data["weight"],
-        "height": data["height"],
-        "diagnoses_text": data["diagnoses_text"],
-        "history_text": data["history_text"],
-        "treatment_text": data["treatment_text"],
-        "hx_thrombosis": data["hx_thrombosis"],
-        "hx_bleeding": data["hx_bleeding"],
-        "hx_spleen": data["hx_spleen"],
-        "hx_smoking": data["hx_smoking"],
-        "symptom_itch": data["symptoms"]["świąd"],
-        "symptom_headache": data["symptoms"]["ból_głowy"],
-        "symptom_erythromelalgia": data["symptoms"]["erytromelalgia"],
-        "symptom_dizziness": data["symptoms"]["zawroty"],
-        "symptom_micro": data["symptoms"]["mikrokrążenie"],
-        "symptom_nightsweats": data["symptoms"]["nocne_poty"],
-        "symptom_weightloss": data["symptoms"]["spadek_masy"],
-        "other_symptoms_text": data["other_symptoms_text"],
-        "other_events_text": data["other_events_text"],
-        "hct": current["hct"],
-        "hb": current["hb"],
-        "wbc": current["wbc"],
-        "plt": current["plt"],
-        "ldh": current["ldh"],
-        "uric_acid": current["uric_acid"],
-        "ferritin": current["ferritin"],
-        "creatinine": current["creatinine"],
-        "rdw": current["rdw"],
-        "beta2m": current["beta2m"],
-        "glucose": current["glucose"],
-        "alt": current["alt"],
-        "ast": current["ast"],
-        "ggtp": current["ggtp"],
-        "bilirubin": current["bilirubin"],
-        "next_ml": next_ml,
-        "summary": summary,
-    }
-
-
-def build_analysis(data):
-    bmi = bmi_calc(data["weight"], data["height"])
-    treatment_flags = parse_treatment_flags(data["treatment_text"])
-    cbc_rows = sorted(data["cbc_rows"], key=lambda x: x["date"])
-    phleb_rows = sorted(data["phleb_rows"], key=lambda x: x["date"])
-
-    current = cbc_rows[-1]
-    current_hct = current["hct"]
-    current_hb = current["hb"]
-    current_wbc = current["wbc"]
-    current_plt = current["plt"]
-    current_ldh = current["ldh"]
-    current_uric = current["uric_acid"]
-    current_ferritin = current["ferritin"]
-
-    dates = [r["date"] for r in cbc_rows]
-    hct_vals = [r["hct"] for r in cbc_rows]
-    hb_vals = [r["hb"] for r in cbc_rows]
-    wbc_vals = [r["wbc"] for r in cbc_rows]
-    plt_vals = [r["plt"] for r in cbc_rows]
-
-    hct_trend = trend_label(hct_vals)
-    hb_trend = trend_label(hb_vals)
-    wbc_trend = trend_label(wbc_vals)
-    plt_trend = trend_label(plt_vals)
-
-    hct_slope = last_two_monthly_slope(hct_vals, dates)
-    avg_interval = average_phleb_interval_days(phleb_rows)
-    ebv_liters = estimate_blood_volume_liters(data["sex"], data["height"], data["weight"])
-
-    next_ml = estimate_next_phleb_ml(
-        current_hct=current_hct,
-        current_hb=current_hb,
-        current_wbc=current_wbc,
-        current_plt=current_plt,
-        hct_slope_month=hct_slope,
-        ebv_liters=ebv_liters,
-        bmi=bmi,
-        age=data["age"],
-        treatment_flags=treatment_flags,
-        avg_phleb_interval=avg_interval,
-    )
-
-    days_to_recross = linear_projection_days_to_target(current_hct, hct_slope, TARGET_HCT)
-
-    symptom_burden = sum([
-        1 if data["symptoms"].get("świąd") else 0,
-        1 if data["symptoms"].get("ból_głowy") else 0,
-        1 if data["symptoms"].get("erytromelalgia") else 0,
-        1 if data["symptoms"].get("zawroty") else 0,
-        1 if data["symptoms"].get("mikrokrążenie") else 0,
-        1 if data["symptoms"].get("nocne_poty") else 0,
-        1 if data["symptoms"].get("spadek_masy") else 0,
-    ])
-    if data["other_symptoms_text"].strip():
-        symptom_burden += 1
-
-    cyto_conclusion, cyto_reasons = assess_cytoreduction_need(
-        age=data["age"],
-        hx_thrombosis=data["hx_thrombosis"],
-        treatment_flags=treatment_flags,
-        cbc_rows=cbc_rows,
-        avg_phleb_interval=avg_interval,
-        symptom_burden=symptom_burden,
-    )
-
-    drug_alerts = build_drug_alerts(treatment_flags, current_plt)
-
-    flags = []
-    reasons = []
-
-    if data["hx_thrombosis"]:
-        flags.append("Przebyta zakrzepica")
-        reasons.append("obciążający wywiad zakrzepowy")
-    if data["age"] >= 60:
-        flags.append("Wiek ≥60 lat")
-        reasons.append("wiek zwiększający ryzyko zakrzepowe")
-    if persistent_above_target(hct_vals, 2):
-        flags.append("Kolejne Hct >45%")
-        reasons.append("brak pełnej kontroli Hct")
-    if avg_interval is not None and avg_interval <= 42:
-        flags.append("Częsta potrzeba upustów")
-        reasons.append("nawracająca potrzeba flebotomii")
-    if current_wbc is not None and current_wbc > 15:
-        flags.append("WBC >15 x10^9/l")
-        reasons.append("utrzymująca się leukocytoza")
-    if current_plt is not None and current_plt >= 1000:
-        flags.append("PLT ≥1000 x10^9/l")
-        reasons.append("bardzo wysokie PLT")
-    if symptom_burden >= 2:
-        flags.append("Istotne obciążenie objawami")
-        reasons.append("objawy zgłaszane przez pacjenta")
-    if current_ferritin is not None and current_ferritin < 30:
-        flags.append("Niska ferrytyna")
-        reasons.append("możliwy niedobór żelaza")
-    if current_uric is not None and current_uric > 7:
-        flags.append("Podwyższony kwas moczowy")
-        reasons.append("hiperurykemia")
-    if data["hx_bleeding"]:
-        flags.append("Wywiad krwawienia")
-        reasons.append("wywiad krwawienia")
-
-    recommendations = []
-    if current_hct is not None and current_hct > TARGET_HCT:
-        recommendations.append("Rozważyć intensyfikację kontroli Hct do celu <45%.")
-    if next_ml > 0:
-        recommendations.append(f"Orientacyjny pojedynczy kolejny upust do rozważenia: {next_ml} ml.")
-    if current_ferritin is not None and current_ferritin < 30:
-        recommendations.append("Ocenić niedobór żelaza w kontekście częstych upustów.")
-    if current_uric is not None and current_uric > 7:
-        recommendations.append("Rozważyć kontrolę hiperurykemii.")
-    if current_ldh is not None and current_ldh > 250:
-        recommendations.append("Podwyższone LDH ocenić w kontekście aktywności choroby.")
-    if data["hx_spleen"]:
-        recommendations.append("Uwzględnić ocenę śledziony i obciążenia objawami.")
-    if cyto_reasons:
-        recommendations.append(cyto_conclusion)
-
-    phleb_count_year, phleb_ml_year, phleb_avg_interval, phleb_table = build_phleb_year_stats(phleb_rows)
-    compare_four = build_compare_four_entered(cbc_rows)
-
-    diagnosis_lines = numbered_lines(data["diagnoses_text"])
-    history_lines = text_lines(data["history_text"])
-    treatment_lines = numbered_lines(data["treatment_text"])
-
-    summary_lines = []
-    summary_lines.append("PODSUMOWANIE KLINICZNE")
-    summary_lines.append("=" * 72)
-    summary_lines.append("")
-    summary_lines.append("Dane podstawowe")
-    summary_lines.append(f"ID pacjenta: {data['patient_id'] or 'brak'}")
-    summary_lines.append(f"Wiek: {data['age']}")
-    summary_lines.append(f"Płeć: {data['sex']}")
-    summary_lines.append(
-        f"Masa / wzrost: {data['weight']} kg / {data['height']} cm | "
-        f"BMI: {bmi:.1f} ({bmi_class(bmi)})" if bmi is not None else "BMI: brak danych"
-    )
-    summary_lines.append("")
-    summary_lines.append("Rozpoznania")
-    if diagnosis_lines:
-        summary_lines.extend(diagnosis_lines)
-    else:
-        summary_lines.append("brak danych")
-    summary_lines.append("")
-    summary_lines.append("Historia choroby")
-    if history_lines:
-        for line in history_lines:
-            summary_lines.append(f"• {line}")
-    else:
-        summary_lines.append("brak danych")
-    summary_lines.append("")
-    summary_lines.append("Aktualne leczenie")
-    if treatment_lines:
-        summary_lines.extend(treatment_lines)
-    else:
-        summary_lines.append("brak danych")
-    summary_lines.append("")
-    summary_lines.append("Wywiad / zdarzenia")
-    summary_lines.append(
-        f"Zakrzepica: {'tak' if data['hx_thrombosis'] else 'nie'} | "
-        f"Krwawienie: {'tak' if data['hx_bleeding'] else 'nie'} | "
-        f"Śledziona / splenomegalia: {'tak' if data['hx_spleen'] else 'nie'} | "
-        f"Palenie: {'tak' if data['hx_smoking'] else 'nie'}"
-    )
-    if data["other_events_text"].strip():
-        summary_lines.append(f"Inne zdarzenia: {data['other_events_text'].strip()}")
-    summary_lines.append("")
-    summary_lines.append("Objawy")
-    symptom_names = [k.replace("_", " ") for k, v in data["symptoms"].items() if v]
-    summary_lines.append(", ".join(symptom_names) if symptom_names else "brak zaznaczonych objawów")
-    if data["other_symptoms_text"].strip():
-        summary_lines.append(f"Inne objawy: {data['other_symptoms_text'].strip()}")
-    summary_lines.append("")
-    summary_lines.append("Ocena aktualna")
-    summary_lines.append(
-        f"Hct {current_hct}, Hb {current_hb}, WBC {current_wbc}, PLT {current_plt}, "
-        f"LDH {current_ldh}, kwas moczowy {current_uric}, ferrytyna {current_ferritin}, "
-        f"glukoza {current['glucose']}, ALT {current['alt']}, AST {current['ast']}, "
-        f"GGTP {current['ggtp']}, bilirubina {current['bilirubin']}"
-    )
-    summary_lines.append("")
-    summary_lines.append("Komentarz")
-    if reasons:
-        summary_lines.append("Obraz kliniczny zwraca uwagę na: " + ", ".join(reasons) + ".")
-    else:
-        summary_lines.append("Brak istotnych dodatkowych czynników alarmowych w bieżącym modelu.")
-    summary_lines.append(f"Trendy: Hct {hct_trend}, Hb {hb_trend}, WBC {wbc_trend}, PLT {plt_trend}.")
-    if hct_slope is not None:
-        summary_lines.append(f"Szacowane tempo zmiany Hct: {hct_slope:.2f}% / miesiąc.")
-    if days_to_recross is not None:
-        if current_hct < TARGET_HCT and days_to_recross > 0:
-            est_date = date.today() + timedelta(days=days_to_recross)
-            summary_lines.append(
-                f"Przy obecnym tempie zmian Hct może ponownie przekroczyć 45% za około {days_to_recross} dni, około {est_date.isoformat()}."
-            )
-        elif current_hct >= TARGET_HCT:
-            summary_lines.append("Hct aktualnie pozostaje co najmniej na poziomie 45%.")
-    summary_lines.append("")
-    summary_lines.append("Upusty")
-    summary_lines.append(phleb_frequency_text(avg_interval))
-    summary_lines.append(f"Liczba upustów w bieżącym roku: {phleb_count_year}")
-    summary_lines.append(f"Łączna objętość upustów w bieżącym roku: {phleb_ml_year} ml")
-    if phleb_avg_interval is not None:
-        summary_lines.append(f"Średni odstęp między upustami: {phleb_avg_interval:.1f} dni")
-    summary_lines.append("")
-    summary_lines.append("Czerwone flagi")
-    if flags:
-        for item in flags:
-            summary_lines.append(f"• {item}")
-    else:
-        summary_lines.append("brak istotnych flag")
-    summary_lines.append("")
-    summary_lines.append("Ostrzeżenia lekowe")
-    if drug_alerts:
-        for item in drug_alerts:
-            summary_lines.append(f"• {item}")
-    else:
-        summary_lines.append("brak istotnych ostrzeżeń wykrytych lokalnie")
-    summary_lines.append("")
-    summary_lines.append("Wnioski i zalecenia robocze")
-    if recommendations:
-        for item in recommendations:
-            summary_lines.append(f"• {item}")
-    else:
-        summary_lines.append("• utrzymać bieżący nadzór")
-    summary_lines.append("")
-    summary_lines.append("Ocena cytoredukcji")
-    summary_lines.append(cyto_conclusion)
-
-    summary = "\n".join(summary_lines)
-
-    note_lines = []
-    note_lines.append("NOTATKA DO DOKUMENTACJI")
-    note_lines.append("")
-    note_lines.append(f"Pacjent ID: {data['patient_id'] or 'brak'}")
-    note_lines.append(f"Wiek: {data['age']} lat, płeć: {data['sex']}")
-    note_lines.append("")
-    note_lines.append("Rozpoznania:")
-    if diagnosis_lines:
-        note_lines.extend(diagnosis_lines)
-    else:
-        note_lines.append("brak danych")
-    note_lines.append("")
-    note_lines.append("Historia choroby:")
-    if history_lines:
-        for line in history_lines:
-            note_lines.append(f"• {line}")
-    else:
-        note_lines.append("brak danych")
-    note_lines.append("")
-    note_lines.append("Aktualne leczenie:")
-    if treatment_lines:
-        note_lines.extend(treatment_lines)
-    else:
-        note_lines.append("brak danych")
-    note_lines.append("")
-    note_lines.append(
-        f"Wywiad / zdarzenia: zakrzepica {'tak' if data['hx_thrombosis'] else 'nie'}, "
-        f"krwawienie {'tak' if data['hx_bleeding'] else 'nie'}, "
-        f"śledziona {'tak' if data['hx_spleen'] else 'nie'}, "
-        f"palenie {'tak' if data['hx_smoking'] else 'nie'}."
-    )
-    if data["other_events_text"].strip():
-        note_lines.append(f"Inne zdarzenia: {data['other_events_text'].strip()}")
-    note_lines.append("")
-    symptom_names_text = ", ".join([k.replace("_", " ") for k, v in data["symptoms"].items() if v])
-    note_lines.append(f"Objawy: {symptom_names_text if symptom_names_text else 'brak zaznaczonych objawów'}.")
-    if data["other_symptoms_text"].strip():
-        note_lines.append(f"Inne objawy: {data['other_symptoms_text'].strip()}")
-    note_lines.append("")
-    note_lines.append(
-        f"Aktualne badania: Hct {current_hct}, Hb {current_hb}, WBC {current_wbc}, "
-        f"PLT {current_plt}, LDH {current_ldh}, kwas moczowy {current_uric}, ferrytyna {current_ferritin}, "
-        f"glukoza {current['glucose']}, ALT {current['alt']}, AST {current['ast']}, GGTP {current['ggtp']}, bilirubina {current['bilirubin']}."
-    )
-    note_lines.append(f"Upusty w bieżącym roku: {phleb_count_year}, łącznie {phleb_ml_year} ml.")
-    note_lines.append(f"Orientacyjny kolejny upust do rozważenia: {next_ml} ml.")
-    note_lines.append(f"Ocena cytoredukcji: {cyto_conclusion}.")
-    if flags:
-        note_lines.append(f"Flagi: {', '.join(flags)}.")
-    if drug_alerts:
-        note_lines.append(f"Ostrzeżenia lekowe: {'; '.join(drug_alerts)}.")
-
-    note = "\n".join(note_lines)
-    current_status = "poza celem" if current_hct is not None and current_hct > TARGET_HCT else "w celu"
-
-    return {
-        "summary": summary,
-        "note": note,
-        "flags": flags,
-        "drug_alerts": drug_alerts,
-        "next_ml": next_ml,
-        "current_hct": current_hct,
-        "current_status": current_status,
-        "compare_four": compare_four,
-        "phleb_count_year": phleb_count_year,
-        "phleb_ml_year": phleb_ml_year,
-        "phleb_avg_interval": phleb_avg_interval,
-        "phleb_table": phleb_table,
-    }
-
-
-init_state()
-
-st.title(APP_TITLE)
-st.caption("Analiza badań, historia choroby i wsparcie decyzji klinicznych")
-
-st.text_input("Pacjent / ID", key="patient_id")
-st.button("Wyczyść cały formularz", on_click=clear_form, use_container_width=True)
-
-history_df = load_patient_history(st.session_state["patient_id"])
-if not history_df.empty:
-    st.success(f"Zapisane wizyty tego pacjenta: {len(history_df)}")
-else:
-    st.info("Brak zapisanych wizyt dla tego ID")
-
-st.markdown('<div class="ak-section">Import wyników z pliku</div>', unsafe_allow_html=True)
-uploaded_files = st.file_uploader(
-    "Dodaj PDF, JPG lub PNG z wynikami badań",
-    type=["pdf", "jpg", "jpeg", "png"],
-    accept_multiple_files=True,
+st.markdown(
+    """
+    <div class="top-card">
+    Szanowni Państwo,<br><br>
+    każda wizyta jest przygotowywana indywidualnie.<br>
+    Bardzo proszę o szczere i możliwie dokładne odpowiedzi dotyczące stanu zdrowia.<br>
+    Im więcej szczegółów, tym większa szansa na wcześniejsze wykrycie problemów i trafną ocenę sytuacji zdrowotnej.<br><br>
+    W przypadku dzieci proszę o wypełnienie odpowiednich pól.<br><br>
+    Serdecznie pozdrawiam i do zobaczenia na wizycie.
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
 
-if uploaded_files:
-    imported = import_uploaded_files(uploaded_files)
-    st.session_state["imported_labs_preview"] = imported
-
-    if imported:
-        preview_rows = []
-        for idx, lab in enumerate(imported, start=1):
-            preview_rows.append({
-                "Badanie": idx,
-                "Data": lab["date"].isoformat() if lab.get("date") else "",
-                "Hct": lab.get("hct"),
-                "Hb": lab.get("hb"),
-                "WBC": lab.get("wbc"),
-                "PLT": lab.get("plt"),
-                "LDH": lab.get("ldh"),
-                "Kwas moczowy": lab.get("uric_acid"),
-                "Ferrytyna": lab.get("ferritin"),
-                "Kreatynina": lab.get("creatinine"),
-                "Glukoza": lab.get("glucose"),
-                "ALT": lab.get("alt"),
-                "AST": lab.get("ast"),
-                "GGTP": lab.get("ggtp"),
-                "Bilirubina": lab.get("bilirubin"),
-            })
-        st.dataframe(pd.DataFrame(preview_rows), use_container_width=True)
-
-        if st.button("Przepisz odczytane badania do formularza", use_container_width=True):
-            apply_imported_labs(imported)
-            st.success("Dane z plików zostały wpisane do formularza.")
-            st.rerun()
-    else:
-        st.warning("Nie udało się wiarygodnie odczytać wyników z przesłanych plików.")
-
-st.markdown('<div class="ak-section">Dane podstawowe</div>', unsafe_allow_html=True)
-st.number_input("Wiek", min_value=0, max_value=120, key="age")
-st.selectbox("Płeć", ["M", "K", "inna / niepodano"], key="sex")
-st.number_input("Masa ciała (kg)", min_value=20.0, max_value=300.0, key="weight")
-st.number_input("Wzrost (cm)", min_value=100.0, max_value=250.0, key="height")
-
-bmi = bmi_calc(st.session_state["weight"], st.session_state["height"])
-st.info(f"BMI: {bmi:.1f} ({bmi_class(bmi)})" if bmi is not None else "BMI: brak danych")
-
-st.markdown('<div class="ak-section">Rozpoznania</div>', unsafe_allow_html=True)
-st.text_area(
-    "Rozpoznania",
-    key="diagnoses_text",
-    height=110,
-    label_visibility="collapsed",
-    placeholder="Każde rozpoznanie wpisz w nowej linii"
-)
-
-st.markdown('<div class="ak-section">Historia choroby</div>', unsafe_allow_html=True)
-st.text_area(
-    "Historia choroby",
-    key="history_text",
-    height=130,
-    label_visibility="collapsed",
-    placeholder="Najważniejsze informacje o przebiegu choroby"
-)
-
-st.markdown('<div class="ak-section">Aktualne leczenie</div>', unsafe_allow_html=True)
-st.text_area(
-    "Aktualne leczenie",
-    key="treatment_text",
-    height=120,
-    label_visibility="collapsed",
-    placeholder="Każdy lek i dawkowanie wpisz w nowej linii"
-)
-
-st.markdown("Sprawdzenie interakcji lekowych:")
-st.markdown("[Medscape Interaction Checker](https://reference.medscape.com/drug-interactionchecker)")
-st.markdown("[Drugs.com Interaction Checker](https://www.drugs.com/drug_interactions.html)")
-
-st.markdown('<div class="ak-section">Wywiad / zdarzenia</div>', unsafe_allow_html=True)
-st.checkbox("Przebyta zakrzepica", key="hx_thrombosis")
-st.checkbox("Przebyte krwawienie", key="hx_bleeding")
-st.checkbox("Splenomegalia / objawy śledzionowe", key="hx_spleen")
-st.checkbox("Palenie", key="hx_smoking")
-st.text_area(
-    "Inne zdarzenia",
-    key="other_events_text",
-    height=80,
-    placeholder="Wpisz inne ważne zdarzenia"
-)
-
-st.markdown('<div class="ak-section">Objawy</div>', unsafe_allow_html=True)
-st.checkbox("Świąd", key="symptom_itch")
-st.checkbox("Ból głowy", key="symptom_headache")
-st.checkbox("Erytromelalgia", key="symptom_erythromelalgia")
-st.checkbox("Zawroty głowy", key="symptom_dizziness")
-st.checkbox("Objawy mikrokrążeniowe", key="symptom_micro")
-st.checkbox("Nocne poty", key="symptom_nightsweats")
-st.checkbox("Spadek masy ciała", key="symptom_weightloss")
-st.text_area(
-    "Inne objawy",
-    key="other_symptoms_text",
-    height=80,
-    placeholder="Wpisz inne objawy"
-)
-
-st.markdown('<div class="ak-section">Ostatnie badania</div>', unsafe_allow_html=True)
-c1, c2 = st.columns(2)
-with c1:
-    st.number_input("Liczba badań", min_value=1, max_value=10, key="labs_n")
-with c2:
-    st.caption("Daty wybierasz z kalendarza w każdym wierszu")
-
-cbc_rows = []
-for i in range(st.session_state["labs_n"]):
-    st.markdown(f"**Badanie {i+1}**")
-    st.date_input("Data", key=f"cbc_date_{i}")
-    st.number_input("Hct", min_value=0.0, max_value=100.0, key=f"cbc_hct_{i}")
-    st.number_input("Hb", min_value=0.0, max_value=30.0, key=f"cbc_hb_{i}")
-    st.number_input("WBC", min_value=0.0, max_value=300.0, key=f"cbc_wbc_{i}")
-    st.number_input("PLT", min_value=0.0, max_value=5000.0, key=f"cbc_plt_{i}")
-    st.number_input("LDH", min_value=0.0, max_value=5000.0, key=f"cbc_ldh_{i}")
-    st.number_input("Kwas moczowy", min_value=0.0, max_value=50.0, key=f"cbc_uric_{i}")
-    st.number_input("Ferrytyna", min_value=0.0, max_value=5000.0, key=f"cbc_ferr_{i}")
-    st.number_input("Kreatynina", min_value=0.0, max_value=20.0, key=f"cbc_creat_{i}")
-    st.number_input("RDW", min_value=0.0, max_value=100.0, key=f"cbc_rdw_{i}")
-    st.number_input("Beta-2-mikroglobulina", min_value=0.0, max_value=50.0, key=f"cbc_b2m_{i}")
-    st.number_input("Glukoza", min_value=0.0, max_value=1000.0, key=f"cbc_glu_{i}")
-    st.number_input("ALT", min_value=0.0, max_value=5000.0, key=f"cbc_alt_{i}")
-    st.number_input("AST", min_value=0.0, max_value=5000.0, key=f"cbc_ast_{i}")
-    st.number_input("GGTP", min_value=0.0, max_value=5000.0, key=f"cbc_ggtp_{i}")
-    st.number_input("Bilirubina", min_value=0.0, max_value=50.0, key=f"cbc_bili_{i}")
-
-    cbc_rows.append({
-        "date": st.session_state[f"cbc_date_{i}"],
-        "hct": safe_float(st.session_state[f"cbc_hct_{i}"]),
-        "hb": safe_float(st.session_state[f"cbc_hb_{i}"]),
-        "wbc": safe_float(st.session_state[f"cbc_wbc_{i}"]),
-        "plt": safe_float(st.session_state[f"cbc_plt_{i}"]),
-        "ldh": safe_float(st.session_state[f"cbc_ldh_{i}"]),
-        "uric_acid": safe_float(st.session_state[f"cbc_uric_{i}"]),
-        "ferritin": safe_float(st.session_state[f"cbc_ferr_{i}"]),
-        "creatinine": safe_float(st.session_state[f"cbc_creat_{i}"]),
-        "rdw": safe_float(st.session_state[f"cbc_rdw_{i}"]),
-        "beta2m": safe_float(st.session_state[f"cbc_b2m_{i}"]),
-        "glucose": safe_float(st.session_state[f"cbc_glu_{i}"]),
-        "alt": safe_float(st.session_state[f"cbc_alt_{i}"]),
-        "ast": safe_float(st.session_state[f"cbc_ast_{i}"]),
-        "ggtp": safe_float(st.session_state[f"cbc_ggtp_{i}"]),
-        "bilirubin": safe_float(st.session_state[f"cbc_bili_{i}"]),
-    })
-    st.markdown("---")
-
-st.markdown('<div class="ak-section">Upusty</div>', unsafe_allow_html=True)
-u1, u2 = st.columns(2)
-with u1:
-    st.number_input("Liczba upustów", min_value=1, max_value=12, key="phleb_n")
-with u2:
-    st.caption("Daty wybierasz z kalendarza w każdym wierszu")
-
-phleb_rows = []
-for i in range(st.session_state["phleb_n"]):
-    st.markdown(f"**Upust {i+1}**")
-    st.date_input("Data upustu", key=f"ph_date_{i}")
-    st.number_input("Objętość ml", min_value=0, max_value=1000, step=25, key=f"ph_ml_{i}")
-    phleb_rows.append({
-        "date": st.session_state[f"ph_date_{i}"],
-        "ml": st.session_state[f"ph_ml_{i}"],
-    })
-    st.markdown("---")
-
-if st.button("Analizuj wizytę", type="primary", use_container_width=True):
-    data = {
-        "patient_id": st.session_state["patient_id"],
-        "age": int(st.session_state["age"]),
-        "sex": st.session_state["sex"],
-        "weight": float(st.session_state["weight"]),
-        "height": float(st.session_state["height"]),
-        "diagnoses_text": st.session_state["diagnoses_text"],
-        "history_text": st.session_state["history_text"],
-        "treatment_text": st.session_state["treatment_text"],
-        "hx_thrombosis": st.session_state["hx_thrombosis"],
-        "hx_bleeding": st.session_state["hx_bleeding"],
-        "hx_spleen": st.session_state["hx_spleen"],
-        "hx_smoking": st.session_state["hx_smoking"],
-        "other_events_text": st.session_state["other_events_text"],
-        "other_symptoms_text": st.session_state["other_symptoms_text"],
-        "cbc_rows": cbc_rows,
-        "phleb_rows": phleb_rows,
-        "symptoms": {
-            "świąd": st.session_state["symptom_itch"],
-            "ból_głowy": st.session_state["symptom_headache"],
-            "erytromelalgia": st.session_state["symptom_erythromelalgia"],
-            "zawroty": st.session_state["symptom_dizziness"],
-            "mikrokrążenie": st.session_state["symptom_micro"],
-            "nocne_poty": st.session_state["symptom_nightsweats"],
-            "spadek_masy": st.session_state["symptom_weightloss"],
-        },
-    }
-
-    result = build_analysis(data)
-
-    st.session_state["analysis_ready"] = True
-    st.session_state["last_summary"] = result["summary"]
-    st.session_state["last_note"] = result["note"]
-    st.session_state["last_flags"] = result["flags"]
-    st.session_state["last_drug_alerts"] = result["drug_alerts"]
-    st.session_state["last_next_ml"] = result["next_ml"]
-    st.session_state["last_current_hct"] = result["current_hct"]
-    st.session_state["last_current_status"] = result["current_status"]
-    st.session_state["last_compare_rows"] = result["compare_four"]
-    st.session_state["last_phleb_count_year"] = result["phleb_count_year"]
-    st.session_state["last_phleb_ml_year"] = result["phleb_ml_year"]
-    st.session_state["last_phleb_avg_interval"] = result["phleb_avg_interval"]
-    st.session_state["last_phleb_table"] = result["phleb_table"]
-    st.session_state["last_data"] = data
-
-if st.session_state.get("analysis_ready", False):
-    st.markdown('<div class="ak-section">Analiza</div>', unsafe_allow_html=True)
-
-    col1, col2 = st.columns(2)
-    col3, col4 = st.columns(2)
-
-    with col1:
-        st.markdown(
-            f'<div class="ak-card"><div class="ak-kpi-title">Hct aktualnie</div><div class="ak-kpi-value">{st.session_state["last_current_hct"]:.1f}%</div></div>',
-            unsafe_allow_html=True,
+with st.form("ankieta_zdrowia"):
+    with st.expander("1. Dane podstawowe", expanded=True):
+        email = st.text_input("Adres e-mail")
+        full_name = st.text_input("Imię i nazwisko")
+        birth_date = st.date_input(
+            "Data urodzenia",
+            value=date(1990, 1, 1),
+            min_value=date(1900, 1, 1),
+            max_value=date.today(),
         )
-    with col2:
-        st.markdown(
-            f'<div class="ak-card"><div class="ak-kpi-title">Kolejny upust do rozważenia</div><div class="ak-kpi-value">{st.session_state["last_next_ml"]} ml</div></div>',
-            unsafe_allow_html=True,
+        nationality = st.text_input("Narodowość")
+        sex = st.selectbox("Płeć", ["kobieta", "mężczyzna", "inne"])
+        current_status = st.selectbox(
+            "Aktualny status",
+            ["pracujący", "dziecko", "uczeń", "student", "emeryt", "inne"],
         )
-    with col3:
-        st.markdown(
-            f'<div class="ak-card"><div class="ak-kpi-title">Status kontroli</div><div class="ak-kpi-value">{st.session_state["last_current_status"]}</div></div>',
-            unsafe_allow_html=True,
-        )
-    with col4:
-        st.markdown(
-            f'<div class="ak-card"><div class="ak-kpi-title">Upusty w roku</div><div class="ak-kpi-value">{st.session_state["last_phleb_count_year"]}</div></div>',
-            unsafe_allow_html=True,
-        )
+        profession = st.text_input("Obecnie wykonywany zawód")
+        height_cm = st.number_input("Wzrost (cm)", min_value=30.0, max_value=250.0, value=170.0, step=1.0)
+        weight_kg = st.number_input("Masa ciała (kg)", min_value=1.0, max_value=300.0, value=70.0, step=0.1)
 
-    st.markdown(
-        f'<div class="ak-card"><div class="ak-kpi-title">Łączna objętość upustów w roku</div><div class="ak-kpi-value">{st.session_state["last_phleb_ml_year"]} ml</div></div>',
-        unsafe_allow_html=True,
-    )
-
-    if st.session_state["last_phleb_avg_interval"] is not None:
-        st.markdown(
-            f'<div class="ak-card"><div class="ak-kpi-title">Średni odstęp między upustami</div><div class="ak-kpi-value">{st.session_state["last_phleb_avg_interval"]:.1f} dni</div></div>',
-            unsafe_allow_html=True,
-        )
-
-    if st.session_state["last_flags"]:
-        st.markdown("### Czerwone flagi")
-        for f in st.session_state["last_flags"]:
-            st.error(f)
-
-    st.markdown("### Interakcje lekowe i ostrzeżenia")
-    if st.session_state["last_drug_alerts"]:
-        for a in st.session_state["last_drug_alerts"]:
-            st.warning(a)
-    else:
-        st.info("Brak istotnych ostrzeżeń wykrytych lokalnie.")
-
-    st.markdown("[Medscape Interaction Checker](https://reference.medscape.com/drug-interactionchecker)")
-    st.markdown("[Drugs.com Interaction Checker](https://www.drugs.com/drug_interactions.html)")
-
-    st.markdown("### Porównanie 4 ostatnich badań")
-    compare_df = st.session_state["last_compare_rows"]
-    if isinstance(compare_df, pd.DataFrame) and not compare_df.empty:
-        st.dataframe(compare_df, use_container_width=True)
-
-    st.markdown("### Tabela upustów")
-    phleb_table = st.session_state["last_phleb_table"]
-    if isinstance(phleb_table, pd.DataFrame) and not phleb_table.empty:
-        st.dataframe(phleb_table, use_container_width=True)
-
-    st.markdown("### Podsumowanie wizyty")
-    st.text_area(
-        "summary_box",
-        value=st.session_state["last_summary"],
-        height=520,
-        label_visibility="collapsed",
-    )
-
-    st.markdown("### Notatka do wydruku / dokumentacji")
-    st.text_area(
-        "note_box",
-        value=st.session_state["last_note"],
-        height=340,
-        label_visibility="collapsed",
-    )
-
-    if st.button("Zapisz wizytę do historii", use_container_width=True):
-        if st.session_state["last_data"]["patient_id"]:
-            record = visit_to_record(
-                st.session_state["last_data"],
-                st.session_state["last_summary"],
-                st.session_state["last_next_ml"],
-            )
-            append_visit_to_csv(record)
-            st.success("Wizyta zapisana.")
+        bmi = bmi_calc(weight_kg, height_cm)
+        if bmi is not None:
+            st.info(f"BMI: {bmi:.1f} ({bmi_label(bmi)})")
         else:
-            st.error("Najpierw wpisz ID pacjenta.")
+            st.info("BMI: brak danych")
 
-    pdf_bytes = make_pdf_bytes("Asystent kliniczny - podsumowanie", st.session_state["last_summary"])
+    with st.expander("2. Ocena ogólna"):
+        physical_score = st.slider(
+            "Jak oceniasz swój stan fizyczny? 0 = bardzo zły, 10 = bardzo dobry",
+            0, 10, 6
+        )
+        mental_score = st.slider(
+            "Jak oceniasz swój stan psychiczny? 0 = bardzo zły, 10 = bardzo dobry",
+            0, 10, 6
+        )
+        weight_change = st.radio(
+            "Czy w ostatnim roku zmieniła się masa ciała?",
+            ["wzrosła", "spadła", "bez zmian"]
+        )
+        weight_change_amount = ""
+        if weight_change != "bez zmian":
+            weight_change_amount = st.text_input("O ile mniej więcej zmieniła się masa ciała?")
+
+    with st.expander("3. Badania wykonane w ciągu ostatnich 2 lat"):
+        performed_tests = st.multiselect(
+            "Zaznacz wykonane badania",
+            [
+                "RTG klatki piersiowej",
+                "EKG",
+                "Echo serca",
+                "Holter EKG",
+                "Holter ciśnieniowy",
+                "Gastroskopia",
+                "Kolonoskopia",
+                "USG miednicy",
+                "USG ginekologiczne",
+                "USG tarczycy",
+                "USG jąder",
+                "USG prostaty",
+                "Tomografia komputerowa",
+                "Tomografia głowy",
+                "Rezonans głowy",
+                "Doppler tętnic szyjnych",
+                "Przepływy kończyn dolnych",
+                "Densytometria",
+                "Scyntygrafia",
+                "Mammografia",
+                "USG piersi",
+            ]
+        )
+
+    with st.expander("4. Objawy główne"):
+        main_symptoms = []
+        for i in range(1, 6):
+            st.markdown(f"**Objaw {i}**")
+            symptom_name = st.text_input(f"Nazwa objawu {i}", key=f"main_symptom_{i}")
+            symptom_since = st.text_input(
+                f"Od kiedy występuje objaw {i}?",
+                key=f"main_symptom_since_{i}",
+                placeholder="np. 03.2024 lub 2021"
+            )
+            if symptom_name.strip():
+                if symptom_since.strip():
+                    main_symptoms.append(f"{symptom_name.strip()} - od {symptom_since.strip()}")
+                else:
+                    main_symptoms.append(symptom_name.strip())
+
+        additional_symptoms = st.text_area(
+            "Pozostałe dolegliwości, nawet mniej nasilone"
+        )
+
+    with st.expander("5. Charakter objawów"):
+        symptom_pattern = st.radio(
+            "Czy objawy są stałe czy pojawiają się okresowo?",
+            ["stałe", "okresowe", "trudno powiedzieć"]
+        )
+        symptom_periodicity = st.text_area(
+            "Jeśli okresowe, napisz kiedy się pojawiają i jak często w ciągu roku"
+        )
+        symptom_past = st.text_area(
+            "Czy podobne objawy występowały wcześniej? Jeśli tak, kiedy?"
+        )
+
+        worsen_factors = st.multiselect(
+            "Co nasila objawy?",
+            [
+                "po wysiłku",
+                "na czczo",
+                "po posiłku",
+                "podczas mówienia",
+                "podczas śmiechu",
+                "rano",
+                "w ciągu dnia",
+                "wieczorem",
+                "wybudzenie ze snu",
+            ]
+        )
+        worsen_other = st.text_input("Inne sytuacje nasilające objawy")
+
+        relieve_factors = st.multiselect(
+            "Co osłabia objawy?",
+            [
+                "podczas wypoczynku",
+                "po wysiłku",
+                "na czczo",
+                "po posiłku",
+                "rano",
+                "w ciągu dnia",
+                "wieczorem",
+            ]
+        )
+        relieve_other = st.text_input("Inne sytuacje zmniejszające objawy")
+
+    with st.expander("6. Chronologia zdrowia i leki"):
+        health_timeline = st.text_area(
+            "Opisz przebieg zdrowia od pierwszych problemów zdrowotnych do dziś"
+        )
+        current_meds = st.text_area(
+            "Jakie leki obecnie przyjmujesz? Podaj nazwę i dawkowanie"
+        )
+
+    with st.expander("7. Tryb życia"):
+        lifestyle = st.selectbox(
+            "Tryb życia",
+            ["leżący", "siedzący", "nisko aktywny", "średnio aktywny", "bardzo aktywny", "inne"]
+        )
+        stimulants = st.multiselect(
+            "Używki i codzienne nawyki",
+            ["kawa", "herbata", "papierosy", "alkohol", "narkotyki", "słodycze", "inne"]
+        )
+        stimulants_other = st.text_input("Jeśli zaznaczono inne, napisz jakie")
+        sleep_hours = st.selectbox("Ile średnio trwa sen na dobę?", [3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+
+    with st.expander("8. Podróże, zwierzęta, urazy, COVID, stres"):
+        travel_abroad = st.radio("Czy w ciągu ostatnich 3 miesięcy był wyjazd za granicę?", ["tak", "nie"])
+        travel_where = st.text_input("Jeśli tak, to gdzie?") if travel_abroad == "tak" else ""
+
+        animal_contact = st.radio(
+            "Czy w ostatnich miesiącach było pogryzienie, zadrapanie lub bliski kontakt ze zwierzęciem?",
+            ["tak", "nie"]
+        )
+        animal_contact_details = st.text_area("Jeśli tak, opisz kiedy i jakie zwierzę") if animal_contact == "tak" else ""
+
+        major_injuries = st.text_area(
+            "Czy były duże urazy ciała? Podaj rok i opisz, np. upadek z wysokości, uraz komunikacyjny, pobicie, tonięcie, operacja"
+        )
+
+        covid = st.radio("Czy było przechorowanie COVID-19?", ["tak", "nie", "nie wiem"])
+        covid_details = st.text_area("Jeśli tak, opisz kiedy i jaki był przebieg") if covid == "tak" else ""
+
+        strong_stress = st.text_area(
+            "Czy w ciągu życia były silne reakcje stresowe lub trudne wydarzenia? Jeśli tak, opisz i podaj rok"
+        )
+
+    with st.expander("9. Urodzenie i dzieciństwo"):
+        birth_info = st.multiselect(
+            "Informacje o urodzeniu",
+            [
+                "poród naturalny",
+                "poród przez cesarskie cięcie",
+                "poród przedwczesny",
+                "poród o czasie",
+                "poród po terminie",
+                "zielone wody płodowe",
+                "nie wiem",
+            ]
+        )
+        birth_info_other = st.text_input("Inne ważne informacje o urodzeniu")
+
+        breastfeeding = st.selectbox(
+            "Czy było karmienie mlekiem matki?",
+            ["tak, do 3 miesięcy", "tak, do 6 miesięcy", "tak, powyżej 6 miesięcy", "nie", "nie wiem"]
+        )
+
+        childhood_diseases = st.multiselect(
+            "Poważne choroby w dzieciństwie",
+            [
+                "astma",
+                "atopowe zapalenie skóry",
+                "skaza białkowa",
+                "częste przeziębienia",
+                "pobyty w szpitalu",
+                "częste zapalenia płuc",
+                "problemy jelitowe",
+                "choroby psychiczne",
+                "problemy ze śledzioną",
+                "problemy z trzustką",
+                "inne",
+            ]
+        )
+        childhood_diseases_other = st.text_input("Inne ważne choroby w dzieciństwie")
+
+    with st.expander("10. Objawy ogólne i neurologiczne"):
+        fever_now = st.radio("Czy aktualnie występuje gorączka?", ["tak", "nie"])
+        fever_details = st.text_area("Jeśli tak, opisz dokładniej") if fever_now == "tak" else ""
+
+        headache_dizziness = st.radio("Czy występują bóle i zawroty głowy?", ["tak", "nie"])
+        headache_dizziness_details = st.text_area("Jeśli tak, opisz dokładniej") if headache_dizziness == "tak" else ""
+
+        headache_assoc = st.text_area(
+            "Czy bólom głowy towarzyszą wymioty, omdlenia, zaburzenia widzenia, osłabienie, światłowstręt, niepamięć?"
+        )
+        hearing_vision = st.text_area("Czy w ostatnich latach pogorszył się słuch lub wzrok?")
+        attacks = st.text_area("Czy występują ataki lub nagłe epizody? Jeśli tak, opisz.")
+        sinus_problems = st.text_area("Czy występują problemy z zatokami?")
+        nose_problems = st.text_area("Czy są problemy z nosem, np. krwawienia, suchość, zapalenia, trudności w oddychaniu przez nos?")
+        allergies = st.text_area("Czy występują alergie? Jeśli tak, to na co, o jakiej porze roku i jak nasilone?")
+        herpes = st.text_area("Czy pojawia się opryszczka? Jeśli tak, jak często?")
+        mouth_corners = st.text_area("Czy występują zajady?")
+        fresh_food_reaction = st.text_area(
+            "Czy po spożyciu świeżych warzyw i owoców pojawia się pieczenie lub zaczerwienienie wokół ust?"
+        )
+        epilepsy = st.radio("Czy kiedykolwiek rozpoznano padaczkę?", ["tak", "nie"])
+        smell_taste = st.text_area("Czy są zaburzenia węchu lub smaku? Jeśli tak, od kiedy?")
+        colds = st.text_input("Jak często zdarzają się przeziębienia w ciągu roku?")
+
+    with st.expander("11. Układ oddechowy"):
+        throat_morning = st.radio("Czy rano występuje ból gardła?", ["tak", "nie"])
+        esophagus_burning = st.radio("Czy pojawia się pieczenie w przełyku?", ["tak", "nie"])
+        asthma_dx = st.radio("Czy kiedykolwiek rozpoznano astmę?", ["tak", "nie"])
+        pneumonia = st.radio("Czy kiedykolwiek było zapalenie płuc?", ["tak", "nie"])
+        pneumonia_details = st.text_area("Jeśli tak, podaj daty i po której stronie płuc było zapalenie") if pneumonia == "tak" else ""
+        dyspnea = st.text_area("Czy zdarza się duszność lub zadyszka? Jeśli tak, opisz w jakich sytuacjach.")
+        night_breath = st.text_area("Czy dochodzi do wybudzania w nocy z powodu braku tchu?")
+        chest_heaviness = st.text_area("Czy występuje ciężkość w klatce piersiowej? Jeśli tak, opisz nasilenie.")
+        breathing_type = st.selectbox(
+            "Czy są trudności z oddychaniem?",
+            ["nie mam takich trudności", "z nabieraniem powietrza", "z wypuszczaniem powietrza", "z oboma"],
+        )
+        wheezing = st.multiselect(
+            "Czy występuje świszczący oddech?",
+            ["nie", "podczas wysiłku", "podczas infekcji", "w nocy", "rano", "podczas alergii", "w zimnej pogodzie"]
+        )
+        cough = st.text_area("Czy jest kaszel? Jeśli tak, od kiedy, czy jest suchy czy z wydzieliną, jakiego koloru?")
+
+    with st.expander("12. Układ sercowo-naczyniowy"):
+        chest_pain = st.text_area("Czy występują bóle w klatce piersiowej? Czy są miejscowe czy rozległe? Czy promieniują?")
+        pressure_type = st.selectbox(
+            "Czy są problemy z ciśnieniem?",
+            [
+                "nie mam kłopotów z ciśnieniem",
+                "mam skłonność do niskiego ciśnienia",
+                "mam skłonność do wysokiego ciśnienia",
+            ]
+        )
+        current_bp = st.text_input("Jakie jest aktualne ciśnienie tętnicze?")
+        current_hr = st.text_input("Jakie jest aktualne tętno?")
+        pain_press = st.radio("Czy odczuwasz ból przy naciskaniu klatki piersiowej?", ["tak", "nie"])
+        pain_position = st.radio("Czy przy zmianie pozycji występują bóle w klatce piersiowej?", ["tak", "nie"])
+        palpitations = st.text_area("Czy odczuwasz nierówne bicie serca? Jeśli tak, opisz porę dnia, okoliczności i częstość.")
+
+    with st.expander("13. Przewód pokarmowy"):
+        gi_problem = st.radio("Czy występują problemy z przewodem pokarmowym?", ["tak", "nie"])
+        gi_symptoms = []
+        if gi_problem == "tak":
+            gi_symptoms = st.multiselect(
+                "Zaznacz problemy",
+                ["zgaga", "wzdęcia", "biegunki", "zaparcia", "hemoroidy", "gazy", "skurcze", "wymioty", "nudności"]
+            )
+        worsening_foods = st.text_area("Czy są potrawy, po których samopoczucie się pogarsza?")
+        gi_infections = st.text_area(
+            "Czy kiedykolwiek było zakażenie bakteryjne lub wirusowe przewodu pokarmowego? Jeśli tak, kiedy i czy było badanie kontrolne z wynikiem ujemnym?"
+        )
+
+    with st.expander("14. Układ moczowy"):
+        urine_problems = st.text_area("Czy są problemy z oddawaniem moczu, np. pieczenie, trudności, inne?")
+        night_urination = st.selectbox("Ile razy w nocy wstajesz oddać mocz?", ["0", "1", "2", "3", "4", "5", "6", "7 lub więcej"])
+        fluids = st.selectbox("Ile litrów płynów wypijasz dziennie?", ["1", "2", "3", "4", "5", "więcej niż 5"])
+
+    with st.expander("15. Stawy i mięśnie"):
+        joints = st.text_area("Czy występują bóle stawów? Jeśli tak, to których?")
+        stiffness = st.text_area("Czy po wstaniu z łóżka występuje ból lub sztywność stawów?")
+
+    with st.expander("16. Skóra"):
+        skin_changes = st.text_area(
+            "Czy są jakieś zmiany na skórze? Jeśli tak, opisz dokładnie. Kiedy pojawiły się pierwszy raz? Czy od tej pory jest poprawa lub pogorszenie?"
+        )
+        skin_itch = st.text_area("Czy występuje swędzenie skóry? Jeśli tak, których partii ciała dotyczy?")
+        acne = st.radio("Czy występował lub występuje nasilony trądzik na twarzy lub plecach?", ["tak", "nie"])
+        acne_details = st.text_area("Jeśli tak, możesz opisać dokładniej") if acne == "tak" else ""
+        skin_sensation = st.text_area("Czy są zaburzenia czucia skóry? Jeśli tak, opisz lokalizację i od kiedy.")
+        wound_healing = st.radio("Czy występują problemy z gojeniem się ran?", ["tak", "nie"])
+        wound_healing_details = st.text_area("Jeśli tak, opisz problemy z gojeniem") if wound_healing == "tak" else ""
+
+    with st.expander("17. Sen i psychika"):
+        sleep_problem = st.radio("Czy są problemy ze snem?", ["tak", "nie"])
+        sleep_problem_types = []
+        if sleep_problem == "tak":
+            sleep_problem_types = st.multiselect(
+                "Jakie problemy ze snem występują?",
+                [
+                    "trudności z zasypianiem",
+                    "wybudzanie w nocy",
+                    "wstawanie zmęczony lub zmęczona",
+                    "chrapanie",
+                    "zbyt krótki sen",
+                    "bardzo głęboki sen",
+                ]
+            )
+        psych_contact = st.selectbox("Czy kiedykolwiek była porada psychologa lub psychiatry?", ["nie", "psycholog", "psychiatra", "oba"])
+        psych_dx = st.text_area("Czy kiedykolwiek rozpoznano chorobę psychiczną? Jeśli tak, napisz jaką.")
+
+    with st.expander("18. Krążenie obwodowe"):
+        edema = st.radio("Czy pojawiają się obrzęki na podudziach lub kostkach?", ["tak", "nie"])
+        edema_details = st.text_area("Jeśli tak, napisz czy występują stale czy po staniu, siedzeniu lub w innych sytuacjach.") if edema == "tak" else ""
+        calf_pain = st.text_area("Czy występują bóle łydek podczas chodzenia? Jeśli tak, po jakim dystansie i po jakim czasie ustępują?")
+        cold_fingers = st.text_area("Czy palce rąk lub nóg łatwo stają się zimne lub zmieniają kolor?")
+        tingling = st.text_area("Czy występuje mrowienie lub drętwienie rąk lub nóg?")
+        varicose = st.text_area("Czy są obecne żylaki?")
+
+    with st.expander("19. Odbyt i okolice odbytu"):
+        anal_problems = st.multiselect(
+            "Czy występują problemy ze śluzówką odbytu?",
+            ["nie", "hemoroidy", "stany zapalne błony śluzowej odbytu", "pieczenie", "świąd", "grzybica", "inne"]
+        )
+        anal_other = st.text_input("Jeśli zaznaczono inne, opisz")
+
+    if sex == "kobieta":
+        with st.expander("20. Ginekologia"):
+            gyn_problems = st.text_area("Czy występują problemy ginekologiczne?")
+            menstruation = st.text_area("Czy występuje nieregularna miesiączka, menopauza lub leczenie hormonalne? Jeśli tak, napisz od kiedy.")
+            first_menses = st.text_input("Podaj miesiąc i rok pierwszej miesiączki")
+            last_menses = st.date_input(
+                "Data ostatniej miesiączki",
+                value=date.today(),
+                min_value=date(1950, 1, 1),
+                max_value=date.today(),
+            )
+    else:
+        gyn_problems = ""
+        menstruation = ""
+        first_menses = ""
+        last_menses = None
+
+    if sex == "mężczyzna":
+        with st.expander("20. Andrologia"):
+            potency = st.selectbox("Czy są problemy z potencją?", ["nie", "czasami", "często"])
+    else:
+        potency = ""
+
+    with st.expander("21. Wywiad rodzinny"):
+        mother_history = st.text_area("Na jakie choroby choruje lub chorowała mama?")
+        father_history = st.text_area("Na jakie choroby choruje lub chorował ojciec?")
+        maternal_grandmother = st.text_area("Na jakie choroby choruje lub chorowała babcia ze strony mamy?")
+        paternal_grandmother = st.text_area("Na jakie choroby choruje lub chorowała babcia ze strony ojca?")
+        maternal_grandfather = st.text_area("Na jakie choroby choruje lub chorował dziadek ze strony mamy?")
+        paternal_grandfather = st.text_area("Na jakie choroby choruje lub chorował dziadek ze strony ojca?")
+
+    with st.expander("22. Rozpoznania, operacje i ważne informacje"):
+        own_diagnoses = st.text_area("Proszę wymienić wszystkie dotychczasowe rozpoznania oraz operacje")
+        important_info = st.text_area("Czy są jakieś ważne informacje, które chcesz przekazać lekarzowi?")
+        current_reason = st.text_area("Co jest powodem obecnych dolegliwości lub problemów zdrowotnych?")
+        visit_reason = st.radio(
+            "Wykonuję ocenę zdrowia z powodu:",
+            [
+                "nic mi nie dolega, chcę poznać swój stan zdrowia",
+                "mam dolegliwości, szukam pomocy",
+                "nie wiem",
+            ]
+        )
+
+    with st.expander("23. Załączniki i informacja końcowa", expanded=True):
+        attachments = st.file_uploader(
+            "Możesz dodać wyniki badań",
+            type=["pdf", "jpg", "jpeg", "png"],
+            accept_multiple_files=True,
+        )
+
+        st.markdown(
+            """
+**Proszę wyślij wszystkie posiadane wyniki badań na adres:**  
+niedzialkowski@ocenazdrowia.pl  
+
+**lub załącz pliki logując się na stronie:**  
+https://aplikacja.medyc.pl/NiedzialkowskiPortal/#/login  
+
+Po założeniu konta możesz wgrać pliki bezpośrednio do swojej kartoteki zdrowotnej.  
+Najlepiej wysłać lub wgrać jeden plik PDF układając wyniki chronologicznie.  
+
+Proszę przynieść na wizytę posiadane wyniki badań w formie papierowej.  
+
+**Bardzo dziękuję.**
+"""
+        )
+
+    submitted = st.form_submit_button("Utwórz podsumowanie", use_container_width=True)
+
+if submitted:
+    summary: List[str] = []
+    summary.append("PODSUMOWANIE ANKIETY PACJENTA")
+    summary.append("")
+
+    add_section(summary, "Dane podstawowe", [
+        f"Imię i nazwisko: {full_name}" if nonempty(full_name) else "",
+        f"Adres e-mail: {email}" if nonempty(email) else "",
+        f"Data urodzenia: {birth_date.isoformat()}" if birth_date else "",
+        f"Narodowość: {nationality}" if nonempty(nationality) else "",
+        f"Płeć: {sex}" if nonempty(sex) else "",
+        f"Aktualny status: {current_status}" if nonempty(current_status) else "",
+        f"Zawód: {profession}" if nonempty(profession) else "",
+        f"Wzrost: {height_cm:.0f} cm",
+        f"Masa ciała: {weight_kg:.1f} kg",
+        f"BMI: {bmi:.1f} ({bmi_label(bmi)})" if bmi is not None else "",
+    ])
+
+    add_section(summary, "Ocena ogólna", [
+        f"Ocena stanu fizycznego: {physical_score}/10",
+        f"Ocena stanu psychicznego: {mental_score}/10",
+        f"Zmiana masy ciała: {weight_change}" + (f", {weight_change_amount}" if nonempty(weight_change_amount) else ""),
+    ])
+
+    add_section(summary, "Badania wykonane w ciągu ostatnich 2 lat", [f"• {x}" for x in performed_tests])
+    add_section(summary, "Objawy główne", [f"{i+1}. {x}" for i, x in enumerate(main_symptoms)])
+    add_section(summary, "Pozostałe dolegliwości", [additional_symptoms])
+
+    add_section(summary, "Charakter objawów", [
+        f"Objawy: {symptom_pattern}",
+        symptom_periodicity,
+        symptom_past,
+    ])
+
+    add_section(summary, "Co nasila objawy", [
+        list_text(worsen_factors),
+        f"Inne: {worsen_other}" if nonempty(worsen_other) else "",
+    ])
+
+    add_section(summary, "Co osłabia objawy", [
+        list_text(relieve_factors),
+        f"Inne: {relieve_other}" if nonempty(relieve_other) else "",
+    ])
+
+    add_section(summary, "Chronologia zdrowia", [health_timeline])
+    add_section(summary, "Aktualnie przyjmowane leki", [x.strip() for x in current_meds.splitlines() if x.strip()])
+
+    add_section(summary, "Tryb życia", [
+        f"Tryb życia: {lifestyle}",
+        f"Używki i nawyki: {list_text(stimulants)}" if stimulants else "",
+        f"Inne używki lub nawyki: {stimulants_other}" if nonempty(stimulants_other) else "",
+        f"Sen: {sleep_hours} godzin na dobę",
+    ])
+
+    add_section(summary, "Podróże, zwierzęta, urazy, COVID, stres", [
+        f"Wyjazd za granicę: {travel_abroad}" + (f", {travel_where}" if nonempty(travel_where) else ""),
+        f"Kontakt lub uraz od zwierzęcia: {animal_contact}" + (f", {animal_contact_details}" if nonempty(animal_contact_details) else ""),
+        major_injuries,
+        f"COVID-19: {covid}" + (f", {covid_details}" if nonempty(covid_details) else ""),
+        strong_stress,
+    ])
+
+    add_section(summary, "Informacje o urodzeniu i dzieciństwie", [
+        f"Informacje o urodzeniu: {list_text(birth_info)}" if birth_info else "",
+        f"Inne informacje o urodzeniu: {birth_info_other}" if nonempty(birth_info_other) else "",
+        f"Karmienie mlekiem matki: {breastfeeding}" if nonempty(breastfeeding) else "",
+        f"Choroby dzieciństwa: {list_text(childhood_diseases)}" if childhood_diseases else "",
+        f"Inne choroby dzieciństwa: {childhood_diseases_other}" if nonempty(childhood_diseases_other) else "",
+    ])
+
+    add_section(summary, "Objawy ogólne i neurologiczne", [
+        f"Gorączka: {fever_now}" + (f", {fever_details}" if nonempty(fever_details) else ""),
+        f"Bóle lub zawroty głowy: {headache_dizziness}" + (f", {headache_dizziness_details}" if nonempty(headache_dizziness_details) else ""),
+        headache_assoc,
+        hearing_vision,
+        attacks,
+        sinus_problems,
+        nose_problems,
+        allergies,
+        herpes,
+        mouth_corners,
+        fresh_food_reaction,
+        f"Padaczka: {epilepsy}",
+        smell_taste,
+        f"Częstość przeziębień: {colds}" if nonempty(colds) else "",
+    ])
+
+    add_section(summary, "Układ oddechowy", [
+        f"Ból gardła rano: {throat_morning}",
+        f"Pieczenie w przełyku: {esophagus_burning}",
+        f"Rozpoznana astma: {asthma_dx}",
+        f"Zapalenie płuc: {pneumonia}" + (f", {pneumonia_details}" if nonempty(pneumonia_details) else ""),
+        dyspnea,
+        night_breath,
+        chest_heaviness,
+        f"Trudności z oddychaniem: {breathing_type}",
+        f"Świszczący oddech: {list_text(wheezing)}" if wheezing else "",
+        cough,
+    ])
+
+    add_section(summary, "Układ sercowo-naczyniowy", [
+        chest_pain,
+        f"Problemy z ciśnieniem: {pressure_type}",
+        f"Aktualne ciśnienie: {current_bp}" if nonempty(current_bp) else "",
+        f"Aktualne tętno: {current_hr}" if nonempty(current_hr) else "",
+        f"Ból przy nacisku na klatkę piersiową: {pain_press}",
+        f"Ból przy zmianie pozycji: {pain_position}",
+        palpitations,
+    ])
+
+    add_section(summary, "Przewód pokarmowy", [
+        f"Problemy z przewodem pokarmowym: {gi_problem}",
+        f"Objawy: {list_text(gi_symptoms)}" if gi_symptoms else "",
+        worsening_foods,
+        gi_infections,
+    ])
+
+    add_section(summary, "Układ moczowy", [
+        urine_problems,
+        f"Liczba mikcji nocnych: {night_urination}",
+        f"Ilość wypijanych płynów dziennie: {fluids} l",
+    ])
+
+    add_section(summary, "Stawy i mięśnie", [
+        joints,
+        stiffness,
+    ])
+
+    add_section(summary, "Skóra", [
+        skin_changes,
+        skin_itch,
+        f"Trądzik: {acne}" + (f", {acne_details}" if nonempty(acne_details) else ""),
+        skin_sensation,
+        f"Problemy z gojeniem ran: {wound_healing}" + (f", {wound_healing_details}" if nonempty(wound_healing_details) else ""),
+    ])
+
+    add_section(summary, "Sen i psychika", [
+        f"Problemy ze snem: {sleep_problem}",
+        f"Rodzaj problemów ze snem: {list_text(sleep_problem_types)}" if sleep_problem_types else "",
+        f"Kontakt z psychologiem lub psychiatrą: {psych_contact}",
+        psych_dx,
+    ])
+
+    add_section(summary, "Krążenie obwodowe", [
+        f"Obrzęki: {edema}" + (f", {edema_details}" if nonempty(edema_details) else ""),
+        calf_pain,
+        cold_fingers,
+        tingling,
+        varicose,
+    ])
+
+    add_section(summary, "Odbyt i okolice odbytu", [
+        f"Problemy: {list_text(anal_problems)}" if anal_problems else "",
+        f"Inne: {anal_other}" if nonempty(anal_other) else "",
+    ])
+
+    if sex == "kobieta":
+        add_section(summary, "Ginekologia", [
+            gyn_problems,
+            menstruation,
+            f"Pierwsza miesiączka: {first_menses}" if nonempty(first_menses) else "",
+            f"Ostatnia miesiączka: {last_menses.isoformat()}" if last_menses else "",
+        ])
+
+    if sex == "mężczyzna":
+        add_section(summary, "Andrologia", [
+            f"Problemy z potencją: {potency}" if nonempty(potency) else "",
+        ])
+
+    add_section(summary, "Wywiad rodzinny", [
+        f"Mama: {mother_history}" if nonempty(mother_history) else "",
+        f"Ojciec: {father_history}" if nonempty(father_history) else "",
+        f"Babcia ze strony mamy: {maternal_grandmother}" if nonempty(maternal_grandmother) else "",
+        f"Babcia ze strony ojca: {paternal_grandmother}" if nonempty(paternal_grandmother) else "",
+        f"Dziadek ze strony mamy: {maternal_grandfather}" if nonempty(maternal_grandfather) else "",
+        f"Dziadek ze strony ojca: {paternal_grandfather}" if nonempty(paternal_grandfather) else "",
+    ])
+
+    add_section(summary, "Dotychczasowe rozpoznania, operacje i ważne informacje", [
+        own_diagnoses,
+        important_info,
+        current_reason,
+        f"Cel wizyty: {visit_reason}",
+    ])
+
+    if attachments:
+        attachment_names = ", ".join([f.name for f in attachments])
+        add_section(summary, "Załączniki", [f"Dołączone pliki: {attachment_names}"])
+
+    add_section(summary, "Informacja końcowa", [
+        "Proszę wyślij wszystkie posiadane wyniki badań na adres: niedzialkowski@ocenazdrowia.pl",
+        "lub załącz pliki logując się na stronie:",
+        "https://aplikacja.medyc.pl/NiedzialkowskiPortal/#/login",
+        "Po założeniu konta możesz wgrać pliki bezpośrednio do swojej kartoteki zdrowotnej.",
+        "Najlepiej wysłać lub wgrać jeden plik PDF układając wyniki chronologicznie.",
+        "Proszę przynieść na wizytę posiadane wyniki badań w formie papierowej.",
+        "Bardzo dziękuję.",
+    ])
+
+    final_summary = "\n".join(summary).strip()
+
+    st.subheader("Podsumowanie dla lekarza")
+    st.text_area("Podsumowanie", value=final_summary, height=900, label_visibility="collapsed")
+
+    pdf_bytes = make_pdf("Ocena stanu zdrowia - podsumowanie", final_summary)
+
     st.download_button(
         "Pobierz PDF",
         data=pdf_bytes,
-        file_name="podsumowanie_czerwienica_prawdziwa.pdf",
+        file_name="podsumowanie_ankiety_zdrowia.pdf",
         mime="application/pdf",
-        use_container_width=True,
     )
 
     st.download_button(
         "Pobierz TXT",
-        data=st.session_state["last_summary"].encode("utf-8"),
-        file_name="podsumowanie_czerwienica_prawdziwa.txt",
+        data=final_summary.encode("utf-8"),
+        file_name="podsumowanie_ankiety_zdrowia.txt",
         mime="text/plain",
-        use_container_width=True,
     )
-
-if st.session_state["patient_id"]:
-    st.markdown("---")
-    st.markdown('<div class="ak-section">Historia zapisanych wizyt tego pacjenta</div>', unsafe_allow_html=True)
-
-    if history_df.empty:
-        st.info("Brak zapisanych wizyt dla tego ID.")
-    else:
-        st.dataframe(history_df.tail(10), use_container_width=True)
-
-        st.markdown("### Porównanie z poprzednią zapisaną wizytą")
-        compare_prev = compare_with_previous_visit(history_df)
-        if compare_prev:
-            for line in compare_prev:
-                st.write(line)
-        else:
-            st.write("Za mało zapisanych wizyt do porównania.")
-
-        if "visit_date" in history_df.columns:
-            plot_df = history_df.copy()
-            plot_df["visit_date"] = pd.to_datetime(plot_df["visit_date"])
-            plot_df = plot_df.set_index("visit_date")
-            cols_to_plot = [
-                c for c in [
-                    "hct", "hb", "wbc", "plt", "ldh", "uric_acid",
-                    "ferritin", "glucose", "alt", "ast", "ggtp", "bilirubin"
-                ] if c in plot_df.columns
-            ]
-            if cols_to_plot:
-                st.markdown("### Trendy zapisanych wizyt")
-                st.line_chart(plot_df[cols_to_plot])
