@@ -7,6 +7,7 @@ from email.message import EmailMessage
 from typing import Any, Dict, List, Optional
 
 import streamlit as st
+import streamlit.components.v1 as components
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
@@ -17,18 +18,18 @@ from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
 
-# =========================
+# =========================================================
 # KONFIGURACJA STRONY
-# =========================
+# =========================================================
 st.set_page_config(
     page_title="Ocena stanu zdrowia - wywiad lekarski",
     layout="centered",
     initial_sidebar_state="collapsed",
 )
 
-# =========================
+# =========================================================
 # CSS
-# =========================
+# =========================================================
 st.markdown(
     """
     <style>
@@ -108,8 +109,19 @@ st.markdown(
 
     .field-anchor {
         position: relative;
-        top: -110px;
+        top: -95px;
         visibility: hidden;
+    }
+
+    .field-error-box {
+        border: 2px solid #d93025;
+        border-radius: 10px;
+        padding: 10px 12px;
+        color: #d93025;
+        background: rgba(217, 48, 37, 0.06);
+        font-weight: 600;
+        margin-top: -0.15rem;
+        margin-bottom: 0.9rem;
     }
 
     @media (max-width: 768px) {
@@ -118,12 +130,15 @@ st.markdown(
             padding-left: 0.8rem;
             padding-right: 0.8rem;
         }
+
         .title-main {
             font-size: 1.55rem;
         }
+
         .title-sub {
             font-size: 1rem;
         }
+
         .doctor-line, .site-line, .contact-line {
             font-size: 0.9rem;
         }
@@ -133,9 +148,10 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# =========================
+
+# =========================================================
 # SECRETS
-# =========================
+# =========================================================
 def get_secret(name: str) -> str:
     if name not in st.secrets:
         st.error(f"Brakuje sekretu: {name}")
@@ -149,9 +165,9 @@ EMAIL_ODBIORCA1 = get_secret("EMAIL_ODBIORCA1")
 EMAIL_ODBIORCA2 = get_secret("EMAIL_ODBIORCA2")
 
 
-# =========================
+# =========================================================
 # FUNKCJE POMOCNICZE
-# =========================
+# =========================================================
 def nonempty(value: Any) -> bool:
     if value is None:
         return False
@@ -209,22 +225,18 @@ def bmi_label(bmi):
     return "otyłość III stopnia"
 
 
-def select_with_placeholder(label: str, options: List[str], key: str) -> str:
-    all_options = [""] + options
-    return st.selectbox(
-        label,
-        all_options,
-        format_func=lambda x: "wybierz" if x == "" else x,
-        key=key,
-    )
-
-
 def validate_phone(raw: str) -> Optional[str]:
     text = (raw or "").strip()
     if not text:
         return None
 
-    cleaned = text.replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
+    cleaned = (
+        text.replace(" ", "")
+        .replace("-", "")
+        .replace("(", "")
+        .replace(")", "")
+    )
+
     if cleaned.startswith("+"):
         digits = cleaned[1:]
     else:
@@ -239,17 +251,34 @@ def validate_phone(raw: str) -> Optional[str]:
     return text
 
 
-def scroll_to_anchor(anchor_id: str):
+def select_with_placeholder(label: str, options: List[str], key: str) -> str:
+    all_options = [""] + options
+    return st.selectbox(
+        label,
+        all_options,
+        format_func=lambda x: "wybierz" if x == "" else x,
+        key=key,
+    )
+
+
+def error_box(message: str):
     st.markdown(
+        f"<div class='field-error-box'>{message}</div>",
+        unsafe_allow_html=True,
+    )
+
+
+def scroll_to_anchor(anchor_id: str):
+    components.html(
         f"""
         <script>
-        const el = window.parent.document.getElementById("{anchor_id}");
-        if (el) {{
-            el.scrollIntoView({{behavior: "smooth", block: "start"}});
+        const target = window.parent.document.getElementById("{anchor_id}");
+        if (target) {{
+            target.scrollIntoView({{behavior: "smooth", block: "start"}});
         }}
         </script>
         """,
-        unsafe_allow_html=True,
+        height=0,
     )
 
 
@@ -458,9 +487,9 @@ def calc_progress(values: List[Any]) -> int:
     return int(round((filled / len(values)) * 100))
 
 
-# =========================
-# STAN BŁĘDÓW
-# =========================
+# =========================================================
+# STAN SESJI
+# =========================================================
 if "field_errors" not in st.session_state:
     st.session_state.field_errors = {}
 if "scroll_target" not in st.session_state:
@@ -468,9 +497,9 @@ if "scroll_target" not in st.session_state:
 
 field_errors: Dict[str, str] = st.session_state.field_errors
 
-# =========================
+# =========================================================
 # GÓRA APLIKACJI
-# =========================
+# =========================================================
 progress_placeholder = st.empty()
 
 if os.path.exists("logo.PNG"):
@@ -501,9 +530,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# =========================
+# =========================================================
 # FORMULARZ
-# =========================
+# =========================================================
 with st.form("medical_form"):
     with st.expander("1. Dane podstawowe", expanded=True):
         visit_type = st.radio("Rodzaj wizyty", ["Pierwsza", "Kontrolna"], key="visit_type")
@@ -511,12 +540,12 @@ with st.form("medical_form"):
         st.markdown('<div id="anchor_first_name" class="field-anchor"></div>', unsafe_allow_html=True)
         first_name = st.text_input("Imię", key="first_name")
         if "first_name" in field_errors:
-            st.error(field_errors["first_name"])
+            error_box(field_errors["first_name"])
 
         st.markdown('<div id="anchor_last_name" class="field-anchor"></div>', unsafe_allow_html=True)
         last_name = st.text_input("Nazwisko", key="last_name")
         if "last_name" in field_errors:
-            st.error(field_errors["last_name"])
+            error_box(field_errors["last_name"])
 
         st.markdown('<div id="anchor_phone" class="field-anchor"></div>', unsafe_allow_html=True)
         phone = st.text_input(
@@ -525,7 +554,7 @@ with st.form("medical_form"):
             help="Może być z numerem kierunkowym albo bez, np. 690584584 lub +48690584584",
         )
         if "phone" in field_errors:
-            st.error(field_errors["phone"])
+            error_box(field_errors["phone"])
 
         email = st.text_input("Adres e-mail", key="email")
 
@@ -538,21 +567,12 @@ with st.form("medical_form"):
         )
 
         nationality = st.text_input("Narodowość", key="nationality")
-
-        st.markdown('<div id="anchor_sex" class="field-anchor"></div>', unsafe_allow_html=True)
         sex = select_with_placeholder("Płeć", ["kobieta", "mężczyzna", "inne"], key="sex")
-        if "sex" in field_errors:
-            st.error(field_errors["sex"])
-
-        st.markdown('<div id="anchor_status" class="field-anchor"></div>', unsafe_allow_html=True)
         current_status = select_with_placeholder(
             "Aktualny status",
             ["pracujący", "dziecko", "uczeń", "student", "emeryt", "inne"],
             key="current_status",
         )
-        if "current_status" in field_errors:
-            st.error(field_errors["current_status"])
-
         profession = st.text_input("Obecnie wykonywany zawód", key="profession")
         height_cm = st.number_input("Wzrost (cm)", min_value=30.0, max_value=250.0, value=170.0, step=1.0, key="height_cm")
         weight_kg = st.number_input("Masa ciała (kg)", min_value=1.0, max_value=300.0, value=70.0, step=0.1, key="weight_kg")
@@ -692,7 +712,11 @@ with st.form("medical_form"):
         birth_info_other = ""
         if "inne" in birth_info:
             birth_info_other = st.text_input("Jeśli zaznaczono inne, napisz jakie", key="birth_info_other")
-        breastfeeding = select_with_placeholder("Czy było karmienie mlekiem matki?", ["tak, do 3 miesięcy", "tak, do 6 miesięcy", "tak, powyżej 6 miesięcy", "nie", "nie wiem"], key="breastfeeding")
+        breastfeeding = select_with_placeholder(
+            "Czy było karmienie mlekiem matki?",
+            ["tak, do 3 miesięcy", "tak, do 6 miesięcy", "tak, powyżej 6 miesięcy", "nie", "nie wiem"],
+            key="breastfeeding",
+        )
         childhood_diseases = st.multiselect(
             "Poważne choroby w dzieciństwie",
             ["astma", "atopowe zapalenie skóry", "skaza białkowa", "częste przeziębienia", "pobyty w szpitalu", "częste zapalenia płuc", "problemy jelitowe", "choroby psychiczne", "problemy ze śledzioną", "problemy z trzustką", "inne"],
@@ -738,7 +762,11 @@ with st.form("medical_form"):
         dyspnea = st.text_area("Czy zdarza się duszność lub zadyszka? Jeśli tak, opisz w jakich sytuacjach.", key="dyspnea")
         night_breath = st.text_area("Czy dochodzi do wybudzania w nocy z powodu braku tchu?", key="night_breath")
         chest_heaviness = st.text_area("Czy występuje ciężkość w klatce piersiowej? Jeśli tak, opisz nasilenie.", key="chest_heaviness")
-        breathing_type = select_with_placeholder("Czy są trudności z oddychaniem?", ["nie mam takich trudności", "z nabieraniem powietrza", "z wypuszczaniem powietrza", "z oboma"], key="breathing_type")
+        breathing_type = select_with_placeholder(
+            "Czy są trudności z oddychaniem?",
+            ["nie mam takich trudności", "z nabieraniem powietrza", "z wypuszczaniem powietrza", "z oboma"],
+            key="breathing_type",
+        )
         wheezing = st.multiselect(
             "Czy występuje świszczący oddech?",
             ["nie", "podczas wysiłku", "podczas infekcji", "w nocy", "rano", "podczas alergii", "w zimnej pogodzie"],
@@ -749,7 +777,11 @@ with st.form("medical_form"):
 
     with st.expander("16. Układ sercowo-naczyniowy"):
         chest_pain = st.text_area("Czy występują bóle w klatce piersiowej? Czy są miejscowe czy rozległe? Czy promieniują?", key="chest_pain")
-        pressure_type = select_with_placeholder("Czy są problemy z ciśnieniem?", ["nie mam kłopotów z ciśnieniem", "mam skłonność do niskiego ciśnienia", "mam skłonność do wysokiego ciśnienia"], key="pressure_type")
+        pressure_type = select_with_placeholder(
+            "Czy są problemy z ciśnieniem?",
+            ["nie mam kłopotów z ciśnieniem", "mam skłonność do niskiego ciśnienia", "mam skłonność do wysokiego ciśnienia"],
+            key="pressure_type",
+        )
         current_bp = st.text_input("Jakie jest aktualne ciśnienie tętnicze?", key="current_bp")
         current_hr = st.text_input("Jakie jest aktualne tętno?", key="current_hr")
         pain_press = st.radio("Czy odczuwasz ból przy naciskaniu klatki piersiowej?", ["tak", "nie"], key="pain_press")
@@ -881,8 +913,9 @@ Proszę również przynieść na wizytę posiadane wyniki badań w formie papier
         consent_visit = st.checkbox("Wyrażam zgodę na wykorzystanie tych informacji wyłącznie przez lekarza do przygotowania wizyty.", key="consent_visit")
         consent_privacy = st.checkbox("Przyjmuję do wiadomości, że formularz nie zapisuje danych w bazie aplikacji, a dokument wysyłany do lekarza zawiera ograniczone dane identyfikacyjne.", key="consent_privacy")
         contact_consent = st.checkbox("Wyrażam zgodę na kontakt telefoniczny lub mailowy w sprawach organizacyjnych związanych z wizytą.", key="contact_consent")
+
         if "consent" in field_errors:
-            st.error(field_errors["consent"])
+            error_box(field_errors["consent"])
 
     progress_values = [
         visit_type, first_name, last_name, phone, email, birth_date, nationality, sex, current_status,
@@ -922,24 +955,22 @@ Proszę również przynieść na wizytę posiadane wyniki badań w formie papier
 
     progress_percent = calc_progress(progress_values)
 
-    submit_col = st.container()
-    with submit_col:
-        st.markdown('<div class="send-button">', unsafe_allow_html=True)
-        send_clicked = st.form_submit_button("Wyślij")
-        st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown('<div class="send-button">', unsafe_allow_html=True)
+    send_clicked = st.form_submit_button("Wyślij")
+    st.markdown("</div>", unsafe_allow_html=True)
 
-# =========================
+# =========================================================
 # POSTĘP
-# =========================
+# =========================================================
 with progress_placeholder.container():
     st.markdown("<div class='progress-box'>", unsafe_allow_html=True)
     st.write(f"**Postęp wypełniania formularza: {progress_percent}%**")
     st.progress(progress_percent / 100)
     st.markdown("</div>", unsafe_allow_html=True)
 
-# =========================
+# =========================================================
 # WALIDACJA I WYSYŁKA
-# =========================
+# =========================================================
 if send_clicked:
     st.session_state.field_errors = {}
     st.session_state.scroll_target = None
@@ -958,10 +989,6 @@ if send_clicked:
         st.session_state.field_errors["last_name"] = "Wpisz nazwisko."
     if not validated_phone:
         st.session_state.field_errors["phone"] = "Wpisz poprawny numer telefonu. Może być z +48 albo bez."
-    if sex == "":
-        st.session_state.field_errors["sex"] = "Wybierz płeć."
-    if current_status == "":
-        st.session_state.field_errors["current_status"] = "Wybierz aktualny status."
     if not consent_true or not consent_visit or not consent_privacy:
         st.session_state.field_errors["consent"] = "Zaznacz wszystkie wymagane zgody."
 
@@ -969,8 +996,6 @@ if send_clicked:
         ("first_name", "anchor_first_name"),
         ("last_name", "anchor_last_name"),
         ("phone", "anchor_phone"),
-        ("sex", "anchor_sex"),
-        ("current_status", "anchor_status"),
         ("consent", "anchor_consent"),
     ]
 
@@ -980,187 +1005,187 @@ if send_clicked:
                 st.session_state.scroll_target = anchor_id
                 break
         st.rerun()
-    else:
-        patient_initials = initials(full_name)
-        submitted_at = datetime.now().strftime("%d.%m.%Y, %H:%M")
 
-        main_symptom_rows = []
-        if nonempty(symptom_1):
-            main_symptom_rows.append(f"1. {symptom_1}" + (f" - od {symptom_1_since}" if nonempty(symptom_1_since) else ""))
-        if nonempty(symptom_2):
-            main_symptom_rows.append(f"2. {symptom_2}" + (f" - od {symptom_2_since}" if nonempty(symptom_2_since) else ""))
-        if nonempty(symptom_3):
-            main_symptom_rows.append(f"3. {symptom_3}" + (f" - od {symptom_3_since}" if nonempty(symptom_3_since) else ""))
-        if nonempty(symptom_4):
-            main_symptom_rows.append(f"4. {symptom_4}" + (f" - od {symptom_4_since}" if nonempty(symptom_4_since) else ""))
-        if nonempty(symptom_5):
-            main_symptom_rows.append(f"5. {symptom_5}" + (f" - od {symptom_5_since}" if nonempty(symptom_5_since) else ""))
+    patient_initials = initials(full_name)
+    submitted_at = datetime.now().strftime("%d.%m.%Y, %H:%M")
 
-        pdf_data = {
-            "initials": patient_initials,
-            "phone": validated_phone,
-            "birth_date": birth_date.strftime("%d.%m.%Y"),
-            "visit_type": visit_type,
-            "submitted_at": submitted_at,
-            "sec_basic": [
-                f"Płeć: {sex}",
-                f"Narodowość: {nationality}" if nonempty(nationality) else "",
-                f"Aktualny status: {current_status}",
-                f"Zawód: {profession}" if nonempty(profession) else "",
-                f"Wzrost: {height_cm:.0f} cm",
-                f"Masa ciała: {weight_kg:.1f} kg",
-                f"BMI: {bmi:.1f} ({bmi_label(bmi)})" if bmi is not None else "",
-            ],
-            "sec_overall": [
-                f"Ocena stanu fizycznego: {physical_score}/10",
-                f"Ocena stanu psychicznego: {mental_score}/10",
-                f"Zmiana masy ciała: {weight_change}" + (f", {weight_change_amount}" if nonempty(weight_change_amount) else ""),
-            ],
-            "sec_tests": [f"• {x}" for x in performed_tests],
-            "sec_main_symptoms": main_symptom_rows,
-            "sec_other_symptoms": [additional_symptoms],
-            "sec_symptom_character": [
-                f"Objawy: {symptom_pattern}",
-                f"Okresowość: {symptom_periodicity}" if nonempty(symptom_periodicity) else "",
-                f"Czy występowały wcześniej: {symptom_past}" if nonempty(symptom_past) else "",
-                f"Co powoduje pogorszenie objawów: {list_text(worsening_factors)}" if worsening_factors else "",
-                f"Inne przyczyny pogorszenia objawów: {worsening_other}" if nonempty(worsening_other) else "",
-                f"Co powoduje poprawę lub zmniejszenie objawów: {list_text(improvement_factors)}" if improvement_factors else "",
-                f"Inne przyczyny poprawy objawów: {improvement_other}" if nonempty(improvement_other) else "",
-            ],
-            "sec_timeline_meds": [
-                f"Chronologia zdrowia: {health_timeline}" if nonempty(health_timeline) else "",
-                "Aktualnie przyjmowane leki:" if nonempty(current_meds) else "",
-                *lines_from_text(current_meds),
-            ],
-            "sec_lifestyle": [
-                f"Tryb życia: {lifestyle}" if nonempty(lifestyle) else "",
-                f"Używki i nawyki: {list_text(stimulants)}" if stimulants else "",
-                f"Inne używki lub nawyki: {stimulants_other}" if nonempty(stimulants_other) else "",
-                f"Sen: {sleep_hours} godzin na dobę" if nonempty(sleep_hours) else "",
-            ],
-            "sec_travel": [
-                f"Wyjazd za granicę w ostatnich 3 miesiącach: {travel_abroad}" + (f", {travel_where}" if nonempty(travel_where) else "")
-            ],
-            "sec_animals": [
-                f"Pogryzienie, zadrapanie lub bliski kontakt ze zwierzęciem: {animal_contact}" + (f", {animal_contact_details}" if nonempty(animal_contact_details) else "")
-            ],
-            "sec_injuries": [
-                f"Duże urazy: {major_injuries}" if nonempty(major_injuries) else ""
-            ],
-            "sec_covid": [
-                f"Zachorowanie na COVID-19: {covid}" + (f", {covid_details}" if nonempty(covid_details) else "")
-            ],
-            "sec_stress": [
-                f"Silne reakcje stresowe: {strong_stress}" if nonempty(strong_stress) else ""
-            ],
-            "sec_birth_childhood": [
-                f"Informacje o urodzeniu: {list_text(birth_info)}" if birth_info else "",
-                f"Inne informacje o urodzeniu: {birth_info_other}" if nonempty(birth_info_other) else "",
-                f"Karmienie mlekiem matki: {breastfeeding}" if nonempty(breastfeeding) else "",
-                f"Choroby dzieciństwa: {list_text(childhood_diseases)}" if childhood_diseases else "",
-                f"Inne choroby dzieciństwa: {childhood_diseases_other}" if nonempty(childhood_diseases_other) else "",
-            ],
-            "sec_general_neuro": [
-                f"Gorączka: {fever_now}" + (f", {fever_details}" if nonempty(fever_details) else ""),
-                f"Bóle lub zawroty głowy: {headache_dizziness}" + (f", {headache_dizziness_details}" if nonempty(headache_dizziness_details) else ""),
-                f"Objawy towarzyszące bólom głowy: {headache_assoc}" if nonempty(headache_assoc) else "",
-                f"Słuch lub wzrok: {hearing_vision}" if nonempty(hearing_vision) else "",
-                f"Ataki lub nagłe epizody: {attacks}" if nonempty(attacks) else "",
-                f"Problemy z zatokami: {sinus_problems}" if nonempty(sinus_problems) else "",
-                f"Problemy z nosem: {nose_problems}" if nonempty(nose_problems) else "",
-                f"Alergie: {allergies}" if nonempty(allergies) else "",
-                f"Opryszczka: {herpes}" if nonempty(herpes) else "",
-                f"Zajady: {mouth_corners}" if nonempty(mouth_corners) else "",
-                f"Reakcja po świeżych warzywach i owocach: {fresh_food_reaction}" if nonempty(fresh_food_reaction) else "",
-                f"Padaczka: {epilepsy}",
-                f"Zaburzenia węchu lub smaku: {smell_taste}" if nonempty(smell_taste) else "",
-                f"Częstość przeziębień: {colds}" if nonempty(colds) else "",
-            ],
-            "sec_respiratory": [
-                f"Ból gardła rano: {throat_morning}",
-                f"Pieczenie w przełyku: {esophagus_burning}",
-                f"Rozpoznana astma: {asthma_dx}",
-                f"Zapalenie płuc: {pneumonia}" + (f", {pneumonia_details}" if nonempty(pneumonia_details) else ""),
-                f"Duszność lub zadyszka: {dyspnea}" if nonempty(dyspnea) else "",
-                f"Wybudzanie w nocy z powodu braku tchu: {night_breath}" if nonempty(night_breath) else "",
-                f"Ciężkość w klatce piersiowej: {chest_heaviness}" if nonempty(chest_heaviness) else "",
-                f"Trudności z oddychaniem: {breathing_type}" if nonempty(breathing_type) else "",
-                f"Świszczący oddech: {list_text(wheezing)}" if wheezing else "",
-                f"Kaszel: {cough}" if nonempty(cough) else "",
-            ],
-            "sec_cardio": [
-                f"Bóle w klatce piersiowej: {chest_pain}" if nonempty(chest_pain) else "",
-                f"Problemy z ciśnieniem: {pressure_type}" if nonempty(pressure_type) else "",
-                f"Aktualne ciśnienie: {current_bp}" if nonempty(current_bp) else "",
-                f"Aktualne tętno: {current_hr}" if nonempty(current_hr) else "",
-                f"Ból przy nacisku na klatkę piersiową: {pain_press}",
-                f"Ból przy zmianie pozycji: {pain_position}",
-                f"Nierówne bicie serca: {palpitations}" if nonempty(palpitations) else "",
-            ],
-            "sec_gi": [
-                f"Problemy z przewodem pokarmowym: {gi_problem}",
-                f"Objawy: {list_text(gi_symptoms)}" if gi_symptoms else "",
-                f"Potrawy pogarszające stan: {worsening_foods}" if nonempty(worsening_foods) else "",
-                f"Przebyte infekcje przewodu pokarmowego: {gi_infections}" if nonempty(gi_infections) else "",
-            ],
-            "sec_urinary": [
-                f"Problemy z oddawaniem moczu: {urine_problems}" if nonempty(urine_problems) else "",
-                f"Liczba mikcji nocnych: {night_urination}" if nonempty(night_urination) else "",
-                f"Ilość wypijanych płynów dziennie: {fluids} l" if nonempty(fluids) else "",
-            ],
-            "sec_msk": [
-                f"Bóle stawów: {joints}" if nonempty(joints) else "",
-                f"Sztywność po wstaniu z łóżka: {stiffness}" if nonempty(stiffness) else "",
-            ],
-            "sec_skin": [
-                f"Zmiany skórne: {skin_changes}" if nonempty(skin_changes) else "",
-                f"Świąd skóry: {skin_itch}" if nonempty(skin_itch) else "",
-                f"Trądzik: {acne}" + (f", {acne_details}" if nonempty(acne_details) else ""),
-                f"Zaburzenia czucia skóry: {skin_sensation}" if nonempty(skin_sensation) else "",
-                f"Problemy z gojeniem ran: {wound_healing}" + (f", {wound_healing_details}" if nonempty(wound_healing_details) else ""),
-            ],
-            "sec_sleep_psych": [
-                f"Problemy ze snem: {sleep_problem}",
-                f"Rodzaj problemów ze snem: {list_text(sleep_problem_types)}" if sleep_problem_types else "",
-                f"Kontakt z psychologiem lub psychiatrą: {psych_contact}" if nonempty(psych_contact) else "",
-                f"Rozpoznana choroba psychiczna: {psych_dx}" if nonempty(psych_dx) else "",
-            ],
-            "sec_peripheral": [
-                f"Obrzęki: {edema}" + (f", {edema_details}" if nonempty(edema_details) else ""),
-                f"Bóle łydek podczas chodzenia: {calf_pain}" if nonempty(calf_pain) else "",
-                f"Zimne palce lub zmiana koloru: {cold_fingers}" if nonempty(cold_fingers) else "",
-                f"Mrowienie lub drętwienie: {tingling}" if nonempty(tingling) else "",
-                f"Żylaki: {varicose}" if nonempty(varicose) else "",
-            ],
-            "sec_anal": [
-                f"Problemy w okolicy odbytu: {list_text(anal_problems)}" if anal_problems else "",
-                f"Inne problemy w okolicy odbytu: {anal_other}" if nonempty(anal_other) else "",
-            ],
-            "sec_sex_specific": [
-                f"Problemy ginekologiczne: {gyn_problems}" if nonempty(gyn_problems) else "",
-                f"Miesiączka, menopauza, leczenie hormonalne: {menstruation}" if nonempty(menstruation) else "",
-                f"Pierwsza miesiączka: {first_menses}" if nonempty(first_menses) else "",
-                f"Ostatnia miesiączka: {safe(last_menses)}" if last_menses else "",
-                f"Problemy z potencją: {potency}" if nonempty(potency) else "",
-            ],
-            "sec_family": [
-                f"Mama: {mother_history}" if nonempty(mother_history) else "",
-                f"Ojciec: {father_history}" if nonempty(father_history) else "",
-                f"Babcia ze strony mamy: {maternal_grandmother}" if nonempty(maternal_grandmother) else "",
-                f"Babcia ze strony ojca: {paternal_grandmother}" if nonempty(paternal_grandmother) else "",
-                f"Dziadek ze strony mamy: {maternal_grandfather}" if nonempty(maternal_grandfather) else "",
-                f"Dziadek ze strony ojca: {paternal_grandfather}" if nonempty(paternal_grandfather) else "",
-            ],
-            "sec_history_final": [
-                f"Dotychczasowe rozpoznania i operacje: {own_diagnoses}" if nonempty(own_diagnoses) else "",
-                f"Ważne informacje dla lekarza: {important_info}" if nonempty(important_info) else "",
-                f"Powód obecnych dolegliwości: {current_reason}" if nonempty(current_reason) else "",
-            ],
-            "sec_question": [key_question],
-        }
+    main_symptom_rows = []
+    if nonempty(symptom_1):
+        main_symptom_rows.append(f"1. {symptom_1}" + (f" - od {symptom_1_since}" if nonempty(symptom_1_since) else ""))
+    if nonempty(symptom_2):
+        main_symptom_rows.append(f"2. {symptom_2}" + (f" - od {symptom_2_since}" if nonempty(symptom_2_since) else ""))
+    if nonempty(symptom_3):
+        main_symptom_rows.append(f"3. {symptom_3}" + (f" - od {symptom_3_since}" if nonempty(symptom_3_since) else ""))
+    if nonempty(symptom_4):
+        main_symptom_rows.append(f"4. {symptom_4}" + (f" - od {symptom_4_since}" if nonempty(symptom_4_since) else ""))
+    if nonempty(symptom_5):
+        main_symptom_rows.append(f"5. {symptom_5}" + (f" - od {symptom_5_since}" if nonempty(symptom_5_since) else ""))
 
-        email_body = f"""Nowy formularz pacjenta został wysłany.
+    pdf_data = {
+        "initials": patient_initials,
+        "phone": validated_phone,
+        "birth_date": birth_date.strftime("%d.%m.%Y"),
+        "visit_type": visit_type,
+        "submitted_at": submitted_at,
+        "sec_basic": [
+            f"Płeć: {sex}" if nonempty(sex) else "",
+            f"Narodowość: {nationality}" if nonempty(nationality) else "",
+            f"Aktualny status: {current_status}" if nonempty(current_status) else "",
+            f"Zawód: {profession}" if nonempty(profession) else "",
+            f"Wzrost: {height_cm:.0f} cm",
+            f"Masa ciała: {weight_kg:.1f} kg",
+            f"BMI: {bmi:.1f} ({bmi_label(bmi)})" if bmi is not None else "",
+        ],
+        "sec_overall": [
+            f"Ocena stanu fizycznego: {physical_score}/10",
+            f"Ocena stanu psychicznego: {mental_score}/10",
+            f"Zmiana masy ciała: {weight_change}" + (f", {weight_change_amount}" if nonempty(weight_change_amount) else ""),
+        ],
+        "sec_tests": [f"• {x}" for x in performed_tests],
+        "sec_main_symptoms": main_symptom_rows,
+        "sec_other_symptoms": [additional_symptoms],
+        "sec_symptom_character": [
+            f"Objawy: {symptom_pattern}",
+            f"Okresowość: {symptom_periodicity}" if nonempty(symptom_periodicity) else "",
+            f"Czy występowały wcześniej: {symptom_past}" if nonempty(symptom_past) else "",
+            f"Co powoduje pogorszenie objawów: {list_text(worsening_factors)}" if worsening_factors else "",
+            f"Inne przyczyny pogorszenia objawów: {worsening_other}" if nonempty(worsening_other) else "",
+            f"Co powoduje poprawę lub zmniejszenie objawów: {list_text(improvement_factors)}" if improvement_factors else "",
+            f"Inne przyczyny poprawy objawów: {improvement_other}" if nonempty(improvement_other) else "",
+        ],
+        "sec_timeline_meds": [
+            f"Chronologia zdrowia: {health_timeline}" if nonempty(health_timeline) else "",
+            "Aktualnie przyjmowane leki:" if nonempty(current_meds) else "",
+            *lines_from_text(current_meds),
+        ],
+        "sec_lifestyle": [
+            f"Tryb życia: {lifestyle}" if nonempty(lifestyle) else "",
+            f"Używki i nawyki: {list_text(stimulants)}" if stimulants else "",
+            f"Inne używki lub nawyki: {stimulants_other}" if nonempty(stimulants_other) else "",
+            f"Sen: {sleep_hours} godzin na dobę" if nonempty(sleep_hours) else "",
+        ],
+        "sec_travel": [
+            f"Wyjazd za granicę w ostatnich 3 miesiącach: {travel_abroad}" + (f", {travel_where}" if nonempty(travel_where) else "")
+        ],
+        "sec_animals": [
+            f"Pogryzienie, zadrapanie lub bliski kontakt ze zwierzęciem: {animal_contact}" + (f", {animal_contact_details}" if nonempty(animal_contact_details) else "")
+        ],
+        "sec_injuries": [
+            f"Duże urazy: {major_injuries}" if nonempty(major_injuries) else ""
+        ],
+        "sec_covid": [
+            f"Zachorowanie na COVID-19: {covid}" + (f", {covid_details}" if nonempty(covid_details) else "")
+        ],
+        "sec_stress": [
+            f"Silne reakcje stresowe: {strong_stress}" if nonempty(strong_stress) else ""
+        ],
+        "sec_birth_childhood": [
+            f"Informacje o urodzeniu: {list_text(birth_info)}" if birth_info else "",
+            f"Inne informacje o urodzeniu: {birth_info_other}" if nonempty(birth_info_other) else "",
+            f"Karmienie mlekiem matki: {breastfeeding}" if nonempty(breastfeeding) else "",
+            f"Choroby dzieciństwa: {list_text(childhood_diseases)}" if childhood_diseases else "",
+            f"Inne choroby dzieciństwa: {childhood_diseases_other}" if nonempty(childhood_diseases_other) else "",
+        ],
+        "sec_general_neuro": [
+            f"Gorączka: {fever_now}" + (f", {fever_details}" if nonempty(fever_details) else ""),
+            f"Bóle lub zawroty głowy: {headache_dizziness}" + (f", {headache_dizziness_details}" if nonempty(headache_dizziness_details) else ""),
+            f"Objawy towarzyszące bólom głowy: {headache_assoc}" if nonempty(headache_assoc) else "",
+            f"Słuch lub wzrok: {hearing_vision}" if nonempty(hearing_vision) else "",
+            f"Ataki lub nagłe epizody: {attacks}" if nonempty(attacks) else "",
+            f"Problemy z zatokami: {sinus_problems}" if nonempty(sinus_problems) else "",
+            f"Problemy z nosem: {nose_problems}" if nonempty(nose_problems) else "",
+            f"Alergie: {allergies}" if nonempty(allergies) else "",
+            f"Opryszczka: {herpes}" if nonempty(herpes) else "",
+            f"Zajady: {mouth_corners}" if nonempty(mouth_corners) else "",
+            f"Reakcja po świeżych warzywach i owocach: {fresh_food_reaction}" if nonempty(fresh_food_reaction) else "",
+            f"Padaczka: {epilepsy}",
+            f"Zaburzenia węchu lub smaku: {smell_taste}" if nonempty(smell_taste) else "",
+            f"Częstość przeziębień: {colds}" if nonempty(colds) else "",
+        ],
+        "sec_respiratory": [
+            f"Ból gardła rano: {throat_morning}",
+            f"Pieczenie w przełyku: {esophagus_burning}",
+            f"Rozpoznana astma: {asthma_dx}",
+            f"Zapalenie płuc: {pneumonia}" + (f", {pneumonia_details}" if nonempty(pneumonia_details) else ""),
+            f"Duszność lub zadyszka: {dyspnea}" if nonempty(dyspnea) else "",
+            f"Wybudzanie w nocy z powodu braku tchu: {night_breath}" if nonempty(night_breath) else "",
+            f"Ciężkość w klatce piersiowej: {chest_heaviness}" if nonempty(chest_heaviness) else "",
+            f"Trudności z oddychaniem: {breathing_type}" if nonempty(breathing_type) else "",
+            f"Świszczący oddech: {list_text(wheezing)}" if wheezing else "",
+            f"Kaszel: {cough}" if nonempty(cough) else "",
+        ],
+        "sec_cardio": [
+            f"Bóle w klatce piersiowej: {chest_pain}" if nonempty(chest_pain) else "",
+            f"Problemy z ciśnieniem: {pressure_type}" if nonempty(pressure_type) else "",
+            f"Aktualne ciśnienie: {current_bp}" if nonempty(current_bp) else "",
+            f"Aktualne tętno: {current_hr}" if nonempty(current_hr) else "",
+            f"Ból przy nacisku na klatkę piersiową: {pain_press}",
+            f"Ból przy zmianie pozycji: {pain_position}",
+            f"Nierówne bicie serca: {palpitations}" if nonempty(palpitations) else "",
+        ],
+        "sec_gi": [
+            f"Problemy z przewodem pokarmowym: {gi_problem}",
+            f"Objawy: {list_text(gi_symptoms)}" if gi_symptoms else "",
+            f"Potrawy pogarszające stan: {worsening_foods}" if nonempty(worsening_foods) else "",
+            f"Przebyte infekcje przewodu pokarmowego: {gi_infections}" if nonempty(gi_infections) else "",
+        ],
+        "sec_urinary": [
+            f"Problemy z oddawaniem moczu: {urine_problems}" if nonempty(urine_problems) else "",
+            f"Liczba mikcji nocnych: {night_urination}" if nonempty(night_urination) else "",
+            f"Ilość wypijanych płynów dziennie: {fluids} l" if nonempty(fluids) else "",
+        ],
+        "sec_msk": [
+            f"Bóle stawów: {joints}" if nonempty(joints) else "",
+            f"Sztywność po wstaniu z łóżka: {stiffness}" if nonempty(stiffness) else "",
+        ],
+        "sec_skin": [
+            f"Zmiany skórne: {skin_changes}" if nonempty(skin_changes) else "",
+            f"Świąd skóry: {skin_itch}" if nonempty(skin_itch) else "",
+            f"Trądzik: {acne}" + (f", {acne_details}" if nonempty(acne_details) else ""),
+            f"Zaburzenia czucia skóry: {skin_sensation}" if nonempty(skin_sensation) else "",
+            f"Problemy z gojeniem ran: {wound_healing}" + (f", {wound_healing_details}" if nonempty(wound_healing_details) else ""),
+        ],
+        "sec_sleep_psych": [
+            f"Problemy ze snem: {sleep_problem}",
+            f"Rodzaj problemów ze snem: {list_text(sleep_problem_types)}" if sleep_problem_types else "",
+            f"Kontakt z psychologiem lub psychiatrą: {psych_contact}" if nonempty(psych_contact) else "",
+            f"Rozpoznana choroba psychiczna: {psych_dx}" if nonempty(psych_dx) else "",
+        ],
+        "sec_peripheral": [
+            f"Obrzęki: {edema}" + (f", {edema_details}" if nonempty(edema_details) else ""),
+            f"Bóle łydek podczas chodzenia: {calf_pain}" if nonempty(calf_pain) else "",
+            f"Zimne palce lub zmiana koloru: {cold_fingers}" if nonempty(cold_fingers) else "",
+            f"Mrowienie lub drętwienie: {tingling}" if nonempty(tingling) else "",
+            f"Żylaki: {varicose}" if nonempty(varicose) else "",
+        ],
+        "sec_anal": [
+            f"Problemy w okolicy odbytu: {list_text(anal_problems)}" if anal_problems else "",
+            f"Inne problemy w okolicy odbytu: {anal_other}" if nonempty(anal_other) else "",
+        ],
+        "sec_sex_specific": [
+            f"Problemy ginekologiczne: {gyn_problems}" if nonempty(gyn_problems) else "",
+            f"Miesiączka, menopauza, leczenie hormonalne: {menstruation}" if nonempty(menstruation) else "",
+            f"Pierwsza miesiączka: {first_menses}" if nonempty(first_menses) else "",
+            f"Ostatnia miesiączka: {safe(last_menses)}" if last_menses else "",
+            f"Problemy z potencją: {potency}" if nonempty(potency) else "",
+        ],
+        "sec_family": [
+            f"Mama: {mother_history}" if nonempty(mother_history) else "",
+            f"Ojciec: {father_history}" if nonempty(father_history) else "",
+            f"Babcia ze strony mamy: {maternal_grandmother}" if nonempty(maternal_grandmother) else "",
+            f"Babcia ze strony ojca: {paternal_grandmother}" if nonempty(paternal_grandmother) else "",
+            f"Dziadek ze strony mamy: {maternal_grandfather}" if nonempty(maternal_grandfather) else "",
+            f"Dziadek ze strony ojca: {paternal_grandfather}" if nonempty(paternal_grandfather) else "",
+        ],
+        "sec_history_final": [
+            f"Dotychczasowe rozpoznania i operacje: {own_diagnoses}" if nonempty(own_diagnoses) else "",
+            f"Ważne informacje dla lekarza: {important_info}" if nonempty(important_info) else "",
+            f"Powód obecnych dolegliwości: {current_reason}" if nonempty(current_reason) else "",
+        ],
+        "sec_question": [key_question],
+    }
+
+    email_body = f"""Nowy formularz pacjenta został wysłany.
 
 Imię i nazwisko: {full_name}
 Telefon kontaktowy: {validated_phone}
@@ -1171,28 +1196,28 @@ Data i godzina wypełnienia formularza: {submitted_at}
 Zgoda na kontakt organizacyjny: {"tak" if contact_consent else "nie"}
 """
 
-        try:
-            with st.spinner("Trwa wysyłanie formularza..."):
-                pdf_path = make_pdf(pdf_data)
-                send_email_with_pdf(
-                    subject=f"Nowy formularz pacjenta - {full_name}",
-                    body_text=email_body,
-                    pdf_path=pdf_path,
-                )
-                try:
-                    os.remove(pdf_path)
-                except Exception:
-                    pass
+    try:
+        with st.spinner("Trwa wysyłanie formularza..."):
+            pdf_path = make_pdf(pdf_data)
+            send_email_with_pdf(
+                subject=f"Nowy formularz pacjenta - {full_name}",
+                body_text=email_body,
+                pdf_path=pdf_path,
+            )
+            try:
+                os.remove(pdf_path)
+            except Exception:
+                pass
 
-            st.session_state.field_errors = {}
-            st.session_state.scroll_target = None
-            st.success("Formularz został wysłany. Dziękujemy.")
+        st.session_state.field_errors = {}
+        st.session_state.scroll_target = None
+        st.success("Formularz został wysłany. Dziękujemy.")
 
-        except Exception as e:
-            st.error(f"Nie udało się wysłać formularza. Szczegóły: {e}")
+    except Exception as e:
+        st.error(f"Nie udało się wysłać formularza. Szczegóły: {e}")
 
-# =========================
+# =========================================================
 # PRZEWIJANIE DO BŁĘDU
-# =========================
+# =========================================================
 if st.session_state.scroll_target:
     scroll_to_anchor(st.session_state.scroll_target)
