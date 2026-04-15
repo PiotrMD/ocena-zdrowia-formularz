@@ -26,7 +26,7 @@ st.set_page_config(
 )
 
 # =========================
-# UKRYCIE ELEMENTÓW STREAMLIT + STYL
+# CSS + UKRYCIE STREAMLIT
 # =========================
 st.markdown(
     """
@@ -37,14 +37,14 @@ st.markdown(
 
     .main .block-container {
         max-width: 980px;
-        padding-top: 0.8rem;
+        padding-top: 0.65rem;
         padding-bottom: 2rem;
     }
 
     .top-card {
         padding: 18px 18px;
         border-radius: 18px;
-        border: 1px solid rgba(120,120,120,0.20);
+        border: 1px solid rgba(120,120,120,0.22);
         margin-bottom: 16px;
         background: rgba(250,250,250,0.03);
     }
@@ -52,37 +52,39 @@ st.markdown(
     .site-url {
         text-align: center;
         font-size: 18px;
-        margin-top: -10px;
+        margin-top: -6px;
         margin-bottom: 8px;
-        opacity: 0.95;
+        opacity: 0.98;
+        font-weight: 700;
     }
 
     .doctor-line {
         text-align: center;
-        font-size: 17px;
-        margin-top: 0px;
-        margin-bottom: 8px;
+        font-size: 16px;
+        margin-top: 0;
+        margin-bottom: 6px;
     }
 
     .contact-line {
         text-align: center;
         font-size: 15px;
-        margin-top: 0px;
-        margin-bottom: 16px;
-        opacity: 0.95;
+        margin-top: 0;
+        margin-bottom: 14px;
+        opacity: 0.98;
     }
 
     .progress-box {
         padding: 12px 14px;
-        border-radius: 12px;
-        border: 1px solid rgba(120,120,120,0.20);
+        border-radius: 14px;
+        border: 1px solid rgba(120,120,120,0.22);
         margin-top: 10px;
         margin-bottom: 16px;
+        background: rgba(250,250,250,0.02);
     }
 
     .send-button > button {
         width: 100%;
-        height: 3.2rem;
+        height: 3.25rem;
         font-size: 1.05rem;
         font-weight: 700;
         border-radius: 12px;
@@ -98,10 +100,10 @@ st.markdown(
             font-size: 15px;
         }
         .doctor-line {
-            font-size: 15px;
+            font-size: 14px;
         }
         .contact-line {
-            font-size: 14px;
+            font-size: 13px;
         }
     }
     </style>
@@ -135,6 +137,8 @@ def nonempty(value: Any) -> bool:
         return value.strip() != ""
     if isinstance(value, list):
         return len(value) > 0
+    if isinstance(value, bool):
+        return value
     return True
 
 
@@ -387,8 +391,13 @@ def calc_progress(values: List[Any]) -> int:
 # =========================
 # GÓRA APLIKACJI
 # =========================
-if os.path.exists("logo.png"):
-    st.image("logo.png", use_container_width=True)
+progress_placeholder = st.empty()
+
+logo_candidates = ["logo.PNG", "logo.png", "Logo OCENA ZDROWIA.PNG"]
+for logo_file in logo_candidates:
+    if os.path.exists(logo_file):
+        st.image(logo_file, use_container_width=True)
+        break
 
 st.markdown("<div class='site-url'>www.ocenazdrowia.pl</div>", unsafe_allow_html=True)
 st.markdown("<div class='contact-line'>W sprawie pytań proszę kontaktować się z recepcją: +48 690 584 584</div>", unsafe_allow_html=True)
@@ -664,7 +673,13 @@ with st.expander("20. Ginekologia lub andrologia"):
         gyn_problems = st.text_area("Czy występują problemy ginekologiczne?", key="gyn_problems")
         menstruation = st.text_area("Czy występuje nieregularna miesiączka, menopauza lub leczenie hormonalne? Jeśli tak, napisz od kiedy.", key="menstruation")
         first_menses = st.text_input("Podaj miesiąc i rok pierwszej miesiączki", key="first_menses")
-        last_menses = st.date_input("Data ostatniej miesiączki", value=date.today(), min_value=date(1950, 1, 1), max_value=date.today(), key="last_menses")
+        last_menses = st.date_input(
+            "Data ostatniej miesiączki",
+            value=date.today(),
+            min_value=date(1950, 1, 1),
+            max_value=date.today(),
+            key="last_menses",
+        )
         potency = ""
     elif sex == "mężczyzna":
         potency = st.selectbox("Czy są problemy z potencją?", ["nie", "czasami", "często"], key="potency")
@@ -715,27 +730,33 @@ Proszę również przynieść na wizytę posiadane wyniki badań w formie papier
     contact_consent = st.checkbox("Wyrażam zgodę na kontakt telefoniczny lub mailowy w sprawach organizacyjnych związanych z wizytą.", key="contact_consent")
 
 # =========================
-# POSTĘP
+# POSTĘP NA GÓRZE
 # =========================
 progress_values = [
-    first_name, last_name, phone, email, nationality, profession,
-    physical_score, mental_score, weight_change_amount,
-    performed_tests, symptom_1, symptom_2, symptom_3, symptom_4, symptom_5,
-    additional_symptoms, symptom_periodicity, symptom_past,
-    aggravating_factors, relieving_factors,
+    visit_type, first_name, last_name, phone, email, birth_date, nationality, sex, current_status,
+    profession, height_cm, weight_kg,
+    physical_score, mental_score, weight_change, weight_change_amount,
+    performed_tests,
+    symptom_1, symptom_1_since, symptom_2, symptom_2_since, symptom_3, symptom_3_since,
+    symptom_4, symptom_4_since, symptom_5, symptom_5_since, additional_symptoms,
+    symptom_pattern, symptom_periodicity, symptom_past, aggravating_factors, aggravating_other,
+    relieving_factors, relieving_other,
     health_timeline, current_meds,
     lifestyle, stimulants, stimulants_other, sleep_hours,
-    travel_where, animal_contact_details, major_injuries, covid_details, strong_stress,
-    birth_info, birth_info_other, childhood_diseases, childhood_diseases_other,
-    fever_details, headache_dizziness_details, headache_assoc, hearing_vision, attacks,
-    sinus_problems, nose_problems, allergies, herpes, mouth_corners, fresh_food_reaction, smell_taste, colds,
-    pneumonia_details, dyspnea, night_breath, chest_heaviness, wheezing, cough,
-    chest_pain, current_bp, current_hr, palpitations,
-    gi_symptoms, worsening_foods, gi_infections,
-    urine_problems, joints, stiffness,
-    skin_changes, skin_itch, acne_details, skin_sensation, wound_healing_details,
-    sleep_problem_types, psych_dx,
-    edema_details, calf_pain, cold_fingers, tingling, varicose,
+    travel_abroad, travel_where, animal_contact, animal_contact_details, major_injuries, covid, covid_details, strong_stress,
+    birth_info, birth_info_other, breastfeeding, childhood_diseases, childhood_diseases_other,
+    fever_now, fever_details, headache_dizziness, headache_dizziness_details, headache_assoc,
+    hearing_vision, attacks, sinus_problems, nose_problems, allergies, herpes, mouth_corners,
+    fresh_food_reaction, epilepsy, smell_taste, colds,
+    throat_morning, esophagus_burning, asthma_dx, pneumonia, pneumonia_details, dyspnea,
+    night_breath, chest_heaviness, breathing_type, wheezing, cough,
+    chest_pain, pressure_type, current_bp, current_hr, pain_press, pain_position, palpitations,
+    gi_problem, gi_symptoms, worsening_foods, gi_infections,
+    urine_problems, night_urination, fluids,
+    joints, stiffness,
+    skin_changes, skin_itch, acne, acne_details, skin_sensation, wound_healing, wound_healing_details,
+    sleep_problem, sleep_problem_types, psych_contact, psych_dx,
+    edema, edema_details, calf_pain, cold_fingers, tingling, varicose,
     anal_problems, anal_other,
     gyn_problems, menstruation, first_menses, potency,
     mother_history, father_history, maternal_grandmother, paternal_grandmother, maternal_grandfather, paternal_grandfather,
@@ -745,10 +766,11 @@ progress_values = [
 
 progress_percent = calc_progress(progress_values)
 
-st.markdown("<div class='progress-box'>", unsafe_allow_html=True)
-st.write(f"**Postęp wypełniania formularza: {progress_percent}%**")
-st.progress(progress_percent / 100)
-st.markdown("</div>", unsafe_allow_html=True)
+with progress_placeholder.container():
+    st.markdown("<div class='progress-box'>", unsafe_allow_html=True)
+    st.write(f"**Postęp wypełniania formularza: {progress_percent}%**")
+    st.progress(progress_percent / 100)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # =========================
 # PRZYCISK WYSYŁKI
@@ -943,9 +965,7 @@ if send_clicked:
                 f"Ważne informacje dla lekarza: {important_info}" if nonempty(important_info) else "",
                 f"Powód obecnych dolegliwości: {current_reason}" if nonempty(current_reason) else "",
             ],
-            "sec_question": [
-                key_question
-            ],
+            "sec_question": [key_question],
         }
 
         email_body = f"""Nowy formularz pacjenta został wysłany.
