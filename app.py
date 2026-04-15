@@ -49,35 +49,50 @@ st.markdown(
         background: rgba(250,250,250,0.03);
     }
 
-    .site-url {
+    .title-main {
         text-align: center;
-        font-size: 18px;
-        margin-top: -6px;
-        margin-bottom: 8px;
-        opacity: 0.98;
+        font-size: 2.1rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        margin-top: 0.1rem;
+        margin-bottom: 0.1rem;
+    }
+
+    .title-sub {
+        text-align: center;
+        font-size: 1.15rem;
         font-weight: 700;
+        margin-top: 0;
+        margin-bottom: 0.35rem;
     }
 
     .doctor-line {
         text-align: center;
-        font-size: 16px;
+        font-size: 1rem;
         margin-top: 0;
-        margin-bottom: 6px;
+        margin-bottom: 0.4rem;
+    }
+
+    .site-line {
+        text-align: center;
+        font-size: 1rem;
+        margin-top: 0;
+        margin-bottom: 0.2rem;
+        font-weight: 700;
     }
 
     .contact-line {
         text-align: center;
-        font-size: 15px;
+        font-size: 0.95rem;
         margin-top: 0;
-        margin-bottom: 14px;
-        opacity: 0.98;
+        margin-bottom: 1rem;
     }
 
     .progress-box {
         padding: 12px 14px;
         border-radius: 14px;
         border: 1px solid rgba(120,120,120,0.22);
-        margin-top: 10px;
+        margin-top: 6px;
         margin-bottom: 16px;
         background: rgba(250,250,250,0.02);
     }
@@ -92,18 +107,18 @@ st.markdown(
 
     @media (max-width: 768px) {
         .main .block-container {
-            padding-top: 0.5rem;
+            padding-top: 0.45rem;
             padding-left: 0.8rem;
             padding-right: 0.8rem;
         }
-        .site-url {
-            font-size: 15px;
+        .title-main {
+            font-size: 1.55rem;
         }
-        .doctor-line {
-            font-size: 14px;
+        .title-sub {
+            font-size: 1rem;
         }
-        .contact-line {
-            font-size: 13px;
+        .doctor-line, .site-line, .contact-line {
+            font-size: 0.9rem;
         }
     }
     </style>
@@ -335,7 +350,11 @@ def make_pdf(data: Dict[str, Any]) -> str:
     add_pdf_section(story, "Charakter objawów", data["sec_symptom_character"], styles_dict)
     add_pdf_section(story, "Chronologia zdrowia i leki", data["sec_timeline_meds"], styles_dict)
     add_pdf_section(story, "Tryb życia", data["sec_lifestyle"], styles_dict)
-    add_pdf_section(story, "Podróże, zwierzęta, urazy, COVID-19, stres", data["sec_exposures"], styles_dict)
+    add_pdf_section(story, "Podróże", data["sec_travel"], styles_dict)
+    add_pdf_section(story, "Zwierzęta", data["sec_animals"], styles_dict)
+    add_pdf_section(story, "Urazy", data["sec_injuries"], styles_dict)
+    add_pdf_section(story, "COVID-19", data["sec_covid"], styles_dict)
+    add_pdf_section(story, "Stres", data["sec_stress"], styles_dict)
     add_pdf_section(story, "Urodzenie i dzieciństwo", data["sec_birth_childhood"], styles_dict)
     add_pdf_section(story, "Objawy ogólne i neurologiczne", data["sec_general_neuro"], styles_dict)
     add_pdf_section(story, "Układ oddechowy", data["sec_respiratory"], styles_dict)
@@ -388,18 +407,33 @@ def calc_progress(values: List[Any]) -> int:
     return int(round((filled / len(values)) * 100))
 
 
+def select_with_placeholder(label: str, options: List[str], key: str) -> str:
+    all_options = [""] + options
+    value = st.selectbox(
+        label,
+        all_options,
+        format_func=lambda x: "wybierz" if x == "" else x,
+        key=key,
+    )
+    return value
+
+
 # =========================
 # GÓRA APLIKACJI
 # =========================
 progress_placeholder = st.empty()
 
-logo_candidates = ["logo.PNG", "logo.png", "Logo OCENA ZDROWIA.PNG"]
-for logo_file in logo_candidates:
-    if os.path.exists(logo_file):
-        st.image(logo_file, use_container_width=True)
-        break
+if os.path.exists("logo.PNG"):
+    st.image("logo.PNG", use_container_width=True)
+elif os.path.exists("logo.png"):
+    st.image("logo.png", use_container_width=True)
+elif os.path.exists("Logo OCENA ZDROWIA.PNG"):
+    st.image("Logo OCENA ZDROWIA.PNG", use_container_width=True)
 
-st.markdown("<div class='site-url'>www.ocenazdrowia.pl</div>", unsafe_allow_html=True)
+st.markdown("<div class='title-main'>OCENA STANU ZDROWIA</div>", unsafe_allow_html=True)
+st.markdown("<div class='title-sub'>Wywiad lekarski</div>", unsafe_allow_html=True)
+st.markdown("<div class='doctor-line'>dr n. med. Piotr Niedziałkowski</div>", unsafe_allow_html=True)
+st.markdown("<div class='site-line'>www.ocenazdrowia.pl</div>", unsafe_allow_html=True)
 st.markdown("<div class='contact-line'>W sprawie pytań proszę kontaktować się z recepcją: +48 690 584 584</div>", unsafe_allow_html=True)
 
 st.markdown(
@@ -434,8 +468,8 @@ with st.expander("1. Dane podstawowe", expanded=True):
         key="birth_date",
     )
     nationality = st.text_input("Narodowość", key="nationality")
-    sex = st.selectbox("Płeć", ["kobieta", "mężczyzna", "inne"], key="sex")
-    current_status = st.selectbox(
+    sex = select_with_placeholder("Płeć", ["kobieta", "mężczyzna", "inne"], key="sex")
+    current_status = select_with_placeholder(
         "Aktualny status",
         ["pracujący", "dziecko", "uczeń", "student", "emeryt", "inne"],
         key="current_status",
@@ -454,7 +488,9 @@ with st.expander("2. Ocena ogólna"):
     physical_score = st.slider("Jak oceniasz swój stan fizyczny? 0 = bardzo zły, 10 = bardzo dobry", 0, 10, 6, key="physical_score")
     mental_score = st.slider("Jak oceniasz swój stan psychiczny? 0 = bardzo zły, 10 = bardzo dobry", 0, 10, 6, key="mental_score")
     weight_change = st.radio("Czy w ostatnim roku zmieniła się masa ciała?", ["wzrosła", "spadła", "bez zmian"], key="weight_change")
-    weight_change_amount = st.text_input("O ile mniej więcej zmieniła się masa ciała?", key="weight_change_amount") if weight_change != "bez zmian" else ""
+    weight_change_amount = ""
+    if weight_change != "bez zmian":
+        weight_change_amount = st.text_input("O ile mniej więcej kilogramów zmieniła się masa ciała?", key="weight_change_amount")
 
 with st.expander("3. Badania wykonane w ciągu ostatnich 2 lat"):
     performed_tests = st.multiselect(
@@ -475,8 +511,10 @@ with st.expander("3. Badania wykonane w ciągu ostatnich 2 lat"):
             "USG prostaty",
             "USG piersi",
             "Mammografia",
+            "Tomografia komputerowa",
             "Tomografia głowy",
-            "Rezonans magnetyczny głowy",
+            "Rezonans magnetyczny",
+            "Rezonans głowy",
             "Doppler tętnic szyjnych",
             "Przepływy w naczyniach kończyn dolnych",
             "Densytometria",
@@ -503,55 +541,79 @@ with st.expander("5. Charakter objawów"):
     symptom_pattern = st.radio("Czy objawy są stałe czy pojawiają się okresowo?", ["stałe", "okresowe", "trudno powiedzieć"], key="symptom_pattern")
     symptom_periodicity = st.text_area("Jeśli okresowe, napisz kiedy się pojawiają i jak często w ciągu roku", key="symptom_periodicity")
     symptom_past = st.text_area("Czy podobne objawy występowały wcześniej? Jeśli tak, kiedy?", key="symptom_past")
-    aggravating_factors = st.multiselect(
-        "Co nasila objawy?",
-        ["po wysiłku", "na czczo", "po posiłku", "podczas mówienia", "podczas śmiechu", "rano", "w ciągu dnia", "wieczorem", "wybudzenie ze snu", "inne"],
-        placeholder="Wybierz czynniki nasilające",
-        key="aggravating_factors",
+
+    worsening_factors = st.multiselect(
+        "Co powoduje pogorszenie objawów?",
+        ["wysiłek", "głód", "posiłek", "mówienie", "śmiech", "inne"],
+        placeholder="Wybierz czynniki pogorszenia",
+        key="worsening_factors",
     )
-    aggravating_other = st.text_input("Jeśli zaznaczono inne, napisz jakie", key="aggravating_other")
-    relieving_factors = st.multiselect(
-        "Co osłabia objawy?",
-        ["podczas wypoczynku", "po wysiłku", "na czczo", "po posiłku", "rano", "w ciągu dnia", "wieczorem", "inne"],
-        placeholder="Wybierz czynniki zmniejszające",
-        key="relieving_factors",
+    worsening_other = ""
+    if "inne" in worsening_factors:
+        worsening_other = st.text_input("Jeśli inne, napisz co powoduje pogorszenie objawów", key="worsening_other")
+
+    improvement_factors = st.multiselect(
+        "Co powoduje poprawę lub zmniejszenie objawów?",
+        ["wypoczynek", "wysiłek", "głód", "posiłek", "inne"],
+        placeholder="Wybierz czynniki poprawy",
+        key="improvement_factors",
     )
-    relieving_other = st.text_input("Jeśli zaznaczono inne, napisz jakie", key="relieving_other")
+    improvement_other = ""
+    if "inne" in improvement_factors:
+        improvement_other = st.text_input("Jeśli inne, napisz co powoduje poprawę objawów", key="improvement_other")
 
 with st.expander("6. Chronologia zdrowia i leki"):
     health_timeline = st.text_area("Opisz przebieg zdrowia od pierwszych problemów zdrowotnych do dziś", key="health_timeline")
-    current_meds = st.text_area("Jakie leki obecnie przyjmujesz? Podaj nazwę i dawkowanie", key="current_meds")
+    current_meds = st.text_area("Jakie leki obecnie przyjmujesz? Podaj nazwę i dawkowanie. Najlepiej wpisuj każdy lek w osobnej linii.", key="current_meds")
 
 with st.expander("7. Tryb życia"):
-    lifestyle = st.selectbox("Tryb życia", ["leżący", "siedzący", "nisko aktywny", "średnio aktywny", "bardzo aktywny", "inne"], key="lifestyle")
+    lifestyle = select_with_placeholder("Tryb życia", ["leżący", "siedzący", "nisko aktywny", "średnio aktywny", "bardzo aktywny", "inne"], key="lifestyle")
     stimulants = st.multiselect(
         "Używki i codzienne nawyki",
         ["kawa", "herbata", "papierosy", "alkohol", "narkotyki", "słodycze", "inne"],
         placeholder="Wybierz używki i nawyki",
         key="stimulants",
     )
-    stimulants_other = st.text_input("Jeśli zaznaczono inne, napisz jakie", key="stimulants_other")
-    sleep_hours = st.selectbox("Ile średnio trwa sen na dobę?", [3, 4, 5, 6, 7, 8, 9, 10, 11, 12], key="sleep_hours")
+    stimulants_other = ""
+    if "inne" in stimulants:
+        stimulants_other = st.text_input("Jeśli zaznaczono inne, napisz jakie", key="stimulants_other")
+    sleep_hours = select_with_placeholder("Ile średnio trwa sen na dobę?", ["3", "4", "5", "6", "7", "8", "9", "10", "11", "12"], key="sleep_hours")
 
-with st.expander("8. Podróże, zwierzęta, urazy, COVID-19, stres"):
+with st.expander("8. Podróże"):
     travel_abroad = st.radio("Czy w ciągu ostatnich 3 miesięcy był wyjazd za granicę?", ["tak", "nie"], key="travel_abroad")
-    travel_where = st.text_input("Jeśli tak, to gdzie?", key="travel_where") if travel_abroad == "tak" else ""
+    travel_where = ""
+    if travel_abroad == "tak":
+        travel_where = st.text_input("Jeśli tak, to gdzie?", key="travel_where")
+
+with st.expander("9. Zwierzęta"):
     animal_contact = st.radio("Czy w ostatnich miesiącach było pogryzienie, zadrapanie lub bliski kontakt ze zwierzęciem?", ["tak", "nie"], key="animal_contact")
-    animal_contact_details = st.text_area("Jeśli tak, opisz kiedy i jakie zwierzę", key="animal_contact_details") if animal_contact == "tak" else ""
+    animal_contact_details = ""
+    if animal_contact == "tak":
+        animal_contact_details = st.text_area("Jeśli tak, opisz kiedy i jakie zwierzę", key="animal_contact_details")
+
+with st.expander("10. Urazy"):
     major_injuries = st.text_area("Czy były duże urazy ciała? Podaj rok i opisz, np. upadek z wysokości, uraz komunikacyjny, pobicie, tonięcie, operacja", key="major_injuries")
+
+with st.expander("11. COVID-19"):
     covid = st.radio("Czy i kiedy wystąpiło zachorowanie na COVID-19?", ["tak", "nie", "nie wiem"], key="covid")
-    covid_details = st.text_area("Jeśli tak, opisz kiedy i jaki był przebieg", key="covid_details") if covid == "tak" else ""
+    covid_details = ""
+    if covid == "tak":
+        covid_details = st.text_area("Jeśli tak, opisz kiedy i jaki był przebieg", key="covid_details")
+
+with st.expander("12. Stres"):
     strong_stress = st.text_area("Czy w ciągu życia były silne reakcje stresowe lub trudne wydarzenia? Jeśli tak, opisz i podaj rok", key="strong_stress")
 
-with st.expander("9. Urodzenie i dzieciństwo"):
+with st.expander("13. Urodzenie i dzieciństwo"):
     birth_info = st.multiselect(
         "Informacje o urodzeniu",
         ["poród naturalny", "poród przez cesarskie cięcie", "poród przedwczesny", "poród o czasie", "poród po terminie", "zielone wody płodowe", "nie wiem", "inne"],
         placeholder="Wybierz informacje o urodzeniu",
         key="birth_info",
     )
-    birth_info_other = st.text_input("Jeśli zaznaczono inne, napisz jakie", key="birth_info_other")
-    breastfeeding = st.selectbox(
+    birth_info_other = ""
+    if "inne" in birth_info:
+        birth_info_other = st.text_input("Jeśli zaznaczono inne, napisz jakie", key="birth_info_other")
+    breastfeeding = select_with_placeholder(
         "Czy było karmienie mlekiem matki?",
         ["tak, do 3 miesięcy", "tak, do 6 miesięcy", "tak, powyżej 6 miesięcy", "nie", "nie wiem"],
         key="breastfeeding",
@@ -562,13 +624,21 @@ with st.expander("9. Urodzenie i dzieciństwo"):
         placeholder="Wybierz choroby dzieciństwa",
         key="childhood_diseases",
     )
-    childhood_diseases_other = st.text_input("Jeśli zaznaczono inne, napisz jakie", key="childhood_diseases_other")
+    childhood_diseases_other = ""
+    if "inne" in childhood_diseases:
+        childhood_diseases_other = st.text_input("Jeśli zaznaczono inne, napisz jakie", key="childhood_diseases_other")
 
-with st.expander("10. Objawy ogólne i neurologiczne"):
+with st.expander("14. Objawy ogólne i neurologiczne"):
     fever_now = st.radio("Czy aktualnie występuje gorączka?", ["tak", "nie"], key="fever_now")
-    fever_details = st.text_area("Jeśli tak, opisz dokładniej", key="fever_details") if fever_now == "tak" else ""
+    fever_details = ""
+    if fever_now == "tak":
+        fever_details = st.text_area("Jeśli tak, opisz dokładniej", key="fever_details")
+
     headache_dizziness = st.radio("Czy występują bóle i zawroty głowy?", ["tak", "nie"], key="headache_dizziness")
-    headache_dizziness_details = st.text_area("Jeśli tak, opisz dokładniej", key="headache_dizziness_details") if headache_dizziness == "tak" else ""
+    headache_dizziness_details = ""
+    if headache_dizziness == "tak":
+        headache_dizziness_details = st.text_area("Jeśli tak, opisz dokładniej", key="headache_dizziness_details")
+
     headache_assoc = st.text_area("Czy bólom głowy towarzyszą wymioty, omdlenia, zaburzenia widzenia, osłabienie, światłowstręt, niepamięć?", key="headache_assoc")
     hearing_vision = st.text_area("Czy w ostatnich latach pogorszył się słuch lub wzrok?", key="hearing_vision")
     attacks = st.text_area("Czy występują ataki lub nagłe epizody? Jeśli tak, opisz.", key="attacks")
@@ -582,16 +652,22 @@ with st.expander("10. Objawy ogólne i neurologiczne"):
     smell_taste = st.text_area("Czy są zaburzenia węchu lub smaku? Jeśli tak, od kiedy?", key="smell_taste")
     colds = st.text_input("Jak często zdarzają się przeziębienia w ciągu roku?", key="colds")
 
-with st.expander("11. Układ oddechowy"):
+with st.expander("15. Układ oddechowy"):
     throat_morning = st.radio("Czy rano występuje ból gardła?", ["tak", "nie"], key="throat_morning")
     esophagus_burning = st.radio("Czy pojawia się pieczenie w przełyku?", ["tak", "nie"], key="esophagus_burning")
     asthma_dx = st.radio("Czy kiedykolwiek rozpoznano astmę?", ["tak", "nie"], key="asthma_dx")
     pneumonia = st.radio("Czy kiedykolwiek było zapalenie płuc?", ["tak", "nie"], key="pneumonia")
-    pneumonia_details = st.text_area("Jeśli tak, podaj daty i po której stronie płuc było zapalenie", key="pneumonia_details") if pneumonia == "tak" else ""
+    pneumonia_details = ""
+    if pneumonia == "tak":
+        pneumonia_details = st.text_area("Jeśli tak, podaj daty i po której stronie płuc było zapalenie", key="pneumonia_details")
     dyspnea = st.text_area("Czy zdarza się duszność lub zadyszka? Jeśli tak, opisz w jakich sytuacjach.", key="dyspnea")
     night_breath = st.text_area("Czy dochodzi do wybudzania w nocy z powodu braku tchu?", key="night_breath")
     chest_heaviness = st.text_area("Czy występuje ciężkość w klatce piersiowej? Jeśli tak, opisz nasilenie.", key="chest_heaviness")
-    breathing_type = st.selectbox("Czy są trudności z oddychaniem?", ["nie mam takich trudności", "z nabieraniem powietrza", "z wypuszczaniem powietrza", "z oboma"], key="breathing_type")
+    breathing_type = select_with_placeholder(
+        "Czy są trudności z oddychaniem?",
+        ["nie mam takich trudności", "z nabieraniem powietrza", "z wypuszczaniem powietrza", "z oboma"],
+        key="breathing_type",
+    )
     wheezing = st.multiselect(
         "Czy występuje świszczący oddech?",
         ["nie", "podczas wysiłku", "podczas infekcji", "w nocy", "rano", "podczas alergii", "w zimnej pogodzie"],
@@ -600,73 +676,95 @@ with st.expander("11. Układ oddechowy"):
     )
     cough = st.text_area("Czy jest kaszel? Jeśli tak, od kiedy, czy jest suchy czy z wydzieliną, jakiego koloru?", key="cough")
 
-with st.expander("12. Układ sercowo-naczyniowy"):
+with st.expander("16. Układ sercowo-naczyniowy"):
     chest_pain = st.text_area("Czy występują bóle w klatce piersiowej? Czy są miejscowe czy rozległe? Czy promieniują?", key="chest_pain")
-    pressure_type = st.selectbox("Czy są problemy z ciśnieniem?", ["nie mam kłopotów z ciśnieniem", "mam skłonność do niskiego ciśnienia", "mam skłonność do wysokiego ciśnienia"], key="pressure_type")
+    pressure_type = select_with_placeholder(
+        "Czy są problemy z ciśnieniem?",
+        ["nie mam kłopotów z ciśnieniem", "mam skłonność do niskiego ciśnienia", "mam skłonność do wysokiego ciśnienia"],
+        key="pressure_type",
+    )
     current_bp = st.text_input("Jakie jest aktualne ciśnienie tętnicze?", key="current_bp")
     current_hr = st.text_input("Jakie jest aktualne tętno?", key="current_hr")
     pain_press = st.radio("Czy odczuwasz ból przy naciskaniu klatki piersiowej?", ["tak", "nie"], key="pain_press")
     pain_position = st.radio("Czy przy zmianie pozycji występują bóle w klatce piersiowej?", ["tak", "nie"], key="pain_position")
     palpitations = st.text_area("Czy odczuwasz nierówne bicie serca? Jeśli tak, opisz porę dnia, okoliczności i częstość.", key="palpitations")
 
-with st.expander("13. Przewód pokarmowy"):
+with st.expander("17. Przewód pokarmowy"):
     gi_problem = st.radio("Czy występują problemy z przewodem pokarmowym?", ["tak", "nie"], key="gi_problem")
-    gi_symptoms = st.multiselect(
-        "Zaznacz problemy",
-        ["zgaga", "wzdęcia", "biegunki", "zaparcia", "hemoroidy", "gazy", "skurcze", "wymioty", "nudności"],
-        placeholder="Wybierz objawy przewodu pokarmowego",
-        key="gi_symptoms",
-    ) if gi_problem == "tak" else []
+    gi_symptoms = []
+    if gi_problem == "tak":
+        gi_symptoms = st.multiselect(
+            "Zaznacz problemy",
+            ["zgaga", "wzdęcia", "biegunki", "zaparcia", "hemoroidy", "gazy", "skurcze", "wymioty", "nudności"],
+            placeholder="Wybierz objawy przewodu pokarmowego",
+            key="gi_symptoms",
+        )
     worsening_foods = st.text_area("Czy są potrawy, po których samopoczucie się pogarsza?", key="worsening_foods")
     gi_infections = st.text_area("Czy kiedykolwiek było zakażenie bakteryjne lub wirusowe przewodu pokarmowego? Jeśli tak, kiedy i czy było badanie kontrolne z wynikiem ujemnym?", key="gi_infections")
 
-with st.expander("14. Układ moczowy"):
+with st.expander("18. Układ moczowy"):
     urine_problems = st.text_area("Czy są problemy z oddawaniem moczu, np. pieczenie, trudności, inne?", key="urine_problems")
-    night_urination = st.selectbox("Ile razy w nocy wstajesz oddać mocz?", ["0", "1", "2", "3", "4", "5", "6", "7 lub więcej"], key="night_urination")
-    fluids = st.selectbox("Ile litrów płynów wypijasz dziennie?", ["1", "2", "3", "4", "5", "więcej niż 5"], key="fluids")
+    night_urination = select_with_placeholder("Ile razy w nocy wstajesz oddać mocz?", ["0", "1", "2", "3", "4", "5", "6", "7 lub więcej"], key="night_urination")
+    fluids = select_with_placeholder("Ile litrów płynów wypijasz dziennie?", ["1", "2", "3", "4", "5", "więcej niż 5"], key="fluids")
 
-with st.expander("15. Stawy i mięśnie"):
+with st.expander("19. Stawy i mięśnie"):
     joints = st.text_area("Czy występują bóle stawów? Jeśli tak, to których?", key="joints")
     stiffness = st.text_area("Czy po wstaniu z łóżka występuje ból lub sztywność stawów?", key="stiffness")
 
-with st.expander("16. Skóra"):
+with st.expander("20. Skóra"):
     skin_changes = st.text_area("Czy są jakieś zmiany na skórze? Jeśli tak, opisz dokładnie. Kiedy pojawiły się pierwszy raz? Czy od tej pory jest poprawa lub pogorszenie?", key="skin_changes")
     skin_itch = st.text_area("Czy występuje swędzenie skóry? Jeśli tak, których partii ciała dotyczy?", key="skin_itch")
     acne = st.radio("Czy występował lub występuje nasilony trądzik na twarzy lub plecach?", ["tak", "nie"], key="acne")
-    acne_details = st.text_area("Jeśli tak, możesz opisać dokładniej", key="acne_details") if acne == "tak" else ""
+    acne_details = ""
+    if acne == "tak":
+        acne_details = st.text_area("Jeśli tak, możesz opisać dokładniej", key="acne_details")
     skin_sensation = st.text_area("Czy są zaburzenia czucia skóry? Jeśli tak, opisz lokalizację i od kiedy.", key="skin_sensation")
     wound_healing = st.radio("Czy występują problemy z gojeniem się ran?", ["tak", "nie"], key="wound_healing")
-    wound_healing_details = st.text_area("Jeśli tak, opisz problemy z gojeniem", key="wound_healing_details") if wound_healing == "tak" else ""
+    wound_healing_details = ""
+    if wound_healing == "tak":
+        wound_healing_details = st.text_area("Jeśli tak, opisz problemy z gojeniem", key="wound_healing_details")
 
-with st.expander("17. Sen i psychika"):
+with st.expander("21. Sen i psychika"):
     sleep_problem = st.radio("Czy są problemy ze snem?", ["tak", "nie"], key="sleep_problem")
-    sleep_problem_types = st.multiselect(
-        "Jakie problemy ze snem występują?",
-        ["trudności z zasypianiem", "wybudzanie w nocy", "wstawanie zmęczony lub zmęczona", "chrapanie", "zbyt krótki sen", "bardzo głęboki sen"],
-        placeholder="Wybierz rodzaj problemów ze snem",
-        key="sleep_problem_types",
-    ) if sleep_problem == "tak" else []
-    psych_contact = st.selectbox("Czy kiedykolwiek była porada psychologa lub psychiatry?", ["nie", "psycholog", "psychiatra", "oba"], key="psych_contact")
+    sleep_problem_types = []
+    if sleep_problem == "tak":
+        sleep_problem_types = st.multiselect(
+            "Jakie problemy ze snem występują?",
+            ["trudności z zasypianiem", "wybudzanie w nocy", "wstawanie zmęczony lub zmęczona", "chrapanie", "zbyt krótki sen", "bardzo głęboki sen"],
+            placeholder="Wybierz rodzaj problemów ze snem",
+            key="sleep_problem_types",
+        )
+    psych_contact = select_with_placeholder("Czy kiedykolwiek była porada psychologa lub psychiatry?", ["nie", "psycholog", "psychiatra", "oba"], key="psych_contact")
     psych_dx = st.text_area("Czy kiedykolwiek rozpoznano chorobę psychiczną? Jeśli tak, napisz jaką.", key="psych_dx")
 
-with st.expander("18. Krążenie obwodowe"):
+with st.expander("22. Krążenie obwodowe"):
     edema = st.radio("Czy pojawiają się obrzęki na podudziach lub kostkach?", ["tak", "nie"], key="edema")
-    edema_details = st.text_area("Jeśli tak, napisz czy występują stale czy po staniu, siedzeniu lub w innych sytuacjach.", key="edema_details") if edema == "tak" else ""
+    edema_details = ""
+    if edema == "tak":
+        edema_details = st.text_area("Jeśli tak, napisz czy występują stale czy po staniu, siedzeniu lub w innych sytuacjach.", key="edema_details")
     calf_pain = st.text_area("Czy występują bóle łydek podczas chodzenia? Jeśli tak, po jakim dystansie i po jakim czasie ustępują?", key="calf_pain")
     cold_fingers = st.text_area("Czy palce rąk lub nóg łatwo stają się zimne lub zmieniają kolor?", key="cold_fingers")
     tingling = st.text_area("Czy występuje mrowienie lub drętwienie rąk lub nóg?", key="tingling")
     varicose = st.text_area("Czy są obecne żylaki?", key="varicose")
 
-with st.expander("19. Odbyt i okolice odbytu"):
+with st.expander("23. Odbyt i okolice odbytu"):
     anal_problems = st.multiselect(
         "Czy występują problemy ze śluzówką odbytu?",
         ["nie", "hemoroidy", "stany zapalne błony śluzowej odbytu", "pieczenie", "świąd", "grzybica", "inne"],
         placeholder="Wybierz problemy w okolicy odbytu",
         key="anal_problems",
     )
-    anal_other = st.text_input("Jeśli zaznaczono inne, opisz", key="anal_other")
+    anal_other = ""
+    if "inne" in anal_problems:
+        anal_other = st.text_input("Jeśli zaznaczono inne, opisz", key="anal_other")
 
-with st.expander("20. Ginekologia lub andrologia"):
+with st.expander("24. Ginekologia lub andrologia"):
+    gyn_problems = ""
+    menstruation = ""
+    first_menses = ""
+    last_menses = None
+    potency = ""
+
     if sex == "kobieta":
         gyn_problems = st.text_area("Czy występują problemy ginekologiczne?", key="gyn_problems")
         menstruation = st.text_area("Czy występuje nieregularna miesiączka, menopauza lub leczenie hormonalne? Jeśli tak, napisz od kiedy.", key="menstruation")
@@ -678,21 +776,10 @@ with st.expander("20. Ginekologia lub andrologia"):
             max_value=date.today(),
             key="last_menses",
         )
-        potency = ""
     elif sex == "mężczyzna":
-        potency = st.selectbox("Czy są problemy z potencją?", ["nie", "czasami", "często"], key="potency")
-        gyn_problems = ""
-        menstruation = ""
-        first_menses = ""
-        last_menses = None
-    else:
-        gyn_problems = ""
-        menstruation = ""
-        first_menses = ""
-        last_menses = None
-        potency = ""
+        potency = select_with_placeholder("Czy są problemy z potencją?", ["nie", "czasami", "często"], key="potency")
 
-with st.expander("21. Wywiad rodzinny"):
+with st.expander("25. Wywiad rodzinny"):
     mother_history = st.text_area("Na jakie choroby choruje lub chorowała mama?", key="mother_history")
     father_history = st.text_area("Na jakie choroby choruje lub chorował ojciec?", key="father_history")
     maternal_grandmother = st.text_area("Na jakie choroby choruje lub chorowała babcia ze strony mamy?", key="maternal_grandmother")
@@ -700,13 +787,13 @@ with st.expander("21. Wywiad rodzinny"):
     maternal_grandfather = st.text_area("Na jakie choroby choruje lub chorował dziadek ze strony mamy?", key="maternal_grandfather")
     paternal_grandfather = st.text_area("Na jakie choroby choruje lub chorował dziadek ze strony ojca?", key="paternal_grandfather")
 
-with st.expander("22. Dotychczasowe rozpoznania, operacje i ważne informacje"):
+with st.expander("26. Dotychczasowe rozpoznania, operacje i ważne informacje"):
     own_diagnoses = st.text_area("Proszę wymienić wszystkie dotychczasowe rozpoznania oraz operacje", key="own_diagnoses")
     important_info = st.text_area("Czy są jakieś ważne informacje, które chcesz przekazać lekarzowi?", key="important_info")
     current_reason = st.text_area("Co jest powodem obecnych dolegliwości lub problemów zdrowotnych?", key="current_reason")
     key_question = st.text_area("Jakie jest najważniejsze pytanie do lekarza lub najważniejszy problem do omówienia na wizycie?", key="key_question")
 
-with st.expander("23. Informacje organizacyjne i zgody", expanded=True):
+with st.expander("27. Informacje organizacyjne i zgody", expanded=True):
     st.markdown(
         """
 **Proszę przesłać wszystkie posiadane wyniki badań na adres:**  
@@ -728,7 +815,7 @@ Proszę również przynieść na wizytę posiadane wyniki badań w formie papier
     contact_consent = st.checkbox("Wyrażam zgodę na kontakt telefoniczny lub mailowy w sprawach organizacyjnych związanych z wizytą.", key="contact_consent")
 
 # =========================
-# POSTĘP NA GÓRZE
+# POSTĘP
 # =========================
 progress_values = [
     visit_type, first_name, last_name, phone, email, birth_date, nationality, sex, current_status,
@@ -737,11 +824,15 @@ progress_values = [
     performed_tests,
     symptom_1, symptom_1_since, symptom_2, symptom_2_since, symptom_3, symptom_3_since,
     symptom_4, symptom_4_since, symptom_5, symptom_5_since, additional_symptoms,
-    symptom_pattern, symptom_periodicity, symptom_past, aggravating_factors, aggravating_other,
-    relieving_factors, relieving_other,
+    symptom_pattern, symptom_periodicity, symptom_past, worsening_factors, worsening_other,
+    improvement_factors, improvement_other,
     health_timeline, current_meds,
     lifestyle, stimulants, stimulants_other, sleep_hours,
-    travel_abroad, travel_where, animal_contact, animal_contact_details, major_injuries, covid, covid_details, strong_stress,
+    travel_abroad, travel_where,
+    animal_contact, animal_contact_details,
+    major_injuries,
+    covid, covid_details,
+    strong_stress,
     birth_info, birth_info_other, breastfeeding, childhood_diseases, childhood_diseases_other,
     fever_now, fever_details, headache_dizziness, headache_dizziness_details, headache_assoc,
     hearing_vision, attacks, sinus_problems, nose_problems, allergies, herpes, mouth_corners,
@@ -781,15 +872,24 @@ st.markdown("</div>", unsafe_allow_html=True)
 # WYSYŁKA
 # =========================
 if send_clicked:
-    full_name = f"{safe(first_name)} {safe(last_name)}".strip()
+    first_name_clean = st.session_state.get("first_name", "").strip()
+    last_name_clean = st.session_state.get("last_name", "").strip()
+    phone_clean = st.session_state.get("phone", "").strip()
+    email_clean = st.session_state.get("email", "").strip()
+
+    full_name = f"{first_name_clean} {last_name_clean}".strip()
 
     errors = []
     if not full_name:
         errors.append("Wpisz imię i nazwisko.")
-    if not phone.strip():
-        errors.append("Wpisz telefon kontaktowy.")
+    if not phone_clean:
+        errors.append("Podaj numer kontaktowy.")
     if not consent_true or not consent_visit or not consent_privacy:
         errors.append("Zaznacz wszystkie wymagane zgody.")
+    if sex == "":
+        errors.append("Wybierz płeć.")
+    if current_status == "":
+        errors.append("Wybierz aktualny status.")
 
     if errors:
         for err in errors:
@@ -812,7 +912,7 @@ if send_clicked:
 
         pdf_data = {
             "initials": patient_initials,
-            "phone": phone,
+            "phone": phone_clean,
             "birth_date": birth_date.strftime("%d.%m.%Y"),
             "visit_type": visit_type,
             "submitted_at": submitted_at,
@@ -837,10 +937,10 @@ if send_clicked:
                 f"Objawy: {symptom_pattern}",
                 f"Okresowość: {symptom_periodicity}" if nonempty(symptom_periodicity) else "",
                 f"Czy występowały wcześniej: {symptom_past}" if nonempty(symptom_past) else "",
-                f"Co nasila objawy: {list_text(aggravating_factors)}" if aggravating_factors else "",
-                f"Inne czynniki nasilające: {aggravating_other}" if nonempty(aggravating_other) else "",
-                f"Co osłabia objawy: {list_text(relieving_factors)}" if relieving_factors else "",
-                f"Inne czynniki zmniejszające objawy: {relieving_other}" if nonempty(relieving_other) else "",
+                f"Co powoduje pogorszenie objawów: {list_text(worsening_factors)}" if worsening_factors else "",
+                f"Inne przyczyny pogorszenia objawów: {worsening_other}" if nonempty(worsening_other) else "",
+                f"Co powoduje poprawę lub zmniejszenie objawów: {list_text(improvement_factors)}" if improvement_factors else "",
+                f"Inne przyczyny poprawy objawów: {improvement_other}" if nonempty(improvement_other) else "",
             ],
             "sec_timeline_meds": [
                 f"Chronologia zdrowia: {health_timeline}" if nonempty(health_timeline) else "",
@@ -848,22 +948,30 @@ if send_clicked:
                 *lines_from_text(current_meds),
             ],
             "sec_lifestyle": [
-                f"Tryb życia: {lifestyle}",
+                f"Tryb życia: {lifestyle}" if nonempty(lifestyle) else "",
                 f"Używki i nawyki: {list_text(stimulants)}" if stimulants else "",
                 f"Inne używki lub nawyki: {stimulants_other}" if nonempty(stimulants_other) else "",
-                f"Sen: {sleep_hours} godzin na dobę",
+                f"Sen: {sleep_hours} godzin na dobę" if nonempty(sleep_hours) else "",
             ],
-            "sec_exposures": [
-                f"Wyjazd za granicę: {travel_abroad}" + (f", {travel_where}" if nonempty(travel_where) else ""),
-                f"Kontakt lub uraz od zwierzęcia: {animal_contact}" + (f", {animal_contact_details}" if nonempty(animal_contact_details) else ""),
-                f"Duże urazy: {major_injuries}" if nonempty(major_injuries) else "",
-                f"Zachorowanie na COVID-19: {covid}" + (f", {covid_details}" if nonempty(covid_details) else ""),
-                f"Silne reakcje stresowe: {strong_stress}" if nonempty(strong_stress) else "",
+            "sec_travel": [
+                f"Wyjazd za granicę w ostatnich 3 miesiącach: {travel_abroad}" + (f", {travel_where}" if nonempty(travel_where) else "")
+            ],
+            "sec_animals": [
+                f"Pogryzienie, zadrapanie lub bliski kontakt ze zwierzęciem: {animal_contact}" + (f", {animal_contact_details}" if nonempty(animal_contact_details) else "")
+            ],
+            "sec_injuries": [
+                f"Duże urazy: {major_injuries}" if nonempty(major_injuries) else ""
+            ],
+            "sec_covid": [
+                f"Zachorowanie na COVID-19: {covid}" + (f", {covid_details}" if nonempty(covid_details) else "")
+            ],
+            "sec_stress": [
+                f"Silne reakcje stresowe: {strong_stress}" if nonempty(strong_stress) else ""
             ],
             "sec_birth_childhood": [
                 f"Informacje o urodzeniu: {list_text(birth_info)}" if birth_info else "",
                 f"Inne informacje o urodzeniu: {birth_info_other}" if nonempty(birth_info_other) else "",
-                f"Karmienie mlekiem matki: {breastfeeding}",
+                f"Karmienie mlekiem matki: {breastfeeding}" if nonempty(breastfeeding) else "",
                 f"Choroby dzieciństwa: {list_text(childhood_diseases)}" if childhood_diseases else "",
                 f"Inne choroby dzieciństwa: {childhood_diseases_other}" if nonempty(childhood_diseases_other) else "",
             ],
@@ -891,13 +999,13 @@ if send_clicked:
                 f"Duszność lub zadyszka: {dyspnea}" if nonempty(dyspnea) else "",
                 f"Wybudzanie w nocy z powodu braku tchu: {night_breath}" if nonempty(night_breath) else "",
                 f"Ciężkość w klatce piersiowej: {chest_heaviness}" if nonempty(chest_heaviness) else "",
-                f"Trudności z oddychaniem: {breathing_type}",
+                f"Trudności z oddychaniem: {breathing_type}" if nonempty(breathing_type) else "",
                 f"Świszczący oddech: {list_text(wheezing)}" if wheezing else "",
                 f"Kaszel: {cough}" if nonempty(cough) else "",
             ],
             "sec_cardio": [
                 f"Bóle w klatce piersiowej: {chest_pain}" if nonempty(chest_pain) else "",
-                f"Problemy z ciśnieniem: {pressure_type}",
+                f"Problemy z ciśnieniem: {pressure_type}" if nonempty(pressure_type) else "",
                 f"Aktualne ciśnienie: {current_bp}" if nonempty(current_bp) else "",
                 f"Aktualne tętno: {current_hr}" if nonempty(current_hr) else "",
                 f"Ból przy nacisku na klatkę piersiową: {pain_press}",
@@ -912,8 +1020,8 @@ if send_clicked:
             ],
             "sec_urinary": [
                 f"Problemy z oddawaniem moczu: {urine_problems}" if nonempty(urine_problems) else "",
-                f"Liczba mikcji nocnych: {night_urination}",
-                f"Ilość wypijanych płynów dziennie: {fluids} l",
+                f"Liczba mikcji nocnych: {night_urination}" if nonempty(night_urination) else "",
+                f"Ilość wypijanych płynów dziennie: {fluids} l" if nonempty(fluids) else "",
             ],
             "sec_msk": [
                 f"Bóle stawów: {joints}" if nonempty(joints) else "",
@@ -929,7 +1037,7 @@ if send_clicked:
             "sec_sleep_psych": [
                 f"Problemy ze snem: {sleep_problem}",
                 f"Rodzaj problemów ze snem: {list_text(sleep_problem_types)}" if sleep_problem_types else "",
-                f"Kontakt z psychologiem lub psychiatrą: {psych_contact}",
+                f"Kontakt z psychologiem lub psychiatrą: {psych_contact}" if nonempty(psych_contact) else "",
                 f"Rozpoznana choroba psychiczna: {psych_dx}" if nonempty(psych_dx) else "",
             ],
             "sec_peripheral": [
@@ -969,8 +1077,8 @@ if send_clicked:
         email_body = f"""Nowy formularz pacjenta został wysłany.
 
 Imię i nazwisko: {full_name}
-Telefon kontaktowy: {phone}
-Adres e-mail: {email}
+Telefon kontaktowy: {phone_clean}
+Adres e-mail: {email_clean}
 Data urodzenia: {birth_date.strftime("%d.%m.%Y")}
 Rodzaj wizyty: {visit_type}
 Data i godzina wypełnienia formularza: {submitted_at}
