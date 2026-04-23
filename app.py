@@ -653,11 +653,17 @@ with st.form("medical_form"):
 
         nationality = st.text_input("Narodowość", key="nationality")
         sex = select_with_placeholder("Płeć", ["kobieta", "mężczyzna", "inne"], key="sex")
+        sex_other = ""
+        if sex == "inne":
+            sex_other = st.text_input("Jeśli inne, opisz płeć", key="sex_other")
         current_status = select_with_placeholder(
             "Aktualny status",
             ["pracujący", "dziecko", "uczeń", "student", "emeryt", "inne"],
             key="current_status",
         )
+        current_status_other = ""
+        if current_status == "inne":
+            current_status_other = st.text_input("Jeśli inne, opisz aktualny status", key="current_status_other")
         profession = st.text_input("Obecnie wykonywany zawód", key="profession")
         height_cm_text = st.text_input("Wzrost (cm)", key="height_cm_text")
         weight_kg_text = st.text_input("Masa ciała (kg)", key="weight_kg_text")
@@ -775,6 +781,9 @@ with st.form("medical_form"):
             ["leżący", "siedzący", "nisko aktywny", "średnio aktywny", "bardzo aktywny", "inne"],
             key="lifestyle",
         )
+        lifestyle_other = ""
+        if lifestyle == "inne":
+            lifestyle_other = st.text_input("Jeśli inne, opisz tryb życia", key="lifestyle_other")
         stimulants = st.multiselect(
             "Używki i codzienne nawyki",
             ["kawa", "herbata", "papierosy", "alkohol", "narkotyki", "słodycze", "inne"],
@@ -816,11 +825,17 @@ with st.form("medical_form"):
             ["poród naturalny", "poród przez cesarskie cięcie", "nie wiem", "inne"],
             key="birth_delivery",
         )
+        birth_delivery_other = ""
+        if birth_delivery == "inne":
+            birth_delivery_other = st.text_input("Jeśli inne, opisz sposób porodu", key="birth_delivery_other")
         birth_timing = select_with_placeholder(
             "Czas porodu",
             ["poród przedwczesny", "poród o czasie", "poród po terminie", "nie wiem", "inne"],
             key="birth_timing",
         )
+        birth_timing_other = ""
+        if birth_timing == "inne":
+            birth_timing_other = st.text_input("Jeśli inne, opisz czas porodu", key="birth_timing_other")
         green_water = yes_no_unknown("Czy były zielone wody płodowe?", key="green_water")
         birth_info_other = st.text_input("Inne informacje o urodzeniu", key="birth_info_other")
 
@@ -1024,7 +1039,10 @@ Proszę również przynieść na wizytę posiadane wyniki badań w formie papier
             error_box(field_errors["consent"])
 
     progress_values = [
-        visit_type, first_name, last_name, phone, email, birth_date_input, nationality, sex, current_status,
+        visit_type, first_name, last_name, phone, email, birth_date_input, nationality, sex,
+        *(([sex_other]) if sex == "inne" else []),
+        current_status,
+        *(([current_status_other]) if current_status == "inne" else []),
         profession, height_cm_text, weight_kg_text,
         physical_score, mental_score, weight_change,
         *(([weight_change_amount]) if weight_change in ["wzrosła", "spadła"] else []),
@@ -1036,7 +1054,9 @@ Proszę również przynieść na wizytę posiadane wyniki badań w formie papier
         improvement_factors,
         *(([improvement_other]) if "inne" in improvement_factors else []),
         health_timeline, current_meds,
-        lifestyle, stimulants,
+        lifestyle,
+        *(([lifestyle_other]) if lifestyle == "inne" else []),
+        stimulants,
         *(([stimulants_other]) if "inne" in stimulants else []),
         sleep_hours,
         travel_abroad,
@@ -1047,7 +1067,11 @@ Proszę również przynieść na wizytę posiadane wyniki badań w formie papier
         covid,
         *(([covid_details]) if covid == "tak" else []),
         strong_stress,
-        birth_delivery, birth_timing, green_water, birth_info_other, breastfeeding, childhood_diseases,
+        birth_delivery,
+        *(([birth_delivery_other]) if birth_delivery == "inne" else []),
+        birth_timing,
+        *(([birth_timing_other]) if birth_timing == "inne" else []),
+        green_water, birth_info_other, breastfeeding, childhood_diseases,
         *(([childhood_diseases_other]) if "inne" in childhood_diseases else []),
         fever_now,
         *(([fever_details]) if fever_now == "tak" else []),
@@ -1173,9 +1197,9 @@ if send_clicked:
         "visit_type": visit_type,
         "submitted_at": submitted_at,
         "sec_basic": [
-            f"Płeć: {sex}" if nonempty(sex) else "",
+            f"Płeć: {sex_other if nonempty(sex_other) else sex}" if nonempty(sex) else "",
             f"Narodowość: {nationality}" if nonempty(nationality) else "",
-            f"Aktualny status: {current_status}" if nonempty(current_status) else "",
+            f"Aktualny status: {current_status_other if nonempty(current_status_other) else current_status}" if nonempty(current_status) else "",
             f"Zawód: {profession}" if nonempty(profession) else "",
             f"Wzrost: {height_cm:.0f} cm" if height_cm is not None else "",
             f"Masa ciała: {weight_kg:.1f} kg" if weight_kg is not None else "",
@@ -1204,7 +1228,7 @@ if send_clicked:
             *lines_from_text(current_meds),
         ],
         "sec_lifestyle": [
-            f"Tryb życia: {lifestyle}" if nonempty(lifestyle) else "",
+            f"Tryb życia: {lifestyle_other if nonempty(lifestyle_other) else lifestyle}" if nonempty(lifestyle) else "",
             f"Używki i nawyki: {list_text(stimulants)}" if stimulants else "",
             f"Inne używki lub nawyki: {stimulants_other}" if nonempty(stimulants_other) else "",
             f"Sen: {sleep_hours} godzin na dobę" if nonempty(sleep_hours) else "",
@@ -1225,8 +1249,8 @@ if send_clicked:
             f"Silne reakcje stresowe: {strong_stress}" if nonempty(strong_stress) else ""
         ],
         "sec_birth_childhood": [
-            f"Sposób porodu: {birth_delivery}" if nonempty(birth_delivery) else "",
-            f"Czas porodu: {birth_timing}" if nonempty(birth_timing) else "",
+            f"Sposób porodu: {birth_delivery_other if nonempty(birth_delivery_other) else birth_delivery}" if nonempty(birth_delivery) else "",
+            f"Czas porodu: {birth_timing_other if nonempty(birth_timing_other) else birth_timing}" if nonempty(birth_timing) else "",
             f"Zielone wody płodowe: {green_water}" if nonempty(green_water) else "",
             f"Inne informacje o urodzeniu: {birth_info_other}" if nonempty(birth_info_other) else "",
             f"Karmienie mlekiem matki: {breastfeeding}" if nonempty(breastfeeding) else "",
