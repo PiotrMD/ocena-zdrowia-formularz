@@ -228,6 +228,33 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "err_phone": "Wpisz poprawny numer telefonu. Może być z +48 albo bez.",
         "err_email": "Wpisz poprawny adres e-mail.",
         "err_birth_date": "Wybierz datę urodzenia.",
+        # sekcja 3
+        "sec_3": "3. Badania wykonane w ciągu ostatnich 2 lat",
+        "tests_lbl": "Zaznacz wykonane badania",
+        "tests_ph": "Wybierz badania",
+        # sekcja 5
+        "sec_5": "5. Charakter objawów",
+        "symptom_pattern_lbl": "Czy objawy są stałe czy pojawiają się okresowo?",
+        "symptom_periodicity_lbl": "Jeśli okresowe, napisz kiedy się pojawiają i jak często w ciągu roku",
+        "symptom_past_lbl": "Czy podobne objawy występowały wcześniej? Jeśli tak, kiedy?",
+        "worsening_factors_lbl": "Co powoduje pogorszenie objawów?",
+        "worsening_factors_ph": "Wybierz czynniki pogorszenia",
+        "worsening_other_lbl": "Inne czynniki pogorszenia — opisz jakie",
+        "improvement_factors_lbl": "Co powoduje poprawę lub zmniejszenie objawów?",
+        "improvement_factors_ph": "Wybierz czynniki poprawy",
+        "improvement_other_lbl": "Inne czynniki poprawy — opisz jakie",
+        # sekcja 6
+        "sec_6": "6. Chronologia zdrowia i leki",
+        "health_timeline_lbl": "Opisz przebieg zdrowia od pierwszych problemów zdrowotnych do dziś",
+        "current_meds_lbl": "Jakie leki obecnie przyjmujesz? Podaj nazwę i dawkowanie. Najlepiej wpisuj każdy lek w osobnej linii.",
+        # sekcja 7
+        "sec_7": "7. Tryb życia",
+        "lifestyle_lbl": "Tryb życia",
+        "lifestyle_other_lbl": "Inny tryb życia — opisz",
+        "stimulants_lbl": "Używki i codzienne nawyki",
+        "stimulants_ph": "Wybierz używki i nawyki",
+        "stimulants_other_lbl": "Inne używki lub nawyki — opisz jakie",
+        "sleep_hours_lbl": "Ile średnio trwa sen na dobę?",
     },
     "en": {
         "header_title": "HEALTH ASSESSMENT",
@@ -291,6 +318,33 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "err_phone": "Please enter a valid phone number. With or without +country code.",
         "err_email": "Please enter a valid email address.",
         "err_birth_date": "Please select your date of birth.",
+        # section 3
+        "sec_3": "3. Tests Performed in the Last 2 Years",
+        "tests_lbl": "Select completed tests",
+        "tests_ph": "Select tests",
+        # section 5
+        "sec_5": "5. Symptom Characteristics",
+        "symptom_pattern_lbl": "Are symptoms constant or do they appear periodically?",
+        "symptom_periodicity_lbl": "If periodic, describe when they appear and how often per year",
+        "symptom_past_lbl": "Did similar symptoms occur before? If so, when?",
+        "worsening_factors_lbl": "What causes worsening of symptoms?",
+        "worsening_factors_ph": "Select worsening factors",
+        "worsening_other_lbl": "Other worsening factors — describe",
+        "improvement_factors_lbl": "What causes improvement or reduction of symptoms?",
+        "improvement_factors_ph": "Select improvement factors",
+        "improvement_other_lbl": "Other improvement factors — describe",
+        # section 6
+        "sec_6": "6. Health Timeline and Medications",
+        "health_timeline_lbl": "Describe your health history from first health issues to today",
+        "current_meds_lbl": "What medications are you currently taking? Provide name and dosage. Preferably enter each medication on a separate line.",
+        # section 7
+        "sec_7": "7. Lifestyle",
+        "lifestyle_lbl": "Lifestyle",
+        "lifestyle_other_lbl": "Other lifestyle — describe",
+        "stimulants_lbl": "Stimulants and daily habits",
+        "stimulants_ph": "Select stimulants and habits",
+        "stimulants_other_lbl": "Other stimulants or habits — describe",
+        "sleep_hours_lbl": "How many hours of sleep per night on average?",
     },
 }
 
@@ -314,6 +368,52 @@ _OPT_EN: Dict[str, str] = {
     "wzrosła": "Increased",
     "spadła": "Decreased",
     "bez zmian": "Unchanged",
+    # sec 3 — badania
+    "RTG klatki piersiowej": "Chest X-ray",
+    "EKG": "ECG",
+    "Echo serca": "Echocardiogram",
+    "Holter EKG": "Holter ECG",
+    "Holter ciśnieniowy": "Blood pressure Holter",
+    "Gastroskopia": "Gastroscopy",
+    "Kolonoskopia": "Colonoscopy",
+    "USG jamy brzusznej": "Abdominal ultrasound",
+    "USG miednicy": "Pelvic ultrasound",
+    "USG ginekologiczne": "Gynecological ultrasound",
+    "USG tarczycy": "Thyroid ultrasound",
+    "USG jąder": "Testicular ultrasound",
+    "USG prostaty": "Prostate ultrasound",
+    "USG piersi": "Breast ultrasound",
+    "Mammografia": "Mammography",
+    "Tomografia komputerowa": "CT scan",
+    "Tomografia głowy": "Head CT scan",
+    "Rezonans magnetyczny": "MRI",
+    "Rezonans głowy": "Head MRI",
+    "Doppler tętnic szyjnych": "Carotid artery Doppler",
+    "Przepływy w naczyniach kończyn dolnych": "Lower limb vessel flow study",
+    "Densytometria": "Bone densitometry",
+    "Scyntygrafia": "Scintigraphy",
+    # sec 5 — charakter objawów
+    "stałe": "constant",
+    "okresowe": "periodic",
+    "trudno powiedzieć": "hard to say",
+    "wysiłek": "exercise",
+    "głód": "hunger",
+    "posiłek": "meal",
+    "mówienie": "speaking",
+    "śmiech": "laughing",
+    "wypoczynek": "rest",
+    # sec 7 — tryb życia
+    "leżący": "bedridden",
+    "siedzący": "sedentary",
+    "nisko aktywny": "lightly active",
+    "średnio aktywny": "moderately active",
+    "bardzo aktywny": "very active",
+    "kawa": "coffee",
+    "herbata": "tea",
+    "papierosy": "cigarettes",
+    "alkohol": "alcohol",
+    "narkotyki": "drugs",
+    "słodycze": "sweets",
 }
 
 
@@ -903,9 +1003,9 @@ with st.expander(t("sec_2")):
         )
         weight_change_amount = str(_kg) if _kg is not None else ""
 
-with st.expander("3. Badania wykonane w ciągu ostatnich 2 lat"):
+with st.expander(t("sec_3")):
     performed_tests = st.multiselect(
-        "Zaznacz wykonane badania",
+        t("tests_lbl"),
         [
             "RTG klatki piersiowej",
             "EKG",
@@ -931,7 +1031,8 @@ with st.expander("3. Badania wykonane w ciągu ostatnich 2 lat"):
             "Densytometria",
             "Scyntygrafia",
         ],
-        placeholder="Wybierz badania",
+        format_func=_opt,
+        placeholder=t("tests_ph"),
         key="performed_tests",
     )
 
@@ -948,61 +1049,64 @@ with st.expander(t("sec_4")):
     symptom_5_since = st.text_input(t("symptom_since_lbl").format(n=5), key="symptom_5_since")
     additional_symptoms = st.text_area(t("additional_symptoms_lbl"), key="additional_symptoms")
 
-with st.expander("5. Charakter objawów"):
+with st.expander(t("sec_5")):
     symptom_pattern = select_with_placeholder(
-        "Czy objawy są stałe czy pojawiają się okresowo?",
+        t("symptom_pattern_lbl"),
         ["stałe", "okresowe", "trudno powiedzieć"],
         key="symptom_pattern",
     )
-    symptom_periodicity = st.text_area("Jeśli okresowe, napisz kiedy się pojawiają i jak często w ciągu roku", key="symptom_periodicity")
-    symptom_past = st.text_area("Czy podobne objawy występowały wcześniej? Jeśli tak, kiedy?", key="symptom_past")
+    symptom_periodicity = st.text_area(t("symptom_periodicity_lbl"), key="symptom_periodicity")
+    symptom_past = st.text_area(t("symptom_past_lbl"), key="symptom_past")
 
     worsening_factors = st.multiselect(
-        "Co powoduje pogorszenie objawów?",
+        t("worsening_factors_lbl"),
         ["wysiłek", "głód", "posiłek", "mówienie", "śmiech", "inne"],
-        placeholder="Wybierz czynniki pogorszenia",
+        format_func=_opt,
+        placeholder=t("worsening_factors_ph"),
         key="worsening_factors",
     )
     _inne_w = "inne" in worsening_factors
-    worsening_other = st.text_input("Inne czynniki pogorszenia — opisz jakie", key="worsening_other", disabled=not _inne_w)
+    worsening_other = st.text_input(t("worsening_other_lbl"), key="worsening_other", disabled=not _inne_w)
     if not _inne_w:
         worsening_other = ""
 
     improvement_factors = st.multiselect(
-        "Co powoduje poprawę lub zmniejszenie objawów?",
+        t("improvement_factors_lbl"),
         ["wypoczynek", "wysiłek", "głód", "posiłek", "inne"],
-        placeholder="Wybierz czynniki poprawy",
+        format_func=_opt,
+        placeholder=t("improvement_factors_ph"),
         key="improvement_factors",
     )
     _inne_i = "inne" in improvement_factors
-    improvement_other = st.text_input("Inne czynniki poprawy — opisz jakie", key="improvement_other", disabled=not _inne_i)
+    improvement_other = st.text_input(t("improvement_other_lbl"), key="improvement_other", disabled=not _inne_i)
     if not _inne_i:
         improvement_other = ""
 
-with st.expander("6. Chronologia zdrowia i leki"):
-    health_timeline = st.text_area("Opisz przebieg zdrowia od pierwszych problemów zdrowotnych do dziś", key="health_timeline")
-    current_meds = st.text_area("Jakie leki obecnie przyjmujesz? Podaj nazwę i dawkowanie. Najlepiej wpisuj każdy lek w osobnej linii.", key="current_meds")
+with st.expander(t("sec_6")):
+    health_timeline = st.text_area(t("health_timeline_lbl"), key="health_timeline")
+    current_meds = st.text_area(t("current_meds_lbl"), key="current_meds")
 
-with st.expander("7. Tryb życia"):
+with st.expander(t("sec_7")):
     lifestyle = select_with_placeholder(
-        "Tryb życia",
+        t("lifestyle_lbl"),
         ["leżący", "siedzący", "nisko aktywny", "średnio aktywny", "bardzo aktywny", "inne"],
         key="lifestyle",
     )
-    lifestyle_other = st.text_input("Inny tryb życia — opisz", key="lifestyle_other", disabled=(lifestyle != "inne"))
+    lifestyle_other = st.text_input(t("lifestyle_other_lbl"), key="lifestyle_other", disabled=(lifestyle != "inne"))
     if lifestyle != "inne":
         lifestyle_other = ""
     stimulants = st.multiselect(
-        "Używki i codzienne nawyki",
+        t("stimulants_lbl"),
         ["kawa", "herbata", "papierosy", "alkohol", "narkotyki", "słodycze", "inne"],
-        placeholder="Wybierz używki i nawyki",
+        format_func=_opt,
+        placeholder=t("stimulants_ph"),
         key="stimulants",
     )
     _inne_s = "inne" in stimulants
-    stimulants_other = st.text_input("Inne używki lub nawyki — opisz jakie", key="stimulants_other", disabled=not _inne_s)
+    stimulants_other = st.text_input(t("stimulants_other_lbl"), key="stimulants_other", disabled=not _inne_s)
     if not _inne_s:
         stimulants_other = ""
-    sleep_hours = select_with_placeholder("Ile średnio trwa sen na dobę?", ["3", "4", "5", "6", "7", "8", "9", "10", "11", "12"], key="sleep_hours")
+    sleep_hours = select_with_placeholder(t("sleep_hours_lbl"), ["3", "4", "5", "6", "7", "8", "9", "10", "11", "12"], key="sleep_hours")
 
 with st.expander("8. Podróże"):
     travel_abroad = yes_no("Czy w ciągu ostatnich 3 miesięcy był wyjazd za granicę?", key="travel_abroad")
