@@ -163,6 +163,70 @@ st.markdown(
 )
 
 # =========================================================
+# TRANSLATIONS
+# =========================================================
+TRANSLATIONS: Dict[str, Dict[str, str]] = {
+    "pl": {
+        "header_title": "OCENA STANU ZDROWIA",
+        "header_subtitle": "Wywiad lekarski",
+        "header_contact": "W sprawie pytań proszę kontaktować się z recepcją: +48 690 584 584",
+        "welcome_text": (
+            "Szanowni Państwo,<br><br>"
+            "każda wizyta jest przygotowywana indywidualnie.<br>"
+            "Bardzo proszę o szczere i możliwie dokładne odpowiedzi dotyczące stanu zdrowia.<br>"
+            "Im więcej szczegółów, tym większa szansa na wcześniejsze wykrycie problemów i trafną ocenę sytuacji zdrowotnej.<br><br>"
+            "W przypadku dzieci proszę o wypełnienie odpowiednich pól.<br><br>"
+            "Serdecznie pozdrawiam i do zobaczenia na wizycie."
+        ),
+        "welcome_privacy": (
+            "Formularz ma charakter informacyjny i służy przygotowaniu wizyty lekarskiej. "
+            "Dane nie są przechowywane w bazie aplikacji. "
+            "Po wysłaniu przekazywane są wyłącznie lekarzowi w formie wiadomości e-mail i dokumentu PDF."
+        ),
+        "send_btn": "Wyślij",
+        "sending": "Wysyłanie formularza…",
+        "form_sent": "Formularz został wysłany. Dziękujemy.",
+        "consent_true": "Oświadczam, że podane informacje są prawdziwe.",
+        "consent_visit": "Wyrażam zgodę na wykorzystanie tych informacji wyłącznie przez lekarza do przygotowania wizyty.",
+        "consent_privacy": "Przyjmuję do wiadomości, że formularz nie zapisuje danych w bazie aplikacji, a dokument wysyłany do lekarza zawiera ograniczone dane identyfikacyjne.",
+        "contact_consent": "Wyrażam zgodę na kontakt telefoniczny lub mailowy w sprawach organizacyjnych związanych z wizytą.",
+        "err_consent": "Zaznacz wszystkie wymagane zgody.",
+    },
+    "en": {
+        "header_title": "HEALTH ASSESSMENT",
+        "header_subtitle": "Medical Interview",
+        "header_contact": "For questions, please contact reception: +48 690 584 584",
+        "welcome_text": (
+            "Dear Patient,<br><br>"
+            "each visit is prepared individually.<br>"
+            "Please answer as honestly and thoroughly as possible about your health.<br>"
+            "The more details you provide, the better the chances of early detection and accurate assessment.<br><br>"
+            "For children, please fill in the appropriate fields.<br><br>"
+            "Best regards and see you at the appointment."
+        ),
+        "welcome_privacy": (
+            "This form is informational and serves to prepare the medical appointment. "
+            "Data is not stored in the application database. "
+            "After submission, it is sent exclusively to the doctor via email and PDF document."
+        ),
+        "send_btn": "Submit",
+        "sending": "Sending form…",
+        "form_sent": "Form submitted successfully. Thank you.",
+        "consent_true": "I declare that the information provided is true.",
+        "consent_visit": "I consent to the use of this information exclusively by the doctor to prepare the appointment.",
+        "consent_privacy": "I acknowledge that the form does not store data in the application database, and the document sent to the doctor contains limited identifying information.",
+        "contact_consent": "I consent to phone or email contact for organizational matters related to the appointment.",
+        "err_consent": "Please check all required consents.",
+    },
+}
+
+
+def t(key: str) -> str:
+    lang = st.session_state.get("lang", "pl")
+    return TRANSLATIONS.get(lang, TRANSLATIONS["pl"]).get(key, key)
+
+
+# =========================================================
 # SECRETS / ENV
 # =========================================================
 def get_secret(name: str) -> str:
@@ -557,16 +621,29 @@ if "field_errors" not in st.session_state:
     st.session_state.field_errors = {}
 if "scroll_target" not in st.session_state:
     st.session_state.scroll_target = None
+if "lang" not in st.session_state:
+    st.session_state["lang"] = "pl"
 
 field_errors: Dict[str, str] = st.session_state.field_errors
 
 if st.session_state.pop("_form_sent", False):
-    st.success("Formularz został wysłany. Dziękujemy.")
+    st.success(t("form_sent"))
 
 # =========================================================
 # GÓRA APLIKACJI
 # =========================================================
 progress_placeholder = st.empty()
+
+_lc1, _lc2 = st.columns([6, 1])
+with _lc2:
+    st.radio(
+        "",
+        ["pl", "en"],
+        key="lang",
+        horizontal=True,
+        format_func=lambda x: "🇵🇱 PL" if x == "pl" else "🇬🇧 EN",
+        label_visibility="collapsed",
+    )
 
 if os.path.exists("logo.PNG"):
     st.image("logo.PNG", use_container_width=True)
@@ -576,33 +653,24 @@ elif os.path.exists("Logo OCENA ZDROWIA.PNG"):
     st.image("Logo OCENA ZDROWIA.PNG", use_container_width=True)
 
 st.markdown(
-    """
+    f"""
     <div class="header-card">
-        <div class="header-title">OCENA STANU ZDROWIA</div>
-        <div class="header-subtitle">Wywiad lekarski</div>
+        <div class="header-title">{t("header_title")}</div>
+        <div class="header-subtitle">{t("header_subtitle")}</div>
         <hr class="header-divider">
         <div class="header-doctor">dr n. med. Piotr Niedziałkowski</div>
         <div class="header-site">www.ocenazdrowia.pl</div>
-        <div class="header-contact">W sprawie pytań proszę kontaktować się z recepcją: +48 690 584 584</div>
+        <div class="header-contact">{t("header_contact")}</div>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
 st.markdown(
-    """
+    f"""
     <div class="welcome-card">
-        Szanowni Państwo,<br><br>
-        każda wizyta jest przygotowywana indywidualnie.<br>
-        Bardzo proszę o szczere i możliwie dokładne odpowiedzi dotyczące stanu zdrowia.<br>
-        Im więcej szczegółów, tym większa szansa na wcześniejsze wykrycie problemów i trafną ocenę sytuacji zdrowotnej.<br><br>
-        W przypadku dzieci proszę o wypełnienie odpowiednich pól.<br><br>
-        Serdecznie pozdrawiam i do zobaczenia na wizycie.
-        <div class="welcome-privacy">
-            Formularz ma charakter informacyjny i służy przygotowaniu wizyty lekarskiej.
-            Dane nie są przechowywane w bazie aplikacji.
-            Po wysłaniu przekazywane są wyłącznie lekarzowi w formie wiadomości e-mail i dokumentu PDF.
-        </div>
+        {t("welcome_text")}
+        <div class="welcome-privacy">{t("welcome_privacy")}</div>
     </div>
     """,
     unsafe_allow_html=True,
@@ -1075,10 +1143,10 @@ Proszę również przynieść na wizytę posiadane wyniki badań w formie papier
     )
 
     st.markdown('<div id="anchor_consent" class="field-anchor"></div>', unsafe_allow_html=True)
-    consent_true = st.checkbox("Oświadczam, że podane informacje są prawdziwe.", key="consent_true")
-    consent_visit = st.checkbox("Wyrażam zgodę na wykorzystanie tych informacji wyłącznie przez lekarza do przygotowania wizyty.", key="consent_visit")
-    consent_privacy = st.checkbox("Przyjmuję do wiadomości, że formularz nie zapisuje danych w bazie aplikacji, a dokument wysyłany do lekarza zawiera ograniczone dane identyfikacyjne.", key="consent_privacy")
-    contact_consent = st.checkbox("Wyrażam zgodę na kontakt telefoniczny lub mailowy w sprawach organizacyjnych związanych z wizytą.", key="contact_consent")
+    consent_true = st.checkbox(t("consent_true"), key="consent_true")
+    consent_visit = st.checkbox(t("consent_visit"), key="consent_visit")
+    consent_privacy = st.checkbox(t("consent_privacy"), key="consent_privacy")
+    contact_consent = st.checkbox(t("contact_consent"), key="contact_consent")
 
     if "consent" in field_errors:
         error_box(field_errors["consent"])
@@ -1157,7 +1225,7 @@ progress_values = [
 progress_percent = calc_progress(progress_values)
 
 st.markdown('<div class="send-button">', unsafe_allow_html=True)
-send_clicked = st.button("Wyślij", key="send_button")
+send_clicked = st.button(t("send_btn"), key="send_button")
 st.markdown("</div>", unsafe_allow_html=True)
 
 # =========================================================
@@ -1199,7 +1267,7 @@ if send_clicked:
     if not birth_date:
         st.session_state.field_errors["birth_date"] = "Wybierz datę urodzenia."
     if not consent_true or not consent_visit or not consent_privacy:
-        st.session_state.field_errors["consent"] = "Zaznacz wszystkie wymagane zgody."
+        st.session_state.field_errors["consent"] = t("err_consent")
 
     anchor_order = [
         ("visit_type", "anchor_visit_type"),
@@ -1455,7 +1523,7 @@ Zgoda na kontakt organizacyjny: {"tak" if contact_consent else "nie"}
     ]
 
     _status = st.empty()
-    _status.info("Wysyłanie formularza…")
+    _status.info(t("sending"))
     pdf_path = None
     try:
         pdf_path = make_pdf(pdf_data)
