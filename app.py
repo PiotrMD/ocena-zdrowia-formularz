@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional
 
 import streamlit as st
 import streamlit.components.v1 as components
+from dotenv import load_dotenv
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
@@ -17,6 +18,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
+load_dotenv()
 
 # =========================================================
 # KONFIGURACJA STRONY
@@ -149,13 +151,14 @@ st.markdown(
 )
 
 # =========================================================
-# SECRETS
+# SECRETS / ENV
 # =========================================================
 def get_secret(name: str) -> str:
-    if name not in st.secrets:
-        st.error(f"Brakuje sekretu: {name}")
+    value = os.getenv(name)
+    if not value:
+        st.error(f"Brakuje zmiennej środowiskowej: {name}")
         st.stop()
-    return st.secrets[name]
+    return value
 
 
 EMAIL_NADAWCA = get_secret("EMAIL_NADAWCA")
