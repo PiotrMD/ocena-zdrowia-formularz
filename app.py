@@ -560,6 +560,9 @@ if "scroll_target" not in st.session_state:
 
 field_errors: Dict[str, str] = st.session_state.field_errors
 
+if st.session_state.pop("_form_sent", False):
+    st.success("Formularz został wysłany. Dziękujemy.")
+
 # =========================================================
 # GÓRA APLIKACJI
 # =========================================================
@@ -1401,25 +1404,73 @@ Data i godzina wypełnienia formularza: {submitted_at}
 Zgoda na kontakt organizacyjny: {"tak" if contact_consent else "nie"}
 """
 
+    _FORM_KEYS = [
+        "visit_type", "first_name", "last_name", "phone", "email", "birth_date_input",
+        "nationality", "sex", "sex_other", "current_status", "current_status_other",
+        "profession", "height_cm_text", "weight_kg_text",
+        "physical_score", "mental_score", "weight_change", "weight_change_amount_num",
+        "performed_tests",
+        "symptom_1", "symptom_1_since", "symptom_2", "symptom_2_since",
+        "symptom_3", "symptom_3_since", "symptom_4", "symptom_4_since",
+        "symptom_5", "symptom_5_since", "additional_symptoms",
+        "symptom_pattern", "symptom_periodicity", "symptom_past",
+        "worsening_factors", "worsening_other", "improvement_factors", "improvement_other",
+        "health_timeline", "current_meds",
+        "lifestyle", "lifestyle_other", "stimulants", "stimulants_other", "sleep_hours",
+        "travel_abroad", "travel_where",
+        "animal_contact", "animal_contact_details",
+        "major_injuries", "covid", "covid_details", "strong_stress",
+        "birth_delivery", "birth_delivery_other", "birth_timing", "birth_timing_other",
+        "green_water", "birth_info_other", "breastfeeding",
+        "childhood_diseases", "childhood_diseases_other",
+        "fever_now", "fever_details", "headache_dizziness", "headache_dizziness_details",
+        "headache_assoc", "hearing_vision", "attacks", "sinus_problems", "nose_problems",
+        "allergies", "herpes", "mouth_corners", "fresh_food_reaction", "epilepsy",
+        "smell_taste", "colds",
+        "throat_morning", "esophagus_burning", "asthma_dx", "pneumonia", "pneumonia_details",
+        "dyspnea", "night_breath", "chest_heaviness", "breathing_type", "wheezing", "cough",
+        "chest_pain", "pressure_type", "current_bp", "current_hr",
+        "pain_press", "pain_position", "palpitations",
+        "gi_problem", "gi_symptoms", "worsening_foods", "gi_infections",
+        "urine_problems", "night_urination", "fluids",
+        "joints", "stiffness",
+        "skin_changes", "skin_itch", "acne", "acne_details", "skin_sensation",
+        "wound_healing", "wound_healing_details",
+        "sleep_problem", "sleep_problem_types", "psych_contact", "psych_dx",
+        "edema", "edema_details", "calf_pain", "cold_fingers", "tingling", "varicose",
+        "anal_problems", "anal_other",
+        "gyn_problems", "menstruation", "first_menses", "last_menses_text", "potency",
+        "mother_history", "father_history", "maternal_grandmother", "paternal_grandmother",
+        "maternal_grandfather", "paternal_grandfather",
+        "own_diagnoses", "important_info", "current_reason", "key_question",
+        "consent_true", "consent_visit", "consent_privacy", "contact_consent",
+    ]
+
+    _status = st.empty()
+    _status.info("Wysyłanie formularza…")
     pdf_path = None
     try:
-        with st.spinner("Trwa wysyłanie formularza..."):
-            pdf_path = make_pdf(pdf_data)
-            date_slug = datetime.now().strftime("%Y-%m-%d")
-            safe_initials = patient_initials.replace(" ", "_").replace(".", "")
-            pdf_filename = f"wywiad_{safe_initials}_{date_slug}.pdf"
-            send_email_with_pdf(
-                subject=f"Nowy formularz pacjenta - {full_name}",
-                body_text=email_body,
-                pdf_path=pdf_path,
-                filename=pdf_filename,
-            )
+        pdf_path = make_pdf(pdf_data)
+        date_slug = datetime.now().strftime("%Y-%m-%d")
+        safe_initials = patient_initials.replace(" ", "_").replace(".", "")
+        pdf_filename = f"wywiad_{safe_initials}_{date_slug}.pdf"
+        send_email_with_pdf(
+            subject=f"Nowy formularz pacjenta - {full_name}",
+            body_text=email_body,
+            pdf_path=pdf_path,
+            filename=pdf_filename,
+        )
 
+        _status.empty()
         st.session_state.field_errors = {}
         st.session_state.scroll_target = None
-        st.success("Formularz został wysłany. Dziękujemy.")
+        st.session_state["_form_sent"] = True
+        for _k in _FORM_KEYS:
+            st.session_state.pop(_k, None)
+        st.rerun()
 
     except Exception as e:
+        _status.empty()
         st.error(f"Nie udało się wysłać formularza. Szczegóły: {e}")
 
     finally:
