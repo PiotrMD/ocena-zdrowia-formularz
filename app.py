@@ -700,14 +700,14 @@ with st.expander("1. Dane podstawowe", expanded=True):
     profession = st.text_input("Obecnie wykonywany zawód", key="profession")
 
 with st.expander("2. Ocena ogólna"):
-    physical_score = select_with_placeholder(
+    physical_score = st.slider(
         "Jak oceniasz swój stan fizyczny? 0 = bardzo zły, 10 = bardzo dobry",
-        [str(i) for i in range(0, 11)],
+        min_value=0, max_value=10, value=5,
         key="physical_score",
     )
-    mental_score = select_with_placeholder(
+    mental_score = st.slider(
         "Jak oceniasz swój stan psychiczny? 0 = bardzo zły, 10 = bardzo dobry",
-        [str(i) for i in range(0, 11)],
+        min_value=0, max_value=10, value=5,
         key="mental_score",
     )
     weight_change = select_with_placeholder(
