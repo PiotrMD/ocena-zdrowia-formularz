@@ -8,7 +8,6 @@ from typing import Any, Dict, List, Optional
 
 import streamlit as st
 import streamlit.components.v1 as components
-from dotenv import load_dotenv
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
@@ -17,8 +16,6 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
-
-load_dotenv()
 
 # =========================================================
 # KONFIGURACJA STRONY
