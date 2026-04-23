@@ -161,7 +161,7 @@ def get_secret(name: str) -> str:
 EMAIL_NADAWCA = get_secret("EMAIL_NADAWCA")
 HASLO_APLIKACJI = get_secret("HASLO_APLIKACJI")
 EMAIL_ODBIORCA1 = get_secret("EMAIL_ODBIORCA1")
-EMAIL_ODBIORCA2 = get_secret("EMAIL_ODBIORCA2")
+EMAIL_ODBIORCA2 = os.getenv("EMAIL_ODBIORCA2", "")
 
 
 # =========================================================
@@ -502,12 +502,15 @@ def make_pdf(data: Dict[str, Any]) -> str:
     return tmp.name
 
 
-def send_email_with_pdf(subject: str, body_text: str, pdf_path: str):
+def send_email_with_pdf(subject: str, body_text: str, pdf_path: str, filename: str = "wywiad_lekarski.pdf"):
     msg = EmailMessage()
     msg["Subject"] = subject
     msg["From"] = EMAIL_NADAWCA
     msg["To"] = EMAIL_NADAWCA
-    msg["Bcc"] = f"{EMAIL_ODBIORCA1}, {EMAIL_ODBIORCA2}"
+    bcc_list = [EMAIL_ODBIORCA1]
+    if EMAIL_ODBIORCA2:
+        bcc_list.append(EMAIL_ODBIORCA2)
+    msg["Bcc"] = ", ".join(bcc_list)
     msg.set_content(body_text)
 
     with open(pdf_path, "rb") as f:
@@ -517,7 +520,7 @@ def send_email_with_pdf(subject: str, body_text: str, pdf_path: str):
         pdf_bytes,
         maintype="application",
         subtype="pdf",
-        filename="wywiad_lekarski.pdf",
+        filename=filename,
     )
 
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
@@ -573,7 +576,6 @@ st.markdown(
     Bardzo proszę o szczere i możliwie dokładne odpowiedzi dotyczące stanu zdrowia.<br>
     Im więcej szczegółów, tym większa szansa na wcześniejsze wykrycie problemów i trafną ocenę sytuacji zdrowotnej.<br><br>
     W przypadku dzieci proszę o wypełnienie odpowiednich pól.<br><br>
-    Dane z formularza nie są zapisywane w bazie aplikacji. Po wysłaniu formularza dokument trafia wyłącznie do lekarza w celu przygotowania wizyty.<br><br>
     Serdecznie pozdrawiam i do zobaczenia na wizycie.
     </div>
     """,
@@ -585,7 +587,10 @@ st.markdown(
 # =========================================================
 with st.form("medical_form"):
     with st.expander("1. Dane podstawowe", expanded=True):
+        st.markdown('<div id="anchor_visit_type" class="field-anchor"></div>', unsafe_allow_html=True)
         visit_type = select_with_placeholder("Rodzaj wizyty", ["Pierwsza", "Kontrolna"], key="visit_type")
+        if "visit_type" in field_errors:
+            error_box(field_errors["visit_type"])
 
         st.markdown('<div id="anchor_first_name" class="field-anchor"></div>', unsafe_allow_html=True)
         first_name = st.text_input("Imię", key="first_name")
@@ -612,10 +617,13 @@ with st.form("medical_form"):
             error_box(field_errors["email"])
 
         st.markdown('<div id="anchor_birth_date" class="field-anchor"></div>', unsafe_allow_html=True)
-        birth_date_text = st.text_input(
+        birth_date_input = st.date_input(
             "Data urodzenia",
-            key="birth_date_text",
-            help="Najlepiej w formacie DD.MM.RRRR",
+            value=None,
+            min_value=date(1900, 1, 1),
+            max_value=date.today(),
+            format="DD.MM.YYYY",
+            key="birth_date_input",
         )
         if "birth_date" in field_errors:
             error_box(field_errors["birth_date"])
@@ -993,36 +1001,62 @@ Proszę również przynieść na wizytę posiadane wyniki badań w formie papier
             error_box(field_errors["consent"])
 
     progress_values = [
-        visit_type, first_name, last_name, phone, email, birth_date_text, nationality, sex, current_status,
+        visit_type, first_name, last_name, phone, email, birth_date_input, nationality, sex, current_status,
         profession, height_cm_text, weight_kg_text,
-        physical_score, mental_score, weight_change, weight_change_amount,
+        physical_score, mental_score, weight_change,
+        *(([weight_change_amount]) if weight_change in ["wzrosła", "spadła"] else []),
         performed_tests,
         symptom_1, symptom_1_since, symptom_2, symptom_2_since, symptom_3, symptom_3_since,
         symptom_4, symptom_4_since, symptom_5, symptom_5_since, additional_symptoms,
-        symptom_pattern, symptom_periodicity, symptom_past, worsening_factors, worsening_other,
-        improvement_factors, improvement_other,
+        symptom_pattern, symptom_periodicity, symptom_past, worsening_factors,
+        *(([worsening_other]) if "inne" in worsening_factors else []),
+        improvement_factors,
+        *(([improvement_other]) if "inne" in improvement_factors else []),
         health_timeline, current_meds,
-        lifestyle, stimulants, stimulants_other, sleep_hours,
-        travel_abroad, travel_where,
-        animal_contact, animal_contact_details,
+        lifestyle, stimulants,
+        *(([stimulants_other]) if "inne" in stimulants else []),
+        sleep_hours,
+        travel_abroad,
+        *(([travel_where]) if travel_abroad == "tak" else []),
+        animal_contact,
+        *(([animal_contact_details]) if animal_contact == "tak" else []),
         major_injuries,
-        covid, covid_details,
+        covid,
+        *(([covid_details]) if covid == "tak" else []),
         strong_stress,
-        birth_delivery, birth_timing, green_water, birth_info_other, breastfeeding, childhood_diseases, childhood_diseases_other,
-        fever_now, fever_details, headache_dizziness, headache_dizziness_details, headache_assoc,
+        birth_delivery, birth_timing, green_water, birth_info_other, breastfeeding, childhood_diseases,
+        *(([childhood_diseases_other]) if "inne" in childhood_diseases else []),
+        fever_now,
+        *(([fever_details]) if fever_now == "tak" else []),
+        headache_dizziness,
+        *(([headache_dizziness_details]) if headache_dizziness == "tak" else []),
+        headache_assoc,
         hearing_vision, attacks, sinus_problems, nose_problems, allergies, herpes, mouth_corners,
         fresh_food_reaction, epilepsy, smell_taste, colds,
-        throat_morning, esophagus_burning, asthma_dx, pneumonia, pneumonia_details, dyspnea,
+        throat_morning, esophagus_burning, asthma_dx, pneumonia,
+        *(([pneumonia_details]) if pneumonia == "tak" else []),
+        dyspnea,
         night_breath, chest_heaviness, breathing_type, wheezing, cough,
         chest_pain, pressure_type, current_bp, current_hr, pain_press, pain_position, palpitations,
-        gi_problem, gi_symptoms, worsening_foods, gi_infections,
+        gi_problem,
+        *(([gi_symptoms]) if gi_problem == "tak" else []),
+        worsening_foods, gi_infections,
         urine_problems, night_urination, fluids,
         joints, stiffness,
-        skin_changes, skin_itch, acne, acne_details, skin_sensation, wound_healing, wound_healing_details,
-        sleep_problem, sleep_problem_types, psych_contact, psych_dx,
-        edema, edema_details, calf_pain, cold_fingers, tingling, varicose,
-        anal_problems, anal_other,
-        gyn_problems, menstruation, first_menses, last_menses_text, potency,
+        skin_changes, skin_itch, acne,
+        *(([acne_details]) if acne == "tak" else []),
+        skin_sensation, wound_healing,
+        *(([wound_healing_details]) if wound_healing == "tak" else []),
+        sleep_problem,
+        *(([sleep_problem_types]) if sleep_problem == "tak" else []),
+        psych_contact, psych_dx,
+        edema,
+        *(([edema_details]) if edema == "tak" else []),
+        calf_pain, cold_fingers, tingling, varicose,
+        anal_problems,
+        *(([anal_other]) if "inne" in anal_problems else []),
+        *(([gyn_problems, menstruation, first_menses, last_menses_text]) if sex == "kobieta" else []),
+        *(([potency]) if sex == "mężczyzna" else []),
         mother_history, father_history, maternal_grandmother, paternal_grandmother, maternal_grandfather, paternal_grandfather,
         own_diagnoses, important_info, current_reason, key_question,
         consent_true, consent_visit, consent_privacy, contact_consent
@@ -1054,11 +1088,9 @@ if send_clicked:
     last_name_clean = st.session_state.get("last_name", "").strip()
     phone_raw = st.session_state.get("phone", "").strip()
     email_raw = st.session_state.get("email", "").strip()
-    birth_date_raw = st.session_state.get("birth_date_text", "").strip()
-
     validated_phone = validate_phone(phone_raw)
     validated_email = validate_email(email_raw) if email_raw else None
-    birth_date = parse_polish_date(birth_date_raw)
+    birth_date = st.session_state.get("birth_date_input")
 
     full_name = f"{first_name_clean} {last_name_clean}".strip()
 
@@ -1073,12 +1105,12 @@ if send_clicked:
     if email_raw and not validated_email:
         st.session_state.field_errors["email"] = "Wpisz poprawny adres e-mail."
     if not birth_date:
-        st.session_state.field_errors["birth_date"] = "Wpisz poprawną datę urodzenia w formacie DD.MM.RRRR."
+        st.session_state.field_errors["birth_date"] = "Wybierz datę urodzenia."
     if not consent_true or not consent_visit or not consent_privacy:
         st.session_state.field_errors["consent"] = "Zaznacz wszystkie wymagane zgody."
 
     anchor_order = [
-        ("visit_type", "anchor_first_name"),
+        ("visit_type", "anchor_visit_type"),
         ("first_name", "anchor_first_name"),
         ("last_name", "anchor_last_name"),
         ("phone", "anchor_phone"),
@@ -1292,10 +1324,14 @@ Zgoda na kontakt organizacyjny: {"tak" if contact_consent else "nie"}
     try:
         with st.spinner("Trwa wysyłanie formularza..."):
             pdf_path = make_pdf(pdf_data)
+            date_slug = datetime.now().strftime("%Y-%m-%d")
+            safe_initials = patient_initials.replace(" ", "_").replace(".", "")
+            pdf_filename = f"wywiad_{safe_initials}_{date_slug}.pdf"
             send_email_with_pdf(
                 subject=f"Nowy formularz pacjenta - {full_name}",
                 body_text=email_body,
                 pdf_path=pdf_path,
+                filename=pdf_filename,
             )
 
         st.session_state.field_errors = {}
