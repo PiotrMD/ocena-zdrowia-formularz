@@ -606,6 +606,25 @@ st.markdown(
 )
 
 # =========================================================
+# WZROST / MASA / BMI — poza formularzem, żeby liczyć na bieżąco
+# =========================================================
+with st.expander("Wzrost, masa ciała i BMI", expanded=True):
+    col1, col2 = st.columns(2)
+    with col1:
+        height_cm_text = st.text_input("Wzrost (cm)", key="height_cm_text")
+    with col2:
+        weight_kg_text = st.text_input("Masa ciała (kg)", key="weight_kg_text")
+
+    height_cm = parse_optional_float(height_cm_text)
+    weight_kg = parse_optional_float(weight_kg_text)
+    bmi = bmi_calc(weight_kg, height_cm)
+
+    if bmi is not None:
+        st.info(f"BMI: {bmi:.1f} — {bmi_label(bmi)}")
+    else:
+        st.info("BMI zostanie obliczone po wpisaniu wzrostu i masy ciała.")
+
+# =========================================================
 # FORMULARZ
 # =========================================================
 with st.form("medical_form"):
@@ -665,17 +684,6 @@ with st.form("medical_form"):
         if current_status == "inne":
             current_status_other = st.text_input("Jeśli inne, opisz aktualny status", key="current_status_other")
         profession = st.text_input("Obecnie wykonywany zawód", key="profession")
-        height_cm_text = st.text_input("Wzrost (cm)", key="height_cm_text")
-        weight_kg_text = st.text_input("Masa ciała (kg)", key="weight_kg_text")
-
-        height_cm = parse_optional_float(height_cm_text)
-        weight_kg = parse_optional_float(weight_kg_text)
-        bmi = bmi_calc(weight_kg, height_cm)
-
-        if bmi is not None:
-            st.info(f"BMI: {bmi:.1f} ({bmi_label(bmi)})")
-        else:
-            st.info("BMI: brak danych")
 
     with st.expander("2. Ocena ogólna"):
         physical_score = select_with_placeholder(
