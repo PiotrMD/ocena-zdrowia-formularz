@@ -620,9 +620,24 @@ with st.expander("Wzrost, masa ciała i BMI", expanded=True):
     bmi = bmi_calc(weight_kg, height_cm)
 
     if bmi is not None:
-        st.info(f"BMI: {bmi:.1f} — {bmi_label(bmi)}")
+        if bmi < 18.5:
+            bmi_color, bmi_bg = "#1565C0", "rgba(21,101,192,0.12)"
+        elif bmi < 25:
+            bmi_color, bmi_bg = "#2E7D32", "rgba(46,125,50,0.12)"
+        elif bmi < 30:
+            bmi_color, bmi_bg = "#E65100", "rgba(230,81,0,0.12)"
+        elif bmi < 35:
+            bmi_color, bmi_bg = "#BF360C", "rgba(191,54,12,0.12)"
+        else:
+            bmi_color, bmi_bg = "#B71C1C", "rgba(183,28,28,0.14)"
+        st.markdown(
+            f"<div style='padding:10px 14px;border-radius:10px;border:1px solid {bmi_color};"
+            f"background:{bmi_bg};color:{bmi_color};font-weight:700;font-size:1rem;'>"
+            f"BMI: {bmi:.1f} — {bmi_label(bmi)}</div>",
+            unsafe_allow_html=True,
+        )
     else:
-        st.info("BMI zostanie obliczone po wpisaniu wzrostu i masy ciała.")
+        st.caption("BMI zostanie obliczone po wpisaniu wzrostu i masy ciała.")
 
 # =========================================================
 # FORMULARZ
