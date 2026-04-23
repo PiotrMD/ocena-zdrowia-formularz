@@ -556,6 +556,11 @@ elif os.path.exists("Logo OCENA ZDROWIA.PNG"):
 
 st.markdown("<div class='title-main'>OCENA STANU ZDROWIA</div>", unsafe_allow_html=True)
 st.markdown("<div class='title-sub'>Wywiad lekarski</div>", unsafe_allow_html=True)
+st.info(
+    "Formularz ma charakter informacyjny i służy przygotowaniu wizyty lekarskiej. "
+    "Dane nie są przechowywane w bazie aplikacji. "
+    "Po wysłaniu przekazywane są wyłącznie lekarzowi w formie wiadomości e-mail i dokumentu PDF."
+)
 st.markdown("<div class='doctor-line'>dr n. med. Piotr Niedziałkowski</div>", unsafe_allow_html=True)
 st.markdown("<div class='site-line'>www.ocenazdrowia.pl</div>", unsafe_allow_html=True)
 st.markdown("<div class='contact-line'>W sprawie pytań proszę kontaktować się z recepcją: +48 690 584 584</div>", unsafe_allow_html=True)
