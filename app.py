@@ -627,501 +627,500 @@ with st.expander("Wzrost, masa ciała i BMI", expanded=True):
 # =========================================================
 # FORMULARZ
 # =========================================================
-with st.form("medical_form"):
-    with st.expander("1. Dane podstawowe", expanded=True):
-        st.markdown('<div id="anchor_visit_type" class="field-anchor"></div>', unsafe_allow_html=True)
-        visit_type = select_with_placeholder("Rodzaj wizyty", ["Pierwsza", "Kontrolna"], key="visit_type")
-        if "visit_type" in field_errors:
-            error_box(field_errors["visit_type"])
+with st.expander("1. Dane podstawowe", expanded=True):
+    st.markdown('<div id="anchor_visit_type" class="field-anchor"></div>', unsafe_allow_html=True)
+    visit_type = select_with_placeholder("Rodzaj wizyty", ["Pierwsza", "Kontrolna"], key="visit_type")
+    if "visit_type" in field_errors:
+        error_box(field_errors["visit_type"])
 
-        st.markdown('<div id="anchor_first_name" class="field-anchor"></div>', unsafe_allow_html=True)
-        first_name = st.text_input("Imię", key="first_name")
-        if "first_name" in field_errors:
-            error_box(field_errors["first_name"])
+    st.markdown('<div id="anchor_first_name" class="field-anchor"></div>', unsafe_allow_html=True)
+    first_name = st.text_input("Imię", key="first_name")
+    if "first_name" in field_errors:
+        error_box(field_errors["first_name"])
 
-        st.markdown('<div id="anchor_last_name" class="field-anchor"></div>', unsafe_allow_html=True)
-        last_name = st.text_input("Nazwisko", key="last_name")
-        if "last_name" in field_errors:
-            error_box(field_errors["last_name"])
+    st.markdown('<div id="anchor_last_name" class="field-anchor"></div>', unsafe_allow_html=True)
+    last_name = st.text_input("Nazwisko", key="last_name")
+    if "last_name" in field_errors:
+        error_box(field_errors["last_name"])
 
-        st.markdown('<div id="anchor_phone" class="field-anchor"></div>', unsafe_allow_html=True)
-        phone = st.text_input(
-            "Telefon kontaktowy",
-            key="phone",
-            help="Może być z numerem kierunkowym albo bez, np. 690584584 lub +48690584584",
+    st.markdown('<div id="anchor_phone" class="field-anchor"></div>', unsafe_allow_html=True)
+    phone = st.text_input(
+        "Telefon kontaktowy",
+        key="phone",
+        help="Może być z numerem kierunkowym albo bez, np. 690584584 lub +48690584584",
+    )
+    if "phone" in field_errors:
+        error_box(field_errors["phone"])
+
+    st.markdown('<div id="anchor_email" class="field-anchor"></div>', unsafe_allow_html=True)
+    email = st.text_input("Adres e-mail", key="email")
+    if "email" in field_errors:
+        error_box(field_errors["email"])
+
+    st.markdown('<div id="anchor_birth_date" class="field-anchor"></div>', unsafe_allow_html=True)
+    birth_date_input = st.date_input(
+        "Data urodzenia",
+        value=None,
+        min_value=date(1900, 1, 1),
+        max_value=date.today(),
+        format="DD.MM.YYYY",
+        key="birth_date_input",
+    )
+    if "birth_date" in field_errors:
+        error_box(field_errors["birth_date"])
+
+    nationality = st.text_input("Narodowość", key="nationality")
+    sex = select_with_placeholder("Płeć", ["kobieta", "mężczyzna", "inne"], key="sex")
+    sex_other = ""
+    if sex == "inne":
+        sex_other = st.text_input("Jeśli inne, opisz płeć", key="sex_other")
+    current_status = select_with_placeholder(
+        "Aktualny status",
+        ["pracujący", "dziecko", "uczeń", "student", "emeryt", "inne"],
+        key="current_status",
+    )
+    current_status_other = ""
+    if current_status == "inne":
+        current_status_other = st.text_input("Jeśli inne, opisz aktualny status", key="current_status_other")
+    profession = st.text_input("Obecnie wykonywany zawód", key="profession")
+
+with st.expander("2. Ocena ogólna"):
+    physical_score = select_with_placeholder(
+        "Jak oceniasz swój stan fizyczny? 0 = bardzo zły, 10 = bardzo dobry",
+        [str(i) for i in range(0, 11)],
+        key="physical_score",
+    )
+    mental_score = select_with_placeholder(
+        "Jak oceniasz swój stan psychiczny? 0 = bardzo zły, 10 = bardzo dobry",
+        [str(i) for i in range(0, 11)],
+        key="mental_score",
+    )
+    weight_change = select_with_placeholder(
+        "Czy w ostatnim roku zmieniła się masa ciała?",
+        ["wzrosła", "spadła", "bez zmian"],
+        key="weight_change",
+    )
+    weight_change_amount = ""
+    if weight_change in ["wzrosła", "spadła"]:
+        weight_change_amount = st.text_input("O ile mniej więcej kilogramów zmieniła się masa ciała?", key="weight_change_amount")
+
+with st.expander("3. Badania wykonane w ciągu ostatnich 2 lat"):
+    performed_tests = st.multiselect(
+        "Zaznacz wykonane badania",
+        [
+            "RTG klatki piersiowej",
+            "EKG",
+            "Echo serca",
+            "Holter EKG",
+            "Holter ciśnieniowy",
+            "Gastroskopia",
+            "Kolonoskopia",
+            "USG jamy brzusznej",
+            "USG miednicy",
+            "USG ginekologiczne",
+            "USG tarczycy",
+            "USG jąder",
+            "USG prostaty",
+            "USG piersi",
+            "Mammografia",
+            "Tomografia komputerowa",
+            "Tomografia głowy",
+            "Rezonans magnetyczny",
+            "Rezonans głowy",
+            "Doppler tętnic szyjnych",
+            "Przepływy w naczyniach kończyn dolnych",
+            "Densytometria",
+            "Scyntygrafia",
+        ],
+        placeholder="Wybierz badania",
+        key="performed_tests",
+    )
+
+with st.expander("4. Objawy główne"):
+    symptom_1 = st.text_input("Objaw 1", key="symptom_1")
+    symptom_1_since = st.text_input("Od kiedy występuje objaw 1?", key="symptom_1_since")
+    symptom_2 = st.text_input("Objaw 2", key="symptom_2")
+    symptom_2_since = st.text_input("Od kiedy występuje objaw 2?", key="symptom_2_since")
+    symptom_3 = st.text_input("Objaw 3", key="symptom_3")
+    symptom_3_since = st.text_input("Od kiedy występuje objaw 3?", key="symptom_3_since")
+    symptom_4 = st.text_input("Objaw 4", key="symptom_4")
+    symptom_4_since = st.text_input("Od kiedy występuje objaw 4?", key="symptom_4_since")
+    symptom_5 = st.text_input("Objaw 5", key="symptom_5")
+    symptom_5_since = st.text_input("Od kiedy występuje objaw 5?", key="symptom_5_since")
+    additional_symptoms = st.text_area("Pozostałe dolegliwości, nawet mniej nasilone", key="additional_symptoms")
+
+with st.expander("5. Charakter objawów"):
+    symptom_pattern = select_with_placeholder(
+        "Czy objawy są stałe czy pojawiają się okresowo?",
+        ["stałe", "okresowe", "trudno powiedzieć"],
+        key="symptom_pattern",
+    )
+    symptom_periodicity = st.text_area("Jeśli okresowe, napisz kiedy się pojawiają i jak często w ciągu roku", key="symptom_periodicity")
+    symptom_past = st.text_area("Czy podobne objawy występowały wcześniej? Jeśli tak, kiedy?", key="symptom_past")
+
+    worsening_factors = st.multiselect(
+        "Co powoduje pogorszenie objawów?",
+        ["wysiłek", "głód", "posiłek", "mówienie", "śmiech", "inne"],
+        placeholder="Wybierz czynniki pogorszenia",
+        key="worsening_factors",
+    )
+    worsening_other = ""
+    if "inne" in worsening_factors:
+        worsening_other = st.text_input("Jeśli inne, napisz co powoduje pogorszenie objawów", key="worsening_other")
+
+    improvement_factors = st.multiselect(
+        "Co powoduje poprawę lub zmniejszenie objawów?",
+        ["wypoczynek", "wysiłek", "głód", "posiłek", "inne"],
+        placeholder="Wybierz czynniki poprawy",
+        key="improvement_factors",
+    )
+    improvement_other = ""
+    if "inne" in improvement_factors:
+        improvement_other = st.text_input("Jeśli inne, napisz co powoduje poprawę objawów", key="improvement_other")
+
+with st.expander("6. Chronologia zdrowia i leki"):
+    health_timeline = st.text_area("Opisz przebieg zdrowia od pierwszych problemów zdrowotnych do dziś", key="health_timeline")
+    current_meds = st.text_area("Jakie leki obecnie przyjmujesz? Podaj nazwę i dawkowanie. Najlepiej wpisuj każdy lek w osobnej linii.", key="current_meds")
+
+with st.expander("7. Tryb życia"):
+    lifestyle = select_with_placeholder(
+        "Tryb życia",
+        ["leżący", "siedzący", "nisko aktywny", "średnio aktywny", "bardzo aktywny", "inne"],
+        key="lifestyle",
+    )
+    lifestyle_other = ""
+    if lifestyle == "inne":
+        lifestyle_other = st.text_input("Jeśli inne, opisz tryb życia", key="lifestyle_other")
+    stimulants = st.multiselect(
+        "Używki i codzienne nawyki",
+        ["kawa", "herbata", "papierosy", "alkohol", "narkotyki", "słodycze", "inne"],
+        placeholder="Wybierz używki i nawyki",
+        key="stimulants",
+    )
+    stimulants_other = ""
+    if "inne" in stimulants:
+        stimulants_other = st.text_input("Jeśli zaznaczono inne, napisz jakie", key="stimulants_other")
+    sleep_hours = select_with_placeholder("Ile średnio trwa sen na dobę?", ["3", "4", "5", "6", "7", "8", "9", "10", "11", "12"], key="sleep_hours")
+
+with st.expander("8. Podróże"):
+    travel_abroad = yes_no("Czy w ciągu ostatnich 3 miesięcy był wyjazd za granicę?", key="travel_abroad")
+    travel_where = ""
+    if travel_abroad == "tak":
+        travel_where = st.text_input("Jeśli tak, to gdzie?", key="travel_where")
+
+with st.expander("9. Zwierzęta"):
+    animal_contact = yes_no("Czy w ostatnich miesiącach było pogryzienie, zadrapanie lub bliski kontakt ze zwierzęciem?", key="animal_contact")
+    animal_contact_details = ""
+    if animal_contact == "tak":
+        animal_contact_details = st.text_area("Jeśli tak, opisz kiedy i jakie zwierzę", key="animal_contact_details")
+
+with st.expander("10. Urazy"):
+    major_injuries = st.text_area("Czy były duże urazy ciała? Podaj rok i opisz, np. upadek z wysokości, uraz komunikacyjny, pobicie, tonięcie, operacja", key="major_injuries")
+
+with st.expander("11. COVID-19"):
+    covid = yes_no_unknown("Czy i kiedy wystąpiło zachorowanie na COVID-19?", key="covid")
+    covid_details = ""
+    if covid == "tak":
+        covid_details = st.text_area("Jeśli tak, opisz kiedy i jaki był przebieg", key="covid_details")
+
+with st.expander("12. Stres"):
+    strong_stress = st.text_area("Czy w ciągu życia były silne reakcje stresowe lub trudne wydarzenia? Jeśli tak, opisz i podaj rok", key="strong_stress")
+
+with st.expander("13. Urodzenie i dzieciństwo"):
+    birth_delivery = select_with_placeholder(
+        "Sposób porodu",
+        ["poród naturalny", "poród przez cesarskie cięcie", "nie wiem", "inne"],
+        key="birth_delivery",
+    )
+    birth_delivery_other = ""
+    if birth_delivery == "inne":
+        birth_delivery_other = st.text_input("Jeśli inne, opisz sposób porodu", key="birth_delivery_other")
+    birth_timing = select_with_placeholder(
+        "Czas porodu",
+        ["poród przedwczesny", "poród o czasie", "poród po terminie", "nie wiem", "inne"],
+        key="birth_timing",
+    )
+    birth_timing_other = ""
+    if birth_timing == "inne":
+        birth_timing_other = st.text_input("Jeśli inne, opisz czas porodu", key="birth_timing_other")
+    green_water = yes_no_unknown("Czy były zielone wody płodowe?", key="green_water")
+    birth_info_other = st.text_input("Inne informacje o urodzeniu", key="birth_info_other")
+
+    breastfeeding = select_with_placeholder(
+        "Czy było karmienie mlekiem matki?",
+        ["tak, do 3 miesięcy", "tak, do 6 miesięcy", "tak, powyżej 6 miesięcy", "nie", "nie wiem"],
+        key="breastfeeding",
+    )
+    childhood_diseases = st.multiselect(
+        "Poważne choroby w dzieciństwie",
+        ["astma", "atopowe zapalenie skóry", "skaza białkowa", "częste przeziębienia", "pobyty w szpitalu", "częste zapalenia płuc", "problemy jelitowe", "choroby psychiczne", "problemy ze śledzioną", "problemy z trzustką", "inne"],
+        placeholder="Wybierz choroby dzieciństwa",
+        key="childhood_diseases",
+    )
+    childhood_diseases_other = ""
+    if "inne" in childhood_diseases:
+        childhood_diseases_other = st.text_input("Jeśli zaznaczono inne, napisz jakie", key="childhood_diseases_other")
+
+with st.expander("14. Objawy ogólne i neurologiczne"):
+    fever_now = yes_no("Czy aktualnie występuje gorączka?", key="fever_now")
+    fever_details = ""
+    if fever_now == "tak":
+        fever_details = st.text_area("Jeśli tak, opisz dokładniej", key="fever_details")
+
+    headache_dizziness = yes_no("Czy występują bóle i zawroty głowy?", key="headache_dizziness")
+    headache_dizziness_details = ""
+    if headache_dizziness == "tak":
+        headache_dizziness_details = st.text_area("Jeśli tak, opisz dokładniej", key="headache_dizziness_details")
+
+    headache_assoc = st.text_area("Czy bólom głowy towarzyszą wymioty, omdlenia, zaburzenia widzenia, osłabienie, światłowstręt, niepamięć?", key="headache_assoc")
+    hearing_vision = st.text_area("Czy w ostatnich latach pogorszył się słuch lub wzrok?", key="hearing_vision")
+    attacks = st.text_area("Czy występują ataki lub nagłe epizody? Jeśli tak, opisz.", key="attacks")
+    sinus_problems = st.text_area("Czy występują problemy z zatokami?", key="sinus_problems")
+    nose_problems = st.text_area("Czy są problemy z nosem, np. krwawienia, suchość, zapalenia, trudności w oddychaniu przez nos?", key="nose_problems")
+    allergies = st.text_area("Czy występują alergie? Jeśli tak, na co, o jakiej porze roku i jak nasilone?", key="allergies")
+    herpes = st.text_area("Czy pojawia się opryszczka? Jeśli tak, jak często?", key="herpes")
+    mouth_corners = st.text_area("Czy występują zajady?", key="mouth_corners")
+    fresh_food_reaction = st.text_area("Czy po spożyciu świeżych warzyw i owoców pojawia się pieczenie lub zaczerwienienie wokół ust?", key="fresh_food_reaction")
+    epilepsy = yes_no("Czy kiedykolwiek rozpoznano padaczkę?", key="epilepsy")
+    smell_taste = st.text_area("Czy są zaburzenia węchu lub smaku? Jeśli tak, od kiedy?", key="smell_taste")
+    colds = st.text_input("Jak często zdarzają się przeziębienia w ciągu roku?", key="colds")
+
+with st.expander("15. Układ oddechowy"):
+    throat_morning = yes_no("Czy rano występuje ból gardła?", key="throat_morning")
+    esophagus_burning = yes_no("Czy pojawia się pieczenie w przełyku?", key="esophagus_burning")
+    asthma_dx = yes_no("Czy kiedykolwiek rozpoznano astmę?", key="asthma_dx")
+    pneumonia = yes_no("Czy kiedykolwiek było zapalenie płuc?", key="pneumonia")
+    pneumonia_details = ""
+    if pneumonia == "tak":
+        pneumonia_details = st.text_area("Jeśli tak, podaj daty i po której stronie płuc było zapalenie", key="pneumonia_details")
+    dyspnea = st.text_area("Czy zdarza się duszność lub zadyszka? Jeśli tak, opisz w jakich sytuacjach.", key="dyspnea")
+    night_breath = st.text_area("Czy dochodzi do wybudzania w nocy z powodu braku tchu?", key="night_breath")
+    chest_heaviness = st.text_area("Czy występuje ciężkość w klatce piersiowej? Jeśli tak, opisz nasilenie.", key="chest_heaviness")
+    breathing_type = select_with_placeholder(
+        "Czy są trudności z oddychaniem?",
+        ["nie mam takich trudności", "z nabieraniem powietrza", "z wypuszczaniem powietrza", "z oboma"],
+        key="breathing_type",
+    )
+    wheezing = st.multiselect(
+        "Czy występuje świszczący oddech?",
+        ["podczas wysiłku", "podczas infekcji", "w nocy", "rano", "podczas alergii", "w zimnej pogodzie"],
+        placeholder="Wybierz okoliczności świszczącego oddechu",
+        key="wheezing",
+    )
+    cough = st.text_area("Czy jest kaszel? Jeśli tak, od kiedy, czy jest suchy czy z wydzieliną, jakiego koloru?", key="cough")
+
+with st.expander("16. Układ sercowo-naczyniowy"):
+    chest_pain = st.text_area("Czy występują bóle w klatce piersiowej? Czy są miejscowe czy rozległe? Czy promieniują?", key="chest_pain")
+    pressure_type = select_with_placeholder(
+        "Czy są problemy z ciśnieniem?",
+        ["nie mam kłopotów z ciśnieniem", "mam skłonność do niskiego ciśnienia", "mam skłonność do wysokiego ciśnienia"],
+        key="pressure_type",
+    )
+    current_bp = st.text_input("Jakie jest aktualne ciśnienie tętnicze?", key="current_bp")
+    current_hr = st.text_input("Jakie jest aktualne tętno?", key="current_hr")
+    pain_press = yes_no("Czy odczuwasz ból przy naciskaniu klatki piersiowej?", key="pain_press")
+    pain_position = yes_no("Czy przy zmianie pozycji występują bóle w klatce piersiowej?", key="pain_position")
+    palpitations = st.text_area("Czy odczuwasz nierówne bicie serca? Jeśli tak, opisz porę dnia, okoliczności i częstość.", key="palpitations")
+
+with st.expander("17. Przewód pokarmowy"):
+    gi_problem = yes_no("Czy występują problemy z przewodem pokarmowym?", key="gi_problem")
+    gi_symptoms = []
+    if gi_problem == "tak":
+        gi_symptoms = st.multiselect(
+            "Zaznacz problemy",
+            ["zgaga", "wzdęcia", "biegunki", "zaparcia", "hemoroidy", "gazy", "skurcze", "wymioty", "nudności"],
+            placeholder="Wybierz objawy przewodu pokarmowego",
+            key="gi_symptoms",
         )
-        if "phone" in field_errors:
-            error_box(field_errors["phone"])
+    worsening_foods = st.text_area("Czy są potrawy, po których samopoczucie się pogarsza?", key="worsening_foods")
+    gi_infections = st.text_area("Czy kiedykolwiek było zakażenie bakteryjne lub wirusowe przewodu pokarmowego? Jeśli tak, kiedy i czy było badanie kontrolne z wynikiem ujemnym?", key="gi_infections")
 
-        st.markdown('<div id="anchor_email" class="field-anchor"></div>', unsafe_allow_html=True)
-        email = st.text_input("Adres e-mail", key="email")
-        if "email" in field_errors:
-            error_box(field_errors["email"])
+with st.expander("18. Układ moczowy"):
+    urine_problems = st.text_area("Czy są problemy z oddawaniem moczu, np. pieczenie, trudności, inne?", key="urine_problems")
+    night_urination = select_with_placeholder("Ile razy w nocy wstajesz oddać mocz?", ["0", "1", "2", "3", "4", "5", "6", "7 lub więcej"], key="night_urination")
+    fluids = select_with_placeholder("Ile litrów płynów wypijasz dziennie?", ["1", "2", "3", "4", "5", "więcej niż 5"], key="fluids")
 
-        st.markdown('<div id="anchor_birth_date" class="field-anchor"></div>', unsafe_allow_html=True)
-        birth_date_input = st.date_input(
-            "Data urodzenia",
-            value=None,
-            min_value=date(1900, 1, 1),
-            max_value=date.today(),
-            format="DD.MM.YYYY",
-            key="birth_date_input",
+with st.expander("19. Stawy i mięśnie"):
+    joints = st.text_area("Czy występują bóle stawów? Jeśli tak, to których?", key="joints")
+    stiffness = st.text_area("Czy po wstaniu z łóżka występuje ból lub sztywność stawów?", key="stiffness")
+
+with st.expander("20. Skóra"):
+    skin_changes = st.text_area("Czy są jakieś zmiany na skórze? Jeśli tak, opisz dokładnie. Kiedy pojawiły się pierwszy raz? Czy od tej pory jest poprawa lub pogorszenie?", key="skin_changes")
+    skin_itch = st.text_area("Czy występuje swędzenie skóry? Jeśli tak, których partii ciała dotyczy?", key="skin_itch")
+    acne = yes_no("Czy występował lub występuje nasilony trądzik na twarzy lub plecach?", key="acne")
+    acne_details = ""
+    if acne == "tak":
+        acne_details = st.text_area("Jeśli tak, możesz opisać dokładniej", key="acne_details")
+    skin_sensation = st.text_area("Czy są zaburzenia czucia skóry? Jeśli tak, opisz lokalizację i od kiedy.", key="skin_sensation")
+    wound_healing = yes_no("Czy występują problemy z gojeniem się ran?", key="wound_healing")
+    wound_healing_details = ""
+    if wound_healing == "tak":
+        wound_healing_details = st.text_area("Jeśli tak, opisz problemy z gojeniem", key="wound_healing_details")
+
+with st.expander("21. Sen i psychika"):
+    sleep_problem = yes_no("Czy są problemy ze snem?", key="sleep_problem")
+    sleep_problem_types = []
+    if sleep_problem == "tak":
+        sleep_problem_types = st.multiselect(
+            "Jakie problemy ze snem występują?",
+            ["trudności z zasypianiem", "wybudzanie w nocy", "wstawanie zmęczony lub zmęczona", "chrapanie", "zbyt krótki sen", "bardzo głęboki sen"],
+            placeholder="Wybierz rodzaj problemów ze snem",
+            key="sleep_problem_types",
         )
-        if "birth_date" in field_errors:
-            error_box(field_errors["birth_date"])
+    psych_contact = select_with_placeholder("Czy kiedykolwiek była porada psychologa lub psychiatry?", ["nie", "psycholog", "psychiatra", "oba"], key="psych_contact")
+    psych_dx = st.text_area("Czy kiedykolwiek rozpoznano chorobę psychiczną? Jeśli tak, napisz jaką.", key="psych_dx")
 
-        nationality = st.text_input("Narodowość", key="nationality")
-        sex = select_with_placeholder("Płeć", ["kobieta", "mężczyzna", "inne"], key="sex")
-        sex_other = ""
-        if sex == "inne":
-            sex_other = st.text_input("Jeśli inne, opisz płeć", key="sex_other")
-        current_status = select_with_placeholder(
-            "Aktualny status",
-            ["pracujący", "dziecko", "uczeń", "student", "emeryt", "inne"],
-            key="current_status",
-        )
-        current_status_other = ""
-        if current_status == "inne":
-            current_status_other = st.text_input("Jeśli inne, opisz aktualny status", key="current_status_other")
-        profession = st.text_input("Obecnie wykonywany zawód", key="profession")
+with st.expander("22. Krążenie obwodowe"):
+    edema = yes_no("Czy pojawiają się obrzęki na podudziach lub kostkach?", key="edema")
+    edema_details = ""
+    if edema == "tak":
+        edema_details = st.text_area("Jeśli tak, napisz czy występują stale czy po staniu, siedzeniu lub w innych sytuacjach.", key="edema_details")
+    calf_pain = st.text_area("Czy występują bóle łydek podczas chodzenia? Jeśli tak, po jakim dystansie i po jakim czasie ustępują?", key="calf_pain")
+    cold_fingers = st.text_area("Czy palce rąk lub nóg łatwo stają się zimne lub zmieniają kolor?", key="cold_fingers")
+    tingling = st.text_area("Czy występuje mrowienie lub drętwienie rąk lub nóg?", key="tingling")
+    varicose = st.text_area("Czy są obecne żylaki?", key="varicose")
 
-    with st.expander("2. Ocena ogólna"):
-        physical_score = select_with_placeholder(
-            "Jak oceniasz swój stan fizyczny? 0 = bardzo zły, 10 = bardzo dobry",
-            [str(i) for i in range(0, 11)],
-            key="physical_score",
-        )
-        mental_score = select_with_placeholder(
-            "Jak oceniasz swój stan psychiczny? 0 = bardzo zły, 10 = bardzo dobry",
-            [str(i) for i in range(0, 11)],
-            key="mental_score",
-        )
-        weight_change = select_with_placeholder(
-            "Czy w ostatnim roku zmieniła się masa ciała?",
-            ["wzrosła", "spadła", "bez zmian"],
-            key="weight_change",
-        )
-        weight_change_amount = ""
-        if weight_change in ["wzrosła", "spadła"]:
-            weight_change_amount = st.text_input("O ile mniej więcej kilogramów zmieniła się masa ciała?", key="weight_change_amount")
+with st.expander("23. Odbyt i okolice odbytu"):
+    anal_problems = st.multiselect(
+        "Czy występują problemy ze śluzówką odbytu?",
+        ["hemoroidy", "stany zapalne błony śluzowej odbytu", "pieczenie", "świąd", "grzybica", "inne"],
+        placeholder="Wybierz problemy w okolicy odbytu",
+        key="anal_problems",
+    )
+    anal_other = ""
+    if "inne" in anal_problems:
+        anal_other = st.text_input("Jeśli zaznaczono inne, opisz", key="anal_other")
 
-    with st.expander("3. Badania wykonane w ciągu ostatnich 2 lat"):
-        performed_tests = st.multiselect(
-            "Zaznacz wykonane badania",
-            [
-                "RTG klatki piersiowej",
-                "EKG",
-                "Echo serca",
-                "Holter EKG",
-                "Holter ciśnieniowy",
-                "Gastroskopia",
-                "Kolonoskopia",
-                "USG jamy brzusznej",
-                "USG miednicy",
-                "USG ginekologiczne",
-                "USG tarczycy",
-                "USG jąder",
-                "USG prostaty",
-                "USG piersi",
-                "Mammografia",
-                "Tomografia komputerowa",
-                "Tomografia głowy",
-                "Rezonans magnetyczny",
-                "Rezonans głowy",
-                "Doppler tętnic szyjnych",
-                "Przepływy w naczyniach kończyn dolnych",
-                "Densytometria",
-                "Scyntygrafia",
-            ],
-            placeholder="Wybierz badania",
-            key="performed_tests",
-        )
+with st.expander("24. Ginekologia lub andrologia"):
+    gyn_problems = ""
+    menstruation = ""
+    first_menses = ""
+    last_menses_text = ""
+    potency = ""
 
-    with st.expander("4. Objawy główne"):
-        symptom_1 = st.text_input("Objaw 1", key="symptom_1")
-        symptom_1_since = st.text_input("Od kiedy występuje objaw 1?", key="symptom_1_since")
-        symptom_2 = st.text_input("Objaw 2", key="symptom_2")
-        symptom_2_since = st.text_input("Od kiedy występuje objaw 2?", key="symptom_2_since")
-        symptom_3 = st.text_input("Objaw 3", key="symptom_3")
-        symptom_3_since = st.text_input("Od kiedy występuje objaw 3?", key="symptom_3_since")
-        symptom_4 = st.text_input("Objaw 4", key="symptom_4")
-        symptom_4_since = st.text_input("Od kiedy występuje objaw 4?", key="symptom_4_since")
-        symptom_5 = st.text_input("Objaw 5", key="symptom_5")
-        symptom_5_since = st.text_input("Od kiedy występuje objaw 5?", key="symptom_5_since")
-        additional_symptoms = st.text_area("Pozostałe dolegliwości, nawet mniej nasilone", key="additional_symptoms")
+    if sex == "kobieta":
+        gyn_problems = st.text_area("Czy występują problemy ginekologiczne?", key="gyn_problems")
+        menstruation = st.text_area("Czy występuje nieregularna miesiączka, menopauza lub leczenie hormonalne? Jeśli tak, napisz od kiedy.", key="menstruation")
+        first_menses = st.text_input("Podaj miesiąc i rok pierwszej miesiączki", key="first_menses")
+        last_menses_text = st.text_input("Data ostatniej miesiączki", key="last_menses_text", help="Najlepiej w formacie DD.MM.RRRR")
+    elif sex == "mężczyzna":
+        potency = select_with_placeholder("Czy są problemy z potencją?", ["nie", "czasami", "często"], key="potency")
 
-    with st.expander("5. Charakter objawów"):
-        symptom_pattern = select_with_placeholder(
-            "Czy objawy są stałe czy pojawiają się okresowo?",
-            ["stałe", "okresowe", "trudno powiedzieć"],
-            key="symptom_pattern",
-        )
-        symptom_periodicity = st.text_area("Jeśli okresowe, napisz kiedy się pojawiają i jak często w ciągu roku", key="symptom_periodicity")
-        symptom_past = st.text_area("Czy podobne objawy występowały wcześniej? Jeśli tak, kiedy?", key="symptom_past")
+with st.expander("25. Wywiad rodzinny"):
+    mother_history = st.text_area("Na jakie choroby choruje lub chorowała mama?", key="mother_history")
+    father_history = st.text_area("Na jakie choroby choruje lub chorował ojciec?", key="father_history")
+    maternal_grandmother = st.text_area("Na jakie choroby choruje lub chorowała babcia ze strony mamy?", key="maternal_grandmother")
+    paternal_grandmother = st.text_area("Na jakie choroby choruje lub chorowała babcia ze strony ojca?", key="paternal_grandmother")
+    maternal_grandfather = st.text_area("Na jakie choroby choruje lub chorował dziadek ze strony mamy?", key="maternal_grandfather")
+    paternal_grandfather = st.text_area("Na jakie choroby choruje lub chorował dziadek ze strony ojca?", key="paternal_grandfather")
 
-        worsening_factors = st.multiselect(
-            "Co powoduje pogorszenie objawów?",
-            ["wysiłek", "głód", "posiłek", "mówienie", "śmiech", "inne"],
-            placeholder="Wybierz czynniki pogorszenia",
-            key="worsening_factors",
-        )
-        worsening_other = ""
-        if "inne" in worsening_factors:
-            worsening_other = st.text_input("Jeśli inne, napisz co powoduje pogorszenie objawów", key="worsening_other")
+with st.expander("26. Dotychczasowe rozpoznania, operacje i ważne informacje"):
+    own_diagnoses = st.text_area("Proszę wymienić wszystkie dotychczasowe rozpoznania oraz operacje", key="own_diagnoses")
+    important_info = st.text_area("Czy są jakieś ważne informacje, które chcesz przekazać lekarzowi?", key="important_info")
+    current_reason = st.text_area("Co jest powodem obecnych dolegliwości lub problemów zdrowotnych?", key="current_reason")
+    key_question = st.text_area("Jakie jest najważniejsze pytanie do lekarza lub najważniejszy problem do omówienia na wizycie?", key="key_question")
 
-        improvement_factors = st.multiselect(
-            "Co powoduje poprawę lub zmniejszenie objawów?",
-            ["wypoczynek", "wysiłek", "głód", "posiłek", "inne"],
-            placeholder="Wybierz czynniki poprawy",
-            key="improvement_factors",
-        )
-        improvement_other = ""
-        if "inne" in improvement_factors:
-            improvement_other = st.text_input("Jeśli inne, napisz co powoduje poprawę objawów", key="improvement_other")
+with st.expander("27. Informacje organizacyjne i zgody", expanded=True):
+    st.markdown(
+        """
+**Proszę przesłać wszystkie posiadane wyniki badań na adres:**
+niedzialkowski@ocenazdrowia.pl
 
-    with st.expander("6. Chronologia zdrowia i leki"):
-        health_timeline = st.text_area("Opisz przebieg zdrowia od pierwszych problemów zdrowotnych do dziś", key="health_timeline")
-        current_meds = st.text_area("Jakie leki obecnie przyjmujesz? Podaj nazwę i dawkowanie. Najlepiej wpisuj każdy lek w osobnej linii.", key="current_meds")
+**lub wgrać je po zalogowaniu się na stronie:**
+https://aplikacja.medyc.pl/NiedzialkowskiPortal/#/login
 
-    with st.expander("7. Tryb życia"):
-        lifestyle = select_with_placeholder(
-            "Tryb życia",
-            ["leżący", "siedzący", "nisko aktywny", "średnio aktywny", "bardzo aktywny", "inne"],
-            key="lifestyle",
-        )
-        lifestyle_other = ""
-        if lifestyle == "inne":
-            lifestyle_other = st.text_input("Jeśli inne, opisz tryb życia", key="lifestyle_other")
-        stimulants = st.multiselect(
-            "Używki i codzienne nawyki",
-            ["kawa", "herbata", "papierosy", "alkohol", "narkotyki", "słodycze", "inne"],
-            placeholder="Wybierz używki i nawyki",
-            key="stimulants",
-        )
-        stimulants_other = ""
-        if "inne" in stimulants:
-            stimulants_other = st.text_input("Jeśli zaznaczono inne, napisz jakie", key="stimulants_other")
-        sleep_hours = select_with_placeholder("Ile średnio trwa sen na dobę?", ["3", "4", "5", "6", "7", "8", "9", "10", "11", "12"], key="sleep_hours")
-
-    with st.expander("8. Podróże"):
-        travel_abroad = yes_no("Czy w ciągu ostatnich 3 miesięcy był wyjazd za granicę?", key="travel_abroad")
-        travel_where = ""
-        if travel_abroad == "tak":
-            travel_where = st.text_input("Jeśli tak, to gdzie?", key="travel_where")
-
-    with st.expander("9. Zwierzęta"):
-        animal_contact = yes_no("Czy w ostatnich miesiącach było pogryzienie, zadrapanie lub bliski kontakt ze zwierzęciem?", key="animal_contact")
-        animal_contact_details = ""
-        if animal_contact == "tak":
-            animal_contact_details = st.text_area("Jeśli tak, opisz kiedy i jakie zwierzę", key="animal_contact_details")
-
-    with st.expander("10. Urazy"):
-        major_injuries = st.text_area("Czy były duże urazy ciała? Podaj rok i opisz, np. upadek z wysokości, uraz komunikacyjny, pobicie, tonięcie, operacja", key="major_injuries")
-
-    with st.expander("11. COVID-19"):
-        covid = yes_no_unknown("Czy i kiedy wystąpiło zachorowanie na COVID-19?", key="covid")
-        covid_details = ""
-        if covid == "tak":
-            covid_details = st.text_area("Jeśli tak, opisz kiedy i jaki był przebieg", key="covid_details")
-
-    with st.expander("12. Stres"):
-        strong_stress = st.text_area("Czy w ciągu życia były silne reakcje stresowe lub trudne wydarzenia? Jeśli tak, opisz i podaj rok", key="strong_stress")
-
-    with st.expander("13. Urodzenie i dzieciństwo"):
-        birth_delivery = select_with_placeholder(
-            "Sposób porodu",
-            ["poród naturalny", "poród przez cesarskie cięcie", "nie wiem", "inne"],
-            key="birth_delivery",
-        )
-        birth_delivery_other = ""
-        if birth_delivery == "inne":
-            birth_delivery_other = st.text_input("Jeśli inne, opisz sposób porodu", key="birth_delivery_other")
-        birth_timing = select_with_placeholder(
-            "Czas porodu",
-            ["poród przedwczesny", "poród o czasie", "poród po terminie", "nie wiem", "inne"],
-            key="birth_timing",
-        )
-        birth_timing_other = ""
-        if birth_timing == "inne":
-            birth_timing_other = st.text_input("Jeśli inne, opisz czas porodu", key="birth_timing_other")
-        green_water = yes_no_unknown("Czy były zielone wody płodowe?", key="green_water")
-        birth_info_other = st.text_input("Inne informacje o urodzeniu", key="birth_info_other")
-
-        breastfeeding = select_with_placeholder(
-            "Czy było karmienie mlekiem matki?",
-            ["tak, do 3 miesięcy", "tak, do 6 miesięcy", "tak, powyżej 6 miesięcy", "nie", "nie wiem"],
-            key="breastfeeding",
-        )
-        childhood_diseases = st.multiselect(
-            "Poważne choroby w dzieciństwie",
-            ["astma", "atopowe zapalenie skóry", "skaza białkowa", "częste przeziębienia", "pobyty w szpitalu", "częste zapalenia płuc", "problemy jelitowe", "choroby psychiczne", "problemy ze śledzioną", "problemy z trzustką", "inne"],
-            placeholder="Wybierz choroby dzieciństwa",
-            key="childhood_diseases",
-        )
-        childhood_diseases_other = ""
-        if "inne" in childhood_diseases:
-            childhood_diseases_other = st.text_input("Jeśli zaznaczono inne, napisz jakie", key="childhood_diseases_other")
-
-    with st.expander("14. Objawy ogólne i neurologiczne"):
-        fever_now = yes_no("Czy aktualnie występuje gorączka?", key="fever_now")
-        fever_details = ""
-        if fever_now == "tak":
-            fever_details = st.text_area("Jeśli tak, opisz dokładniej", key="fever_details")
-
-        headache_dizziness = yes_no("Czy występują bóle i zawroty głowy?", key="headache_dizziness")
-        headache_dizziness_details = ""
-        if headache_dizziness == "tak":
-            headache_dizziness_details = st.text_area("Jeśli tak, opisz dokładniej", key="headache_dizziness_details")
-
-        headache_assoc = st.text_area("Czy bólom głowy towarzyszą wymioty, omdlenia, zaburzenia widzenia, osłabienie, światłowstręt, niepamięć?", key="headache_assoc")
-        hearing_vision = st.text_area("Czy w ostatnich latach pogorszył się słuch lub wzrok?", key="hearing_vision")
-        attacks = st.text_area("Czy występują ataki lub nagłe epizody? Jeśli tak, opisz.", key="attacks")
-        sinus_problems = st.text_area("Czy występują problemy z zatokami?", key="sinus_problems")
-        nose_problems = st.text_area("Czy są problemy z nosem, np. krwawienia, suchość, zapalenia, trudności w oddychaniu przez nos?", key="nose_problems")
-        allergies = st.text_area("Czy występują alergie? Jeśli tak, na co, o jakiej porze roku i jak nasilone?", key="allergies")
-        herpes = st.text_area("Czy pojawia się opryszczka? Jeśli tak, jak często?", key="herpes")
-        mouth_corners = st.text_area("Czy występują zajady?", key="mouth_corners")
-        fresh_food_reaction = st.text_area("Czy po spożyciu świeżych warzyw i owoców pojawia się pieczenie lub zaczerwienienie wokół ust?", key="fresh_food_reaction")
-        epilepsy = yes_no("Czy kiedykolwiek rozpoznano padaczkę?", key="epilepsy")
-        smell_taste = st.text_area("Czy są zaburzenia węchu lub smaku? Jeśli tak, od kiedy?", key="smell_taste")
-        colds = st.text_input("Jak często zdarzają się przeziębienia w ciągu roku?", key="colds")
-
-    with st.expander("15. Układ oddechowy"):
-        throat_morning = yes_no("Czy rano występuje ból gardła?", key="throat_morning")
-        esophagus_burning = yes_no("Czy pojawia się pieczenie w przełyku?", key="esophagus_burning")
-        asthma_dx = yes_no("Czy kiedykolwiek rozpoznano astmę?", key="asthma_dx")
-        pneumonia = yes_no("Czy kiedykolwiek było zapalenie płuc?", key="pneumonia")
-        pneumonia_details = ""
-        if pneumonia == "tak":
-            pneumonia_details = st.text_area("Jeśli tak, podaj daty i po której stronie płuc było zapalenie", key="pneumonia_details")
-        dyspnea = st.text_area("Czy zdarza się duszność lub zadyszka? Jeśli tak, opisz w jakich sytuacjach.", key="dyspnea")
-        night_breath = st.text_area("Czy dochodzi do wybudzania w nocy z powodu braku tchu?", key="night_breath")
-        chest_heaviness = st.text_area("Czy występuje ciężkość w klatce piersiowej? Jeśli tak, opisz nasilenie.", key="chest_heaviness")
-        breathing_type = select_with_placeholder(
-            "Czy są trudności z oddychaniem?",
-            ["nie mam takich trudności", "z nabieraniem powietrza", "z wypuszczaniem powietrza", "z oboma"],
-            key="breathing_type",
-        )
-        wheezing = st.multiselect(
-            "Czy występuje świszczący oddech?",
-            ["podczas wysiłku", "podczas infekcji", "w nocy", "rano", "podczas alergii", "w zimnej pogodzie"],
-            placeholder="Wybierz okoliczności świszczącego oddechu",
-            key="wheezing",
-        )
-        cough = st.text_area("Czy jest kaszel? Jeśli tak, od kiedy, czy jest suchy czy z wydzieliną, jakiego koloru?", key="cough")
-
-    with st.expander("16. Układ sercowo-naczyniowy"):
-        chest_pain = st.text_area("Czy występują bóle w klatce piersiowej? Czy są miejscowe czy rozległe? Czy promieniują?", key="chest_pain")
-        pressure_type = select_with_placeholder(
-            "Czy są problemy z ciśnieniem?",
-            ["nie mam kłopotów z ciśnieniem", "mam skłonność do niskiego ciśnienia", "mam skłonność do wysokiego ciśnienia"],
-            key="pressure_type",
-        )
-        current_bp = st.text_input("Jakie jest aktualne ciśnienie tętnicze?", key="current_bp")
-        current_hr = st.text_input("Jakie jest aktualne tętno?", key="current_hr")
-        pain_press = yes_no("Czy odczuwasz ból przy naciskaniu klatki piersiowej?", key="pain_press")
-        pain_position = yes_no("Czy przy zmianie pozycji występują bóle w klatce piersiowej?", key="pain_position")
-        palpitations = st.text_area("Czy odczuwasz nierówne bicie serca? Jeśli tak, opisz porę dnia, okoliczności i częstość.", key="palpitations")
-
-    with st.expander("17. Przewód pokarmowy"):
-        gi_problem = yes_no("Czy występują problemy z przewodem pokarmowym?", key="gi_problem")
-        gi_symptoms = []
-        if gi_problem == "tak":
-            gi_symptoms = st.multiselect(
-                "Zaznacz problemy",
-                ["zgaga", "wzdęcia", "biegunki", "zaparcia", "hemoroidy", "gazy", "skurcze", "wymioty", "nudności"],
-                placeholder="Wybierz objawy przewodu pokarmowego",
-                key="gi_symptoms",
-            )
-        worsening_foods = st.text_area("Czy są potrawy, po których samopoczucie się pogarsza?", key="worsening_foods")
-        gi_infections = st.text_area("Czy kiedykolwiek było zakażenie bakteryjne lub wirusowe przewodu pokarmowego? Jeśli tak, kiedy i czy było badanie kontrolne z wynikiem ujemnym?", key="gi_infections")
-
-    with st.expander("18. Układ moczowy"):
-        urine_problems = st.text_area("Czy są problemy z oddawaniem moczu, np. pieczenie, trudności, inne?", key="urine_problems")
-        night_urination = select_with_placeholder("Ile razy w nocy wstajesz oddać mocz?", ["0", "1", "2", "3", "4", "5", "6", "7 lub więcej"], key="night_urination")
-        fluids = select_with_placeholder("Ile litrów płynów wypijasz dziennie?", ["1", "2", "3", "4", "5", "więcej niż 5"], key="fluids")
-
-    with st.expander("19. Stawy i mięśnie"):
-        joints = st.text_area("Czy występują bóle stawów? Jeśli tak, to których?", key="joints")
-        stiffness = st.text_area("Czy po wstaniu z łóżka występuje ból lub sztywność stawów?", key="stiffness")
-
-    with st.expander("20. Skóra"):
-        skin_changes = st.text_area("Czy są jakieś zmiany na skórze? Jeśli tak, opisz dokładnie. Kiedy pojawiły się pierwszy raz? Czy od tej pory jest poprawa lub pogorszenie?", key="skin_changes")
-        skin_itch = st.text_area("Czy występuje swędzenie skóry? Jeśli tak, których partii ciała dotyczy?", key="skin_itch")
-        acne = yes_no("Czy występował lub występuje nasilony trądzik na twarzy lub plecach?", key="acne")
-        acne_details = ""
-        if acne == "tak":
-            acne_details = st.text_area("Jeśli tak, możesz opisać dokładniej", key="acne_details")
-        skin_sensation = st.text_area("Czy są zaburzenia czucia skóry? Jeśli tak, opisz lokalizację i od kiedy.", key="skin_sensation")
-        wound_healing = yes_no("Czy występują problemy z gojeniem się ran?", key="wound_healing")
-        wound_healing_details = ""
-        if wound_healing == "tak":
-            wound_healing_details = st.text_area("Jeśli tak, opisz problemy z gojeniem", key="wound_healing_details")
-
-    with st.expander("21. Sen i psychika"):
-        sleep_problem = yes_no("Czy są problemy ze snem?", key="sleep_problem")
-        sleep_problem_types = []
-        if sleep_problem == "tak":
-            sleep_problem_types = st.multiselect(
-                "Jakie problemy ze snem występują?",
-                ["trudności z zasypianiem", "wybudzanie w nocy", "wstawanie zmęczony lub zmęczona", "chrapanie", "zbyt krótki sen", "bardzo głęboki sen"],
-                placeholder="Wybierz rodzaj problemów ze snem",
-                key="sleep_problem_types",
-            )
-        psych_contact = select_with_placeholder("Czy kiedykolwiek była porada psychologa lub psychiatry?", ["nie", "psycholog", "psychiatra", "oba"], key="psych_contact")
-        psych_dx = st.text_area("Czy kiedykolwiek rozpoznano chorobę psychiczną? Jeśli tak, napisz jaką.", key="psych_dx")
-
-    with st.expander("22. Krążenie obwodowe"):
-        edema = yes_no("Czy pojawiają się obrzęki na podudziach lub kostkach?", key="edema")
-        edema_details = ""
-        if edema == "tak":
-            edema_details = st.text_area("Jeśli tak, napisz czy występują stale czy po staniu, siedzeniu lub w innych sytuacjach.", key="edema_details")
-        calf_pain = st.text_area("Czy występują bóle łydek podczas chodzenia? Jeśli tak, po jakim dystansie i po jakim czasie ustępują?", key="calf_pain")
-        cold_fingers = st.text_area("Czy palce rąk lub nóg łatwo stają się zimne lub zmieniają kolor?", key="cold_fingers")
-        tingling = st.text_area("Czy występuje mrowienie lub drętwienie rąk lub nóg?", key="tingling")
-        varicose = st.text_area("Czy są obecne żylaki?", key="varicose")
-
-    with st.expander("23. Odbyt i okolice odbytu"):
-        anal_problems = st.multiselect(
-            "Czy występują problemy ze śluzówką odbytu?",
-            ["hemoroidy", "stany zapalne błony śluzowej odbytu", "pieczenie", "świąd", "grzybica", "inne"],
-            placeholder="Wybierz problemy w okolicy odbytu",
-            key="anal_problems",
-        )
-        anal_other = ""
-        if "inne" in anal_problems:
-            anal_other = st.text_input("Jeśli zaznaczono inne, opisz", key="anal_other")
-
-    with st.expander("24. Ginekologia lub andrologia"):
-        gyn_problems = ""
-        menstruation = ""
-        first_menses = ""
-        last_menses_text = ""
-        potency = ""
-
-        if sex == "kobieta":
-            gyn_problems = st.text_area("Czy występują problemy ginekologiczne?", key="gyn_problems")
-            menstruation = st.text_area("Czy występuje nieregularna miesiączka, menopauza lub leczenie hormonalne? Jeśli tak, napisz od kiedy.", key="menstruation")
-            first_menses = st.text_input("Podaj miesiąc i rok pierwszej miesiączki", key="first_menses")
-            last_menses_text = st.text_input("Data ostatniej miesiączki", key="last_menses_text", help="Najlepiej w formacie DD.MM.RRRR")
-        elif sex == "mężczyzna":
-            potency = select_with_placeholder("Czy są problemy z potencją?", ["nie", "czasami", "często"], key="potency")
-
-    with st.expander("25. Wywiad rodzinny"):
-        mother_history = st.text_area("Na jakie choroby choruje lub chorowała mama?", key="mother_history")
-        father_history = st.text_area("Na jakie choroby choruje lub chorował ojciec?", key="father_history")
-        maternal_grandmother = st.text_area("Na jakie choroby choruje lub chorowała babcia ze strony mamy?", key="maternal_grandmother")
-        paternal_grandmother = st.text_area("Na jakie choroby choruje lub chorowała babcia ze strony ojca?", key="paternal_grandmother")
-        maternal_grandfather = st.text_area("Na jakie choroby choruje lub chorował dziadek ze strony mamy?", key="maternal_grandfather")
-        paternal_grandfather = st.text_area("Na jakie choroby choruje lub chorował dziadek ze strony ojca?", key="paternal_grandfather")
-
-    with st.expander("26. Dotychczasowe rozpoznania, operacje i ważne informacje"):
-        own_diagnoses = st.text_area("Proszę wymienić wszystkie dotychczasowe rozpoznania oraz operacje", key="own_diagnoses")
-        important_info = st.text_area("Czy są jakieś ważne informacje, które chcesz przekazać lekarzowi?", key="important_info")
-        current_reason = st.text_area("Co jest powodem obecnych dolegliwości lub problemów zdrowotnych?", key="current_reason")
-        key_question = st.text_area("Jakie jest najważniejsze pytanie do lekarza lub najważniejszy problem do omówienia na wizycie?", key="key_question")
-
-    with st.expander("27. Informacje organizacyjne i zgody", expanded=True):
-        st.markdown(
-            """
-**Proszę przesłać wszystkie posiadane wyniki badań na adres:**  
-niedzialkowski@ocenazdrowia.pl  
-
-**lub wgrać je po zalogowaniu się na stronie:**  
-https://aplikacja.medyc.pl/NiedzialkowskiPortal/#/login  
-
-Po założeniu konta możesz wgrać pliki bezpośrednio do swojej kartoteki zdrowotnej.  
-Najlepiej przesłać lub wgrać jeden plik PDF z wynikami ułożonymi chronologicznie.  
+Po założeniu konta możesz wgrać pliki bezpośrednio do swojej kartoteki zdrowotnej.
+Najlepiej przesłać lub wgrać jeden plik PDF z wynikami ułożonymi chronologicznie.
 
 Proszę również przynieść na wizytę posiadane wyniki badań w formie papierowej.
 """
-        )
+    )
 
-        st.markdown('<div id="anchor_consent" class="field-anchor"></div>', unsafe_allow_html=True)
-        consent_true = st.checkbox("Oświadczam, że podane informacje są prawdziwe.", key="consent_true")
-        consent_visit = st.checkbox("Wyrażam zgodę na wykorzystanie tych informacji wyłącznie przez lekarza do przygotowania wizyty.", key="consent_visit")
-        consent_privacy = st.checkbox("Przyjmuję do wiadomości, że formularz nie zapisuje danych w bazie aplikacji, a dokument wysyłany do lekarza zawiera ograniczone dane identyfikacyjne.", key="consent_privacy")
-        contact_consent = st.checkbox("Wyrażam zgodę na kontakt telefoniczny lub mailowy w sprawach organizacyjnych związanych z wizytą.", key="contact_consent")
+    st.markdown('<div id="anchor_consent" class="field-anchor"></div>', unsafe_allow_html=True)
+    consent_true = st.checkbox("Oświadczam, że podane informacje są prawdziwe.", key="consent_true")
+    consent_visit = st.checkbox("Wyrażam zgodę na wykorzystanie tych informacji wyłącznie przez lekarza do przygotowania wizyty.", key="consent_visit")
+    consent_privacy = st.checkbox("Przyjmuję do wiadomości, że formularz nie zapisuje danych w bazie aplikacji, a dokument wysyłany do lekarza zawiera ograniczone dane identyfikacyjne.", key="consent_privacy")
+    contact_consent = st.checkbox("Wyrażam zgodę na kontakt telefoniczny lub mailowy w sprawach organizacyjnych związanych z wizytą.", key="contact_consent")
 
-        if "consent" in field_errors:
-            error_box(field_errors["consent"])
+    if "consent" in field_errors:
+        error_box(field_errors["consent"])
 
-    progress_values = [
-        visit_type, first_name, last_name, phone, email, birth_date_input, nationality, sex,
-        *(([sex_other]) if sex == "inne" else []),
-        current_status,
-        *(([current_status_other]) if current_status == "inne" else []),
-        profession, height_cm_text, weight_kg_text,
-        physical_score, mental_score, weight_change,
-        *(([weight_change_amount]) if weight_change in ["wzrosła", "spadła"] else []),
-        performed_tests,
-        symptom_1, symptom_1_since, symptom_2, symptom_2_since, symptom_3, symptom_3_since,
-        symptom_4, symptom_4_since, symptom_5, symptom_5_since, additional_symptoms,
-        symptom_pattern, symptom_periodicity, symptom_past, worsening_factors,
-        *(([worsening_other]) if "inne" in worsening_factors else []),
-        improvement_factors,
-        *(([improvement_other]) if "inne" in improvement_factors else []),
-        health_timeline, current_meds,
-        lifestyle,
-        *(([lifestyle_other]) if lifestyle == "inne" else []),
-        stimulants,
-        *(([stimulants_other]) if "inne" in stimulants else []),
-        sleep_hours,
-        travel_abroad,
-        *(([travel_where]) if travel_abroad == "tak" else []),
-        animal_contact,
-        *(([animal_contact_details]) if animal_contact == "tak" else []),
-        major_injuries,
-        covid,
-        *(([covid_details]) if covid == "tak" else []),
-        strong_stress,
-        birth_delivery,
-        *(([birth_delivery_other]) if birth_delivery == "inne" else []),
-        birth_timing,
-        *(([birth_timing_other]) if birth_timing == "inne" else []),
-        green_water, birth_info_other, breastfeeding, childhood_diseases,
-        *(([childhood_diseases_other]) if "inne" in childhood_diseases else []),
-        fever_now,
-        *(([fever_details]) if fever_now == "tak" else []),
-        headache_dizziness,
-        *(([headache_dizziness_details]) if headache_dizziness == "tak" else []),
-        headache_assoc,
-        hearing_vision, attacks, sinus_problems, nose_problems, allergies, herpes, mouth_corners,
-        fresh_food_reaction, epilepsy, smell_taste, colds,
-        throat_morning, esophagus_burning, asthma_dx, pneumonia,
-        *(([pneumonia_details]) if pneumonia == "tak" else []),
-        dyspnea,
-        night_breath, chest_heaviness, breathing_type, wheezing, cough,
-        chest_pain, pressure_type, current_bp, current_hr, pain_press, pain_position, palpitations,
-        gi_problem,
-        *(([gi_symptoms]) if gi_problem == "tak" else []),
-        worsening_foods, gi_infections,
-        urine_problems, night_urination, fluids,
-        joints, stiffness,
-        skin_changes, skin_itch, acne,
-        *(([acne_details]) if acne == "tak" else []),
-        skin_sensation, wound_healing,
-        *(([wound_healing_details]) if wound_healing == "tak" else []),
-        sleep_problem,
-        *(([sleep_problem_types]) if sleep_problem == "tak" else []),
-        psych_contact, psych_dx,
-        edema,
-        *(([edema_details]) if edema == "tak" else []),
-        calf_pain, cold_fingers, tingling, varicose,
-        anal_problems,
-        *(([anal_other]) if "inne" in anal_problems else []),
-        *(([gyn_problems, menstruation, first_menses, last_menses_text]) if sex == "kobieta" else []),
-        *(([potency]) if sex == "mężczyzna" else []),
-        mother_history, father_history, maternal_grandmother, paternal_grandmother, maternal_grandfather, paternal_grandfather,
-        own_diagnoses, important_info, current_reason, key_question,
-        consent_true, consent_visit, consent_privacy, contact_consent
-    ]
+progress_values = [
+    visit_type, first_name, last_name, phone, email, birth_date_input, nationality, sex,
+    *(([sex_other]) if sex == "inne" else []),
+    current_status,
+    *(([current_status_other]) if current_status == "inne" else []),
+    profession, height_cm_text, weight_kg_text,
+    physical_score, mental_score, weight_change,
+    *(([weight_change_amount]) if weight_change in ["wzrosła", "spadła"] else []),
+    performed_tests,
+    symptom_1, symptom_1_since, symptom_2, symptom_2_since, symptom_3, symptom_3_since,
+    symptom_4, symptom_4_since, symptom_5, symptom_5_since, additional_symptoms,
+    symptom_pattern, symptom_periodicity, symptom_past, worsening_factors,
+    *(([worsening_other]) if "inne" in worsening_factors else []),
+    improvement_factors,
+    *(([improvement_other]) if "inne" in improvement_factors else []),
+    health_timeline, current_meds,
+    lifestyle,
+    *(([lifestyle_other]) if lifestyle == "inne" else []),
+    stimulants,
+    *(([stimulants_other]) if "inne" in stimulants else []),
+    sleep_hours,
+    travel_abroad,
+    *(([travel_where]) if travel_abroad == "tak" else []),
+    animal_contact,
+    *(([animal_contact_details]) if animal_contact == "tak" else []),
+    major_injuries,
+    covid,
+    *(([covid_details]) if covid == "tak" else []),
+    strong_stress,
+    birth_delivery,
+    *(([birth_delivery_other]) if birth_delivery == "inne" else []),
+    birth_timing,
+    *(([birth_timing_other]) if birth_timing == "inne" else []),
+    green_water, birth_info_other, breastfeeding, childhood_diseases,
+    *(([childhood_diseases_other]) if "inne" in childhood_diseases else []),
+    fever_now,
+    *(([fever_details]) if fever_now == "tak" else []),
+    headache_dizziness,
+    *(([headache_dizziness_details]) if headache_dizziness == "tak" else []),
+    headache_assoc,
+    hearing_vision, attacks, sinus_problems, nose_problems, allergies, herpes, mouth_corners,
+    fresh_food_reaction, epilepsy, smell_taste, colds,
+    throat_morning, esophagus_burning, asthma_dx, pneumonia,
+    *(([pneumonia_details]) if pneumonia == "tak" else []),
+    dyspnea,
+    night_breath, chest_heaviness, breathing_type, wheezing, cough,
+    chest_pain, pressure_type, current_bp, current_hr, pain_press, pain_position, palpitations,
+    gi_problem,
+    *(([gi_symptoms]) if gi_problem == "tak" else []),
+    worsening_foods, gi_infections,
+    urine_problems, night_urination, fluids,
+    joints, stiffness,
+    skin_changes, skin_itch, acne,
+    *(([acne_details]) if acne == "tak" else []),
+    skin_sensation, wound_healing,
+    *(([wound_healing_details]) if wound_healing == "tak" else []),
+    sleep_problem,
+    *(([sleep_problem_types]) if sleep_problem == "tak" else []),
+    psych_contact, psych_dx,
+    edema,
+    *(([edema_details]) if edema == "tak" else []),
+    calf_pain, cold_fingers, tingling, varicose,
+    anal_problems,
+    *(([anal_other]) if "inne" in anal_problems else []),
+    *(([gyn_problems, menstruation, first_menses, last_menses_text]) if sex == "kobieta" else []),
+    *(([potency]) if sex == "mężczyzna" else []),
+    mother_history, father_history, maternal_grandmother, paternal_grandmother, maternal_grandfather, paternal_grandfather,
+    own_diagnoses, important_info, current_reason, key_question,
+    consent_true, consent_visit, consent_privacy, contact_consent
+]
 
-    progress_percent = calc_progress(progress_values)
+progress_percent = calc_progress(progress_values)
 
-    st.markdown('<div class="send-button">', unsafe_allow_html=True)
-    send_clicked = st.form_submit_button("Wyślij")
-    st.markdown("</div>", unsafe_allow_html=True)
+st.markdown('<div class="send-button">', unsafe_allow_html=True)
+send_clicked = st.button("Wyślij", key="send_button")
+st.markdown("</div>", unsafe_allow_html=True)
 
 # =========================================================
 # POSTĘP
