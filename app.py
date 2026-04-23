@@ -609,9 +609,10 @@ st.markdown(
 )
 
 st.markdown(
-    '<div style="margin:12px 0;">'
-    '<iframe width="100%" height="315" src="https://www.youtube.com/embed/qdwtGE9k4GY" '
-    'frameborder="0" allowfullscreen></iframe></div>',
+    '<div style="margin:16px 0;position:relative;padding-bottom:56.25%;height:0;overflow:hidden;'
+    'border-radius:14px;box-shadow:0 6px 24px rgba(0,0,0,0.18);">'
+    '<iframe style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" '
+    'src="https://www.youtube.com/embed/qdwtGE9k4GY" allowfullscreen></iframe></div>',
     unsafe_allow_html=True,
 )
 
