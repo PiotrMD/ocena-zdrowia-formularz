@@ -686,17 +686,17 @@ with st.expander("1. Dane podstawowe", expanded=True):
 
     nationality = st.text_input("Narodowość", key="nationality")
     sex = select_with_placeholder("Płeć", ["kobieta", "mężczyzna", "inne"], key="sex")
-    sex_other = ""
-    if sex == "inne":
-        sex_other = st.text_input("Jeśli inne, opisz płeć", key="sex_other")
+    sex_other = st.text_input("Inna płeć — opisz", key="sex_other", disabled=(sex != "inne"))
+    if sex != "inne":
+        sex_other = ""
     current_status = select_with_placeholder(
         "Aktualny status",
         ["pracujący", "dziecko", "uczeń", "student", "emeryt", "inne"],
         key="current_status",
     )
-    current_status_other = ""
-    if current_status == "inne":
-        current_status_other = st.text_input("Jeśli inne, opisz aktualny status", key="current_status_other")
+    current_status_other = st.text_input("Inny status — opisz", key="current_status_other", disabled=(current_status != "inne"))
+    if current_status != "inne":
+        current_status_other = ""
     profession = st.text_input("Obecnie wykonywany zawód", key="profession")
 
 with st.expander("2. Ocena ogólna"):
@@ -786,9 +786,10 @@ with st.expander("5. Charakter objawów"):
         placeholder="Wybierz czynniki pogorszenia",
         key="worsening_factors",
     )
-    worsening_other = ""
-    if "inne" in worsening_factors:
-        worsening_other = st.text_input("Jeśli inne, napisz co powoduje pogorszenie objawów", key="worsening_other")
+    _inne_w = "inne" in worsening_factors
+    worsening_other = st.text_input("Inne czynniki pogorszenia — opisz jakie", key="worsening_other", disabled=not _inne_w)
+    if not _inne_w:
+        worsening_other = ""
 
     improvement_factors = st.multiselect(
         "Co powoduje poprawę lub zmniejszenie objawów?",
@@ -796,9 +797,10 @@ with st.expander("5. Charakter objawów"):
         placeholder="Wybierz czynniki poprawy",
         key="improvement_factors",
     )
-    improvement_other = ""
-    if "inne" in improvement_factors:
-        improvement_other = st.text_input("Jeśli inne, napisz co powoduje poprawę objawów", key="improvement_other")
+    _inne_i = "inne" in improvement_factors
+    improvement_other = st.text_input("Inne czynniki poprawy — opisz jakie", key="improvement_other", disabled=not _inne_i)
+    if not _inne_i:
+        improvement_other = ""
 
 with st.expander("6. Chronologia zdrowia i leki"):
     health_timeline = st.text_area("Opisz przebieg zdrowia od pierwszych problemów zdrowotnych do dziś", key="health_timeline")
@@ -810,18 +812,19 @@ with st.expander("7. Tryb życia"):
         ["leżący", "siedzący", "nisko aktywny", "średnio aktywny", "bardzo aktywny", "inne"],
         key="lifestyle",
     )
-    lifestyle_other = ""
-    if lifestyle == "inne":
-        lifestyle_other = st.text_input("Jeśli inne, opisz tryb życia", key="lifestyle_other")
+    lifestyle_other = st.text_input("Inny tryb życia — opisz", key="lifestyle_other", disabled=(lifestyle != "inne"))
+    if lifestyle != "inne":
+        lifestyle_other = ""
     stimulants = st.multiselect(
         "Używki i codzienne nawyki",
         ["kawa", "herbata", "papierosy", "alkohol", "narkotyki", "słodycze", "inne"],
         placeholder="Wybierz używki i nawyki",
         key="stimulants",
     )
-    stimulants_other = ""
-    if "inne" in stimulants:
-        stimulants_other = st.text_input("Jeśli zaznaczono inne, napisz jakie", key="stimulants_other")
+    _inne_s = "inne" in stimulants
+    stimulants_other = st.text_input("Inne używki lub nawyki — opisz jakie", key="stimulants_other", disabled=not _inne_s)
+    if not _inne_s:
+        stimulants_other = ""
     sleep_hours = select_with_placeholder("Ile średnio trwa sen na dobę?", ["3", "4", "5", "6", "7", "8", "9", "10", "11", "12"], key="sleep_hours")
 
 with st.expander("8. Podróże"):
@@ -854,17 +857,17 @@ with st.expander("13. Urodzenie i dzieciństwo"):
         ["poród naturalny", "poród przez cesarskie cięcie", "nie wiem", "inne"],
         key="birth_delivery",
     )
-    birth_delivery_other = ""
-    if birth_delivery == "inne":
-        birth_delivery_other = st.text_input("Jeśli inne, opisz sposób porodu", key="birth_delivery_other")
+    birth_delivery_other = st.text_input("Inny sposób porodu — opisz", key="birth_delivery_other", disabled=(birth_delivery != "inne"))
+    if birth_delivery != "inne":
+        birth_delivery_other = ""
     birth_timing = select_with_placeholder(
         "Czas porodu",
         ["poród przedwczesny", "poród o czasie", "poród po terminie", "nie wiem", "inne"],
         key="birth_timing",
     )
-    birth_timing_other = ""
-    if birth_timing == "inne":
-        birth_timing_other = st.text_input("Jeśli inne, opisz czas porodu", key="birth_timing_other")
+    birth_timing_other = st.text_input("Inny czas porodu — opisz", key="birth_timing_other", disabled=(birth_timing != "inne"))
+    if birth_timing != "inne":
+        birth_timing_other = ""
     green_water = yes_no_unknown("Czy były zielone wody płodowe?", key="green_water")
     birth_info_other = st.text_input("Inne informacje o urodzeniu", key="birth_info_other")
 
@@ -879,9 +882,10 @@ with st.expander("13. Urodzenie i dzieciństwo"):
         placeholder="Wybierz choroby dzieciństwa",
         key="childhood_diseases",
     )
-    childhood_diseases_other = ""
-    if "inne" in childhood_diseases:
-        childhood_diseases_other = st.text_input("Jeśli zaznaczono inne, napisz jakie", key="childhood_diseases_other")
+    _inne_cd = "inne" in childhood_diseases
+    childhood_diseases_other = st.text_input("Inne choroby dzieciństwa — opisz jakie", key="childhood_diseases_other", disabled=not _inne_cd)
+    if not _inne_cd:
+        childhood_diseases_other = ""
 
 with st.expander("14. Objawy ogólne i neurologiczne"):
     fever_now = yes_no("Czy aktualnie występuje gorączka?", key="fever_now")
@@ -1009,9 +1013,10 @@ with st.expander("23. Odbyt i okolice odbytu"):
         placeholder="Wybierz problemy w okolicy odbytu",
         key="anal_problems",
     )
-    anal_other = ""
-    if "inne" in anal_problems:
-        anal_other = st.text_input("Jeśli zaznaczono inne, opisz", key="anal_other")
+    _inne_ap = "inne" in anal_problems
+    anal_other = st.text_input("Inne problemy w okolicy odbytu — opisz jakie", key="anal_other", disabled=not _inne_ap)
+    if not _inne_ap:
+        anal_other = ""
 
 with st.expander("24. Ginekologia lub andrologia"):
     gyn_problems = ""
