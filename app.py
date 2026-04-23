@@ -717,7 +717,14 @@ with st.expander("2. Ocena ogólna"):
     )
     weight_change_amount = ""
     if weight_change in ["wzrosła", "spadła"]:
-        weight_change_amount = st.text_input("O ile mniej więcej kilogramów zmieniła się masa ciała?", key="weight_change_amount")
+        _kg = st.number_input(
+            f"O ile kg {weight_change} masa ciała?",
+            min_value=0.0, max_value=200.0, value=None,
+            step=0.5, format="%.1f",
+            placeholder="wpisz liczbę kg",
+            key="weight_change_amount_num",
+        )
+        weight_change_amount = str(_kg) if _kg is not None else ""
 
 with st.expander("3. Badania wykonane w ciągu ostatnich 2 lat"):
     performed_tests = st.multiselect(
