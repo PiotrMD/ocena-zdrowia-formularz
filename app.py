@@ -191,6 +191,43 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "consent_privacy": "Przyjmuję do wiadomości, że formularz nie zapisuje danych w bazie aplikacji, a dokument wysyłany do lekarza zawiera ograniczone dane identyfikacyjne.",
         "contact_consent": "Wyrażam zgodę na kontakt telefoniczny lub mailowy w sprawach organizacyjnych związanych z wizytą.",
         "err_consent": "Zaznacz wszystkie wymagane zgody.",
+        # ogólne
+        "placeholder": "wybierz",
+        # sekcja 1
+        "sec_1": "1. Dane podstawowe",
+        "visit_type_lbl": "Rodzaj wizyty",
+        "first_name_lbl": "Imię",
+        "last_name_lbl": "Nazwisko",
+        "phone_lbl": "Telefon kontaktowy",
+        "phone_help": "Może być z numerem kierunkowym albo bez, np. 690584584 lub +48690584584",
+        "email_lbl": "Adres e-mail",
+        "birth_date_lbl": "Data urodzenia",
+        "nationality_lbl": "Narodowość",
+        "sex_lbl": "Płeć",
+        "sex_other_lbl": "Inna płeć — opisz",
+        "current_status_lbl": "Aktualny status",
+        "current_status_other_lbl": "Inny status — opisz",
+        "profession_lbl": "Obecnie wykonywany zawód",
+        # sekcja 2
+        "sec_2": "2. Ocena ogólna",
+        "physical_score_lbl": "Jak oceniasz swój stan fizyczny? 0 = bardzo zły, 10 = bardzo dobry",
+        "mental_score_lbl": "Jak oceniasz swój stan psychiczny? 0 = bardzo zły, 10 = bardzo dobry",
+        "weight_change_lbl": "Czy w ostatnim roku zmieniła się masa ciała?",
+        "weight_change_grew_lbl": "O ile kg wzrosła masa ciała?",
+        "weight_change_fell_lbl": "O ile kg spadła masa ciała?",
+        "weight_kg_placeholder": "wpisz liczbę kg",
+        # sekcja 4
+        "sec_4": "4. Objawy główne",
+        "symptom_lbl": "Objaw {n}",
+        "symptom_since_lbl": "Od kiedy występuje objaw {n}?",
+        "additional_symptoms_lbl": "Pozostałe dolegliwości, nawet mniej nasilone",
+        # błędy walidacji
+        "err_visit_type": "Wybierz rodzaj wizyty.",
+        "err_first_name": "Wpisz imię.",
+        "err_last_name": "Wpisz nazwisko.",
+        "err_phone": "Wpisz poprawny numer telefonu. Może być z +48 albo bez.",
+        "err_email": "Wpisz poprawny adres e-mail.",
+        "err_birth_date": "Wybierz datę urodzenia.",
     },
     "en": {
         "header_title": "HEALTH ASSESSMENT",
@@ -217,6 +254,43 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "consent_privacy": "I acknowledge that the form does not store data in the application database, and the document sent to the doctor contains limited identifying information.",
         "contact_consent": "I consent to phone or email contact for organizational matters related to the appointment.",
         "err_consent": "Please check all required consents.",
+        # general
+        "placeholder": "select",
+        # section 1
+        "sec_1": "1. Basic Information",
+        "visit_type_lbl": "Type of visit",
+        "first_name_lbl": "First name",
+        "last_name_lbl": "Last name",
+        "phone_lbl": "Contact phone",
+        "phone_help": "With or without country code, e.g. 690584584 or +48690584584",
+        "email_lbl": "Email address",
+        "birth_date_lbl": "Date of birth",
+        "nationality_lbl": "Nationality",
+        "sex_lbl": "Sex",
+        "sex_other_lbl": "Other sex — describe",
+        "current_status_lbl": "Current status",
+        "current_status_other_lbl": "Other status — describe",
+        "profession_lbl": "Current occupation",
+        # section 2
+        "sec_2": "2. General Assessment",
+        "physical_score_lbl": "How would you rate your physical health? 0 = very poor, 10 = excellent",
+        "mental_score_lbl": "How would you rate your mental health? 0 = very poor, 10 = excellent",
+        "weight_change_lbl": "Did your body weight change in the last year?",
+        "weight_change_grew_lbl": "By how many kg did weight increase?",
+        "weight_change_fell_lbl": "By how many kg did weight decrease?",
+        "weight_kg_placeholder": "enter number of kg",
+        # section 4
+        "sec_4": "4. Main Symptoms",
+        "symptom_lbl": "Symptom {n}",
+        "symptom_since_lbl": "Since when has symptom {n} been present?",
+        "additional_symptoms_lbl": "Other complaints, even milder ones",
+        # validation errors
+        "err_visit_type": "Please select the type of visit.",
+        "err_first_name": "Please enter your first name.",
+        "err_last_name": "Please enter your last name.",
+        "err_phone": "Please enter a valid phone number. With or without +country code.",
+        "err_email": "Please enter a valid email address.",
+        "err_birth_date": "Please select your date of birth.",
     },
 }
 
@@ -224,6 +298,29 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
 def t(key: str) -> str:
     lang = st.session_state.get("lang", "pl")
     return TRANSLATIONS.get(lang, TRANSLATIONS["pl"]).get(key, key)
+
+
+_OPT_EN: Dict[str, str] = {
+    "Pierwsza": "First visit",
+    "Kontrolna": "Follow-up visit",
+    "kobieta": "Female",
+    "mężczyzna": "Male",
+    "inne": "Other",
+    "pracujący": "Employed",
+    "dziecko": "Child",
+    "uczeń": "School student",
+    "student": "University student",
+    "emeryt": "Retired",
+    "wzrosła": "Increased",
+    "spadła": "Decreased",
+    "bez zmian": "Unchanged",
+}
+
+
+def _opt(x: str) -> str:
+    if st.session_state.get("lang", "pl") == "en":
+        return _OPT_EN.get(x, x)
+    return x
 
 
 # =========================================================
@@ -371,7 +468,7 @@ def select_with_placeholder(label: str, options: List[str], key: str) -> str:
     return st.selectbox(
         label,
         all_options,
-        format_func=lambda x: "wybierz" if x == "" else x,
+        format_func=lambda x: t("placeholder") if x == "" else _opt(x),
         key=key,
     )
 
@@ -721,39 +818,39 @@ with st.expander("Wzrost, masa ciała i BMI", expanded=True):
 # =========================================================
 # FORMULARZ
 # =========================================================
-with st.expander("1. Dane podstawowe", expanded=True):
+with st.expander(t("sec_1"), expanded=True):
     st.markdown('<div id="anchor_visit_type" class="field-anchor"></div>', unsafe_allow_html=True)
-    visit_type = select_with_placeholder("Rodzaj wizyty", ["Pierwsza", "Kontrolna"], key="visit_type")
+    visit_type = select_with_placeholder(t("visit_type_lbl"), ["Pierwsza", "Kontrolna"], key="visit_type")
     if "visit_type" in field_errors:
         error_box(field_errors["visit_type"])
 
     st.markdown('<div id="anchor_first_name" class="field-anchor"></div>', unsafe_allow_html=True)
-    first_name = st.text_input("Imię", key="first_name")
+    first_name = st.text_input(t("first_name_lbl"), key="first_name")
     if "first_name" in field_errors:
         error_box(field_errors["first_name"])
 
     st.markdown('<div id="anchor_last_name" class="field-anchor"></div>', unsafe_allow_html=True)
-    last_name = st.text_input("Nazwisko", key="last_name")
+    last_name = st.text_input(t("last_name_lbl"), key="last_name")
     if "last_name" in field_errors:
         error_box(field_errors["last_name"])
 
     st.markdown('<div id="anchor_phone" class="field-anchor"></div>', unsafe_allow_html=True)
     phone = st.text_input(
-        "Telefon kontaktowy",
+        t("phone_lbl"),
         key="phone",
-        help="Może być z numerem kierunkowym albo bez, np. 690584584 lub +48690584584",
+        help=t("phone_help"),
     )
     if "phone" in field_errors:
         error_box(field_errors["phone"])
 
     st.markdown('<div id="anchor_email" class="field-anchor"></div>', unsafe_allow_html=True)
-    email = st.text_input("Adres e-mail", key="email")
+    email = st.text_input(t("email_lbl"), key="email")
     if "email" in field_errors:
         error_box(field_errors["email"])
 
     st.markdown('<div id="anchor_birth_date" class="field-anchor"></div>', unsafe_allow_html=True)
     birth_date_input = st.date_input(
-        "Data urodzenia",
+        t("birth_date_lbl"),
         value=None,
         min_value=date(1900, 1, 1),
         max_value=date.today(),
@@ -763,44 +860,45 @@ with st.expander("1. Dane podstawowe", expanded=True):
     if "birth_date" in field_errors:
         error_box(field_errors["birth_date"])
 
-    nationality = st.text_input("Narodowość", key="nationality")
-    sex = select_with_placeholder("Płeć", ["kobieta", "mężczyzna", "inne"], key="sex")
-    sex_other = st.text_input("Inna płeć — opisz", key="sex_other", disabled=(sex != "inne"))
+    nationality = st.text_input(t("nationality_lbl"), key="nationality")
+    sex = select_with_placeholder(t("sex_lbl"), ["kobieta", "mężczyzna", "inne"], key="sex")
+    sex_other = st.text_input(t("sex_other_lbl"), key="sex_other", disabled=(sex != "inne"))
     if sex != "inne":
         sex_other = ""
     current_status = select_with_placeholder(
-        "Aktualny status",
+        t("current_status_lbl"),
         ["pracujący", "dziecko", "uczeń", "student", "emeryt", "inne"],
         key="current_status",
     )
-    current_status_other = st.text_input("Inny status — opisz", key="current_status_other", disabled=(current_status != "inne"))
+    current_status_other = st.text_input(t("current_status_other_lbl"), key="current_status_other", disabled=(current_status != "inne"))
     if current_status != "inne":
         current_status_other = ""
-    profession = st.text_input("Obecnie wykonywany zawód", key="profession")
+    profession = st.text_input(t("profession_lbl"), key="profession")
 
-with st.expander("2. Ocena ogólna"):
+with st.expander(t("sec_2")):
     physical_score = st.slider(
-        "Jak oceniasz swój stan fizyczny? 0 = bardzo zły, 10 = bardzo dobry",
+        t("physical_score_lbl"),
         min_value=0, max_value=10, value=5,
         key="physical_score",
     )
     mental_score = st.slider(
-        "Jak oceniasz swój stan psychiczny? 0 = bardzo zły, 10 = bardzo dobry",
+        t("mental_score_lbl"),
         min_value=0, max_value=10, value=5,
         key="mental_score",
     )
     weight_change = select_with_placeholder(
-        "Czy w ostatnim roku zmieniła się masa ciała?",
+        t("weight_change_lbl"),
         ["wzrosła", "spadła", "bez zmian"],
         key="weight_change",
     )
     weight_change_amount = ""
     if weight_change in ["wzrosła", "spadła"]:
+        _wc_lbl = t("weight_change_grew_lbl") if weight_change == "wzrosła" else t("weight_change_fell_lbl")
         _kg = st.number_input(
-            f"O ile kg {weight_change} masa ciała?",
+            _wc_lbl,
             min_value=0.0, max_value=200.0, value=None,
             step=0.5, format="%.1f",
-            placeholder="wpisz liczbę kg",
+            placeholder=t("weight_kg_placeholder"),
             key="weight_change_amount_num",
         )
         weight_change_amount = str(_kg) if _kg is not None else ""
@@ -837,18 +935,18 @@ with st.expander("3. Badania wykonane w ciągu ostatnich 2 lat"):
         key="performed_tests",
     )
 
-with st.expander("4. Objawy główne"):
-    symptom_1 = st.text_input("Objaw 1", key="symptom_1")
-    symptom_1_since = st.text_input("Od kiedy występuje objaw 1?", key="symptom_1_since")
-    symptom_2 = st.text_input("Objaw 2", key="symptom_2")
-    symptom_2_since = st.text_input("Od kiedy występuje objaw 2?", key="symptom_2_since")
-    symptom_3 = st.text_input("Objaw 3", key="symptom_3")
-    symptom_3_since = st.text_input("Od kiedy występuje objaw 3?", key="symptom_3_since")
-    symptom_4 = st.text_input("Objaw 4", key="symptom_4")
-    symptom_4_since = st.text_input("Od kiedy występuje objaw 4?", key="symptom_4_since")
-    symptom_5 = st.text_input("Objaw 5", key="symptom_5")
-    symptom_5_since = st.text_input("Od kiedy występuje objaw 5?", key="symptom_5_since")
-    additional_symptoms = st.text_area("Pozostałe dolegliwości, nawet mniej nasilone", key="additional_symptoms")
+with st.expander(t("sec_4")):
+    symptom_1 = st.text_input(t("symptom_lbl").format(n=1), key="symptom_1")
+    symptom_1_since = st.text_input(t("symptom_since_lbl").format(n=1), key="symptom_1_since")
+    symptom_2 = st.text_input(t("symptom_lbl").format(n=2), key="symptom_2")
+    symptom_2_since = st.text_input(t("symptom_since_lbl").format(n=2), key="symptom_2_since")
+    symptom_3 = st.text_input(t("symptom_lbl").format(n=3), key="symptom_3")
+    symptom_3_since = st.text_input(t("symptom_since_lbl").format(n=3), key="symptom_3_since")
+    symptom_4 = st.text_input(t("symptom_lbl").format(n=4), key="symptom_4")
+    symptom_4_since = st.text_input(t("symptom_since_lbl").format(n=4), key="symptom_4_since")
+    symptom_5 = st.text_input(t("symptom_lbl").format(n=5), key="symptom_5")
+    symptom_5_since = st.text_input(t("symptom_since_lbl").format(n=5), key="symptom_5_since")
+    additional_symptoms = st.text_area(t("additional_symptoms_lbl"), key="additional_symptoms")
 
 with st.expander("5. Charakter objawów"):
     symptom_pattern = select_with_placeholder(
@@ -1255,17 +1353,17 @@ if send_clicked:
     full_name = f"{first_name_clean} {last_name_clean}".strip()
 
     if not visit_type:
-        st.session_state.field_errors["visit_type"] = "Wybierz rodzaj wizyty."
+        st.session_state.field_errors["visit_type"] = t("err_visit_type")
     if not first_name_clean:
-        st.session_state.field_errors["first_name"] = "Wpisz imię."
+        st.session_state.field_errors["first_name"] = t("err_first_name")
     if not last_name_clean:
-        st.session_state.field_errors["last_name"] = "Wpisz nazwisko."
+        st.session_state.field_errors["last_name"] = t("err_last_name")
     if not validated_phone:
-        st.session_state.field_errors["phone"] = "Wpisz poprawny numer telefonu. Może być z +48 albo bez."
+        st.session_state.field_errors["phone"] = t("err_phone")
     if email_raw and not validated_email:
-        st.session_state.field_errors["email"] = "Wpisz poprawny adres e-mail."
+        st.session_state.field_errors["email"] = t("err_email")
     if not birth_date:
-        st.session_state.field_errors["birth_date"] = "Wybierz datę urodzenia."
+        st.session_state.field_errors["birth_date"] = t("err_birth_date")
     if not consent_true or not consent_visit or not consent_privacy:
         st.session_state.field_errors["consent"] = t("err_consent")
 
