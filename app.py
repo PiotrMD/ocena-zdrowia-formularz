@@ -1265,23 +1265,24 @@ if step == 1:
     st.subheader(t("sec_1"))
     st.markdown('<div id="anchor_visit_type" class="field-anchor"></div>', unsafe_allow_html=True)
     select_with_placeholder(t("visit_type_lbl"), ["Pierwsza", "Kontrolna"], key="visit_type")
-    if "visit_type" in field_errors:
+    if "visit_type" in field_errors and not st.session_state.get("visit_type", ""):
         error_box(field_errors["visit_type"])
     st.markdown('<div id="anchor_first_name" class="field-anchor"></div>', unsafe_allow_html=True)
     st.text_input(t("first_name_lbl"), key="first_name")
-    if "first_name" in field_errors:
+    if "first_name" in field_errors and not st.session_state.get("first_name", "").strip():
         error_box(field_errors["first_name"])
     st.markdown('<div id="anchor_last_name" class="field-anchor"></div>', unsafe_allow_html=True)
     st.text_input(t("last_name_lbl"), key="last_name")
-    if "last_name" in field_errors:
+    if "last_name" in field_errors and not st.session_state.get("last_name", "").strip():
         error_box(field_errors["last_name"])
     st.markdown('<div id="anchor_phone" class="field-anchor"></div>', unsafe_allow_html=True)
     st.text_input(t("phone_lbl"), key="phone", help=t("phone_help"))
-    if "phone" in field_errors:
+    if "phone" in field_errors and not validate_phone(st.session_state.get("phone", "")):
         error_box(field_errors["phone"])
     st.markdown('<div id="anchor_email" class="field-anchor"></div>', unsafe_allow_html=True)
     st.text_input(t("email_lbl"), key="email")
-    if "email" in field_errors:
+    _em_cur = st.session_state.get("email", "")
+    if "email" in field_errors and _em_cur and not validate_email(_em_cur):
         error_box(field_errors["email"])
     st.markdown('<div id="anchor_birth_date" class="field-anchor"></div>', unsafe_allow_html=True)
     st.date_input(
@@ -1292,7 +1293,7 @@ if step == 1:
         format="DD.MM.YYYY",
         key="birth_date_input",
     )
-    if "birth_date" in field_errors:
+    if "birth_date" in field_errors and not st.session_state.get("birth_date_input"):
         error_box(field_errors["birth_date"])
     st.subheader(t("sec_27"))
     st.markdown(t("org_info"))
@@ -1301,7 +1302,10 @@ if step == 1:
     st.checkbox(t("consent_visit"), key="consent_visit")
     st.checkbox(t("consent_privacy"), key="consent_privacy")
     st.checkbox(t("contact_consent"), key="contact_consent")
-    if "consent" in field_errors:
+    _ct_cur = st.session_state.get("consent_true", False)
+    _cv_cur = st.session_state.get("consent_visit", False)
+    _cp_cur = st.session_state.get("consent_privacy", False)
+    if "consent" in field_errors and not (_ct_cur and _cv_cur and _cp_cur):
         error_box(field_errors["consent"])
 
 # =========================================================
