@@ -608,7 +608,12 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.video("https://youtu.be/qdwtGE9k4GY?si=HwXJpcIGKL8m1RFE")
+st.markdown(
+    '<div style="margin:12px 0;">'
+    '<iframe width="100%" height="315" src="https://www.youtube.com/embed/qdwtGE9k4GY" '
+    'frameborder="0" allowfullscreen></iframe></div>',
+    unsafe_allow_html=True,
+)
 
 # =========================================================
 # WZROST / MASA / BMI — poza formularzem, żeby liczyć na bieżąco
