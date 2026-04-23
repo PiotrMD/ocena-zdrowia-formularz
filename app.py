@@ -42,51 +42,66 @@ st.markdown(
         padding-bottom: 2rem;
     }
 
-    .top-card {
-        padding: 18px 18px;
+    .header-card {
+        padding: 20px 24px;
+        border-radius: 18px;
+        border: 1px solid rgba(120,120,120,0.22);
+        margin-bottom: 14px;
+        background: rgba(250,250,250,0.03);
+        text-align: center;
+    }
+
+    .header-title {
+        font-size: 2.1rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        margin: 0 0 4px 0;
+    }
+
+    .header-subtitle {
+        font-size: 1.15rem;
+        font-weight: 700;
+        margin: 0 0 12px 0;
+    }
+
+    .header-divider {
+        border: none;
+        border-top: 1px solid rgba(120,120,120,0.22);
+        margin: 10px 0;
+    }
+
+    .header-doctor {
+        font-size: 1rem;
+        margin: 8px 0 2px 0;
+    }
+
+    .header-site {
+        font-size: 1rem;
+        font-weight: 700;
+        margin: 2px 0;
+    }
+
+    .header-contact {
+        font-size: 0.9rem;
+        opacity: 0.8;
+        margin: 4px 0 0 0;
+    }
+
+    .welcome-card {
+        padding: 20px 24px;
         border-radius: 18px;
         border: 1px solid rgba(120,120,120,0.22);
         margin-bottom: 16px;
         background: rgba(250,250,250,0.03);
+        line-height: 1.65;
     }
 
-    .title-main {
-        text-align: center;
-        font-size: 2.1rem;
-        font-weight: 800;
-        letter-spacing: 0.04em;
-        margin-top: 0.1rem;
-        margin-bottom: 0.1rem;
-    }
-
-    .title-sub {
-        text-align: center;
-        font-size: 1.15rem;
-        font-weight: 700;
-        margin-top: 0;
-        margin-bottom: 0.35rem;
-    }
-
-    .doctor-line {
-        text-align: center;
-        font-size: 1rem;
-        margin-top: 0;
-        margin-bottom: 0.4rem;
-    }
-
-    .site-line {
-        text-align: center;
-        font-size: 1rem;
-        margin-top: 0;
-        margin-bottom: 0.2rem;
-        font-weight: 700;
-    }
-
-    .contact-line {
-        text-align: center;
-        font-size: 0.95rem;
-        margin-top: 0;
-        margin-bottom: 1rem;
+    .welcome-privacy {
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid rgba(120,120,120,0.18);
+        font-size: 0.88rem;
+        opacity: 0.72;
     }
 
     .progress-box {
@@ -130,15 +145,15 @@ st.markdown(
             padding-right: 0.8rem;
         }
 
-        .title-main {
+        .header-title {
             font-size: 1.55rem;
         }
 
-        .title-sub {
+        .header-subtitle {
             font-size: 1rem;
         }
 
-        .doctor-line, .site-line, .contact-line {
+        .header-doctor, .header-site, .header-contact {
             font-size: 0.9rem;
         }
     }
@@ -557,26 +572,34 @@ elif os.path.exists("logo.png"):
 elif os.path.exists("Logo OCENA ZDROWIA.PNG"):
     st.image("Logo OCENA ZDROWIA.PNG", use_container_width=True)
 
-st.markdown("<div class='title-main'>OCENA STANU ZDROWIA</div>", unsafe_allow_html=True)
-st.markdown("<div class='title-sub'>Wywiad lekarski</div>", unsafe_allow_html=True)
-st.info(
-    "Formularz ma charakter informacyjny i służy przygotowaniu wizyty lekarskiej. "
-    "Dane nie są przechowywane w bazie aplikacji. "
-    "Po wysłaniu przekazywane są wyłącznie lekarzowi w formie wiadomości e-mail i dokumentu PDF."
+st.markdown(
+    """
+    <div class="header-card">
+        <div class="header-title">OCENA STANU ZDROWIA</div>
+        <div class="header-subtitle">Wywiad lekarski</div>
+        <hr class="header-divider">
+        <div class="header-doctor">dr n. med. Piotr Niedziałkowski</div>
+        <div class="header-site">www.ocenazdrowia.pl</div>
+        <div class="header-contact">W sprawie pytań proszę kontaktować się z recepcją: +48 690 584 584</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
-st.markdown("<div class='doctor-line'>dr n. med. Piotr Niedziałkowski</div>", unsafe_allow_html=True)
-st.markdown("<div class='site-line'>www.ocenazdrowia.pl</div>", unsafe_allow_html=True)
-st.markdown("<div class='contact-line'>W sprawie pytań proszę kontaktować się z recepcją: +48 690 584 584</div>", unsafe_allow_html=True)
 
 st.markdown(
     """
-    <div class="top-card">
-    Szanowni Państwo,<br><br>
-    każda wizyta jest przygotowywana indywidualnie.<br>
-    Bardzo proszę o szczere i możliwie dokładne odpowiedzi dotyczące stanu zdrowia.<br>
-    Im więcej szczegółów, tym większa szansa na wcześniejsze wykrycie problemów i trafną ocenę sytuacji zdrowotnej.<br><br>
-    W przypadku dzieci proszę o wypełnienie odpowiednich pól.<br><br>
-    Serdecznie pozdrawiam i do zobaczenia na wizycie.
+    <div class="welcome-card">
+        Szanowni Państwo,<br><br>
+        każda wizyta jest przygotowywana indywidualnie.<br>
+        Bardzo proszę o szczere i możliwie dokładne odpowiedzi dotyczące stanu zdrowia.<br>
+        Im więcej szczegółów, tym większa szansa na wcześniejsze wykrycie problemów i trafną ocenę sytuacji zdrowotnej.<br><br>
+        W przypadku dzieci proszę o wypełnienie odpowiednich pól.<br><br>
+        Serdecznie pozdrawiam i do zobaczenia na wizycie.
+        <div class="welcome-privacy">
+            Formularz ma charakter informacyjny i służy przygotowaniu wizyty lekarskiej.
+            Dane nie są przechowywane w bazie aplikacji.
+            Po wysłaniu przekazywane są wyłącznie lekarzowi w formie wiadomości e-mail i dokumentu PDF.
+        </div>
     </div>
     """,
     unsafe_allow_html=True,
