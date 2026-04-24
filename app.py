@@ -1319,9 +1319,8 @@ field_errors: Dict[str, str] = st.session_state.field_errors
 _lang = st.session_state.get("lang", "pl")
 _has_form_nav = False  # set True inside form-wrapped steps
 
-if st.session_state.pop("_form_sent", False):
-    st.session_state["step"] = 1
-    st.success(t("form_sent"))
+if "form_success" not in st.session_state:
+    st.session_state["form_success"] = False
 
 # =========================================================
 # GÓRA APLIKACJI
@@ -1357,6 +1356,30 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
+# =========================================================
+# STRONA SUKCESU
+# =========================================================
+if st.session_state["form_success"]:
+    st.markdown(
+        """
+        <div style="text-align:center;padding:40px 24px;border-radius:18px;
+        border:1px solid rgba(46,125,50,0.4);background:rgba(46,125,50,0.06);margin:20px 0;">
+            <div style="font-size:3rem;margin-bottom:16px;">✅</div>
+            <div style="font-size:1.5rem;font-weight:800;color:#2E7D32;margin-bottom:12px;">
+                Formularz wysłany pomyślnie!
+            </div>
+            <div style="font-size:1rem;opacity:0.85;line-height:1.7;">
+                Dziękujemy za wypełnienie wywiadu lekarskiego.<br>
+                Formularz został przesłany do lekarza.<br><br>
+                Jeśli podałeś adres e-mail, otrzymasz potwierdzenie<br>
+                wraz z instrukcją jak przesłać wyniki badań.
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.stop()
 
 # =========================================================
 # PASEK POSTĘPU
@@ -2374,9 +2397,10 @@ Zgoda na kontakt organizacyjny: {"tak" if contact_consent_v else "nie"}
             _status.empty()
             st.session_state.field_errors = {}
             st.session_state.scroll_target = None
-            st.session_state["_form_sent"] = True
+            st.session_state["form_success"] = True
             for _k in _FORM_KEYS:
                 st.session_state.pop(_k, None)
+            st.session_state["step"] = 1
             st.rerun()
         except Exception as e:
             _status.empty()
