@@ -140,21 +140,89 @@ st.markdown(
 
     @media (max-width: 768px) {
         .main .block-container {
-            padding-top: 0.45rem;
-            padding-left: 0.8rem;
-            padding-right: 0.8rem;
+            padding-top: 0.3rem;
+            padding-left: 0.6rem;
+            padding-right: 0.6rem;
+            padding-bottom: 3rem;
+        }
+
+        .header-card {
+            padding: 14px 16px;
+            border-radius: 14px;
+            margin-bottom: 10px;
         }
 
         .header-title {
-            font-size: 1.55rem;
+            font-size: 1.45rem;
         }
 
         .header-subtitle {
-            font-size: 1rem;
+            font-size: 0.95rem;
         }
 
         .header-doctor, .header-site, .header-contact {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+        }
+
+        .welcome-card {
+            padding: 14px 16px;
+            font-size: 0.95rem;
+        }
+
+        .progress-box {
+            padding: 10px 12px;
+            font-size: 0.95rem;
+        }
+
+        /* Pola formularza — min 16px zapobiega zoom na iOS */
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="number"],
+        textarea,
+        select,
+        [data-baseweb="input"] input,
+        [data-baseweb="textarea"] textarea,
+        [data-baseweb="select"] input {
+            font-size: 16px !important;
+            min-height: 48px;
+        }
+
+        /* Większe przyciski nawigacji */
+        [data-testid="stFormSubmitButton"] button,
+        .send-button > button {
+            min-height: 52px !important;
+            font-size: 1.05rem !important;
+            font-weight: 700 !important;
+            border-radius: 12px !important;
+        }
+
+        /* Etykiety pól */
+        label, [data-testid="stWidgetLabel"] {
+            font-size: 1rem !important;
+        }
+
+        /* Suwaki — większy obszar dotyku */
+        [data-testid="stSlider"] {
+            padding-top: 8px;
+            padding-bottom: 8px;
+        }
+
+        /* Checkboxy i radio — większy obszar */
+        [data-testid="stCheckbox"] label,
+        [data-testid="stRadio"] label {
+            font-size: 1rem !important;
+            padding: 6px 0;
+        }
+
+        /* Separator formularza */
+        hr {
+            margin: 1rem 0;
+        }
+
+        /* Subheadery */
+        h2, h3 {
+            font-size: 1.15rem !important;
         }
     }
     </style>
