@@ -1210,6 +1210,64 @@ def make_pdf(data: Dict[str, Any]) -> str:
     return tmp.name
 
 
+def send_confirmation_to_patient(patient_email: str, full_name: str, lang: str = "pl"):
+    if not patient_email:
+        return
+    msg = EmailMessage()
+    if lang == "pl":
+        msg["Subject"] = "Potwierdzenie wysłania wywiadu lekarskiego"
+        body = f"""Szanowna/Szanowny {full_name},
+
+Dziękujemy za wypełnienie wywiadu lekarskiego. Formularz został pomyślnie przesłany do lekarza.
+
+Prosimy o przesłanie posiadanych wyników badań na adres:
+niedzialkowski@ocenazdrowia.pl
+
+lub wgranie ich po zalogowaniu się na stronie:
+https://aplikacja.medyc.pl/NiedzialkowskiPortal/#/login
+
+Po założeniu konta można wgrać pliki bezpośrednio do swojej kartoteki zdrowotnej.
+Najlepiej przesłać lub wgrać jeden plik PDF z wynikami ułożonymi chronologicznie.
+
+Prosimy również przynieść na wizytę posiadane wyniki badań w formie papierowej.
+
+W razie pytań prosimy o kontakt z recepcją: +48 690 584 584
+
+Z poważaniem,
+dr n. med. Piotr Niedziałkowski
+www.ocenazdrowia.pl
+"""
+    else:
+        msg["Subject"] = "Confirmation of submitted medical interview"
+        body = f"""Dear {full_name},
+
+Thank you for completing the medical interview. Your form has been successfully sent to the doctor.
+
+Please send your test results to:
+niedzialkowski@ocenazdrowia.pl
+
+or upload them after logging in at:
+https://aplikacja.medyc.pl/NiedzialkowskiPortal/#/login
+
+After creating an account you can upload files directly to your health record.
+Ideally, send or upload a single PDF with results arranged chronologically.
+
+Please also bring any paper test results to your appointment.
+
+For questions, please contact reception: +48 690 584 584
+
+Best regards,
+Dr. Piotr Niedziałkowski, MD
+www.ocenazdrowia.pl
+"""
+    msg["From"] = EMAIL_NADAWCA
+    msg["To"] = patient_email
+    msg.set_content(body)
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+        smtp.login(EMAIL_NADAWCA, HASLO_APLIKACJI)
+        smtp.send_message(msg)
+
+
 def send_email_with_pdf(subject: str, body_text: str, pdf_path: str, filename: str = "wywiad_lekarski.pdf"):
     msg = EmailMessage()
     msg["Subject"] = subject
@@ -1347,12 +1405,6 @@ if step == 1:
             format="DD.MM.YYYY",
             key="birth_date_input",
         )
-        st.subheader(t("sec_27"))
-        st.markdown(t("org_info"))
-        st.checkbox(t("consent_true"), key="consent_true")
-        st.checkbox(t("consent_visit"), key="consent_visit")
-        st.checkbox(t("consent_privacy"), key="consent_privacy")
-        st.checkbox(t("contact_consent"), key="contact_consent")
         st.markdown("---")
         _f1_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
     if _f1_next:
@@ -1865,6 +1917,12 @@ elif step == 12:
         st.text_area(t("important_info_lbl"), key="important_info")
         st.text_area(t("current_reason_lbl"), key="current_reason")
         st.text_area(t("key_question_lbl"), key="key_question")
+        st.subheader(t("sec_27"))
+        st.markdown(t("org_info"))
+        st.checkbox(t("consent_true"), key="consent_true")
+        st.checkbox(t("consent_visit"), key="consent_visit")
+        st.checkbox(t("consent_privacy"), key="consent_privacy")
+        st.checkbox(t("contact_consent"), key="contact_consent")
         st.markdown("---")
         _f12l, _f12r = st.columns(2)
         with _f12l:
@@ -2311,6 +2369,8 @@ Zgoda na kontakt organizacyjny: {"tak" if contact_consent_v else "nie"}
                 pdf_path=pdf_path,
                 filename=pdf_filename,
             )
+            if validated_email:
+                send_confirmation_to_patient(validated_email, full_name, _lang)
             _status.empty()
             st.session_state.field_errors = {}
             st.session_state.scroll_target = None
