@@ -230,6 +230,51 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# Natychmiastowy feedback przy kliknięciu przycisków nawigacji
+components.html(
+    """
+    <script>
+    (function () {
+        var NAV_WORDS = ['Dalej', 'Next', 'Wstecz', 'Back', 'Wyślij', 'Submit'];
+        function isNav(btn) {
+            var txt = (btn.textContent || '').trim();
+            return NAV_WORDS.some(function (w) { return txt.indexOf(w) !== -1; });
+        }
+        function attach() {
+            try {
+                window.parent.document.querySelectorAll('button').forEach(function (btn) {
+                    if (btn._navBusy) return;
+                    if (!isNav(btn)) return;
+                    btn._navBusy = true;
+                    btn.addEventListener('click', function () {
+                        var txt = (this.textContent || '').trim();
+                        this.disabled = true;
+                        this.style.opacity = '0.55';
+                        if (txt.indexOf('Wyślij') !== -1 || txt.indexOf('Submit') !== -1) {
+                            this.innerHTML = '&#9203; Wysyłanie…';
+                        } else if (txt.indexOf('Wstecz') !== -1 || txt.indexOf('Back') !== -1) {
+                            this.innerHTML = '&#9203; …';
+                        } else {
+                            this.innerHTML = '&#9203; Ładowanie…';
+                        }
+                    });
+                });
+            } catch (e) {}
+        }
+        attach();
+        try {
+            new window.parent.MutationObserver(attach).observe(
+                window.parent.document.body,
+                { childList: true, subtree: true }
+            );
+        } catch (e) {}
+    })();
+    </script>
+    """,
+    height=0,
+    scrolling=False,
+)
+
 # =========================================================
 # TRANSLATIONS
 # =========================================================
