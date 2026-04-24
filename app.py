@@ -1192,6 +1192,7 @@ TOTAL_STEPS = 13
 step = st.session_state["step"]
 field_errors: Dict[str, str] = st.session_state.field_errors
 _lang = st.session_state.get("lang", "pl")
+_has_form_nav = False  # set True inside form-wrapped steps
 
 if st.session_state.pop("_form_sent", False):
     st.session_state["step"] = 1
@@ -1378,18 +1379,32 @@ elif step == 3:
 # KROK 4 — Objawy główne
 # =========================================================
 elif step == 4:
-    st.subheader(t("sec_4"))
-    st.text_input(t("symptom_lbl").format(n=1), key="symptom_1")
-    st.text_input(t("symptom_since_lbl").format(n=1), key="symptom_1_since")
-    st.text_input(t("symptom_lbl").format(n=2), key="symptom_2")
-    st.text_input(t("symptom_since_lbl").format(n=2), key="symptom_2_since")
-    st.text_input(t("symptom_lbl").format(n=3), key="symptom_3")
-    st.text_input(t("symptom_since_lbl").format(n=3), key="symptom_3_since")
-    st.text_input(t("symptom_lbl").format(n=4), key="symptom_4")
-    st.text_input(t("symptom_since_lbl").format(n=4), key="symptom_4_since")
-    st.text_input(t("symptom_lbl").format(n=5), key="symptom_5")
-    st.text_input(t("symptom_since_lbl").format(n=5), key="symptom_5_since")
-    st.text_area(t("additional_symptoms_lbl"), key="additional_symptoms")
+    _has_form_nav = True
+    with st.form("step_form_4"):
+        st.subheader(t("sec_4"))
+        st.text_input(t("symptom_lbl").format(n=1), key="symptom_1")
+        st.text_input(t("symptom_since_lbl").format(n=1), key="symptom_1_since")
+        st.text_input(t("symptom_lbl").format(n=2), key="symptom_2")
+        st.text_input(t("symptom_since_lbl").format(n=2), key="symptom_2_since")
+        st.text_input(t("symptom_lbl").format(n=3), key="symptom_3")
+        st.text_input(t("symptom_since_lbl").format(n=3), key="symptom_3_since")
+        st.text_input(t("symptom_lbl").format(n=4), key="symptom_4")
+        st.text_input(t("symptom_since_lbl").format(n=4), key="symptom_4_since")
+        st.text_input(t("symptom_lbl").format(n=5), key="symptom_5")
+        st.text_input(t("symptom_since_lbl").format(n=5), key="symptom_5_since")
+        st.text_area(t("additional_symptoms_lbl"), key="additional_symptoms")
+        st.markdown("---")
+        _f4l, _f4r = st.columns(2)
+        with _f4l:
+            _f4_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+        with _f4r:
+            _f4_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
+    if _f4_back:
+        st.session_state["step"] -= 1
+        st.rerun()
+    elif _f4_next:
+        st.session_state["step"] += 1
+        st.rerun()
 
 # =========================================================
 # KROK 5 — Charakter objawów
@@ -1523,102 +1538,125 @@ elif step == 8:
 # KROK 9 — Objawy ogólne, oddechowe i sercowe
 # =========================================================
 elif step == 9:
-    st.subheader(t("sec_14"))
-    _fn9 = yes_no(t("fever_lbl"), key="fever_now")
-    if _fn9 == "tak":
-        st.text_area(t("if_yes_describe"), key="fever_details")
-    _hd9 = yes_no(t("headache_lbl"), key="headache_dizziness")
-    if _hd9 == "tak":
-        st.text_area(t("if_yes_describe"), key="headache_dizziness_details")
-    st.text_area(t("headache_assoc_lbl"), key="headache_assoc")
-    st.text_area(t("hearing_vision_lbl"), key="hearing_vision")
-    st.text_area(t("attacks_lbl"), key="attacks")
-    st.text_area(t("sinus_lbl"), key="sinus_problems")
-    st.text_area(t("nose_lbl"), key="nose_problems")
-    st.text_area(t("allergies_lbl"), key="allergies")
-    st.text_area(t("herpes_lbl"), key="herpes")
-    st.text_area(t("mouth_corners_lbl"), key="mouth_corners")
-    st.text_area(t("fresh_food_lbl"), key="fresh_food_reaction")
-    yes_no(t("epilepsy_lbl"), key="epilepsy")
-    st.text_area(t("smell_taste_lbl"), key="smell_taste")
-    st.text_input(t("colds_lbl"), key="colds")
-    st.subheader(t("sec_15"))
-    yes_no(t("throat_lbl"), key="throat_morning")
-    yes_no(t("esophagus_lbl"), key="esophagus_burning")
-    yes_no(t("asthma_lbl"), key="asthma_dx")
-    _pn9 = yes_no(t("pneumonia_lbl"), key="pneumonia")
-    if _pn9 == "tak":
-        st.text_area(t("pneumonia_details_lbl"), key="pneumonia_details")
-    st.text_area(t("dyspnea_lbl"), key="dyspnea")
-    st.text_area(t("night_breath_lbl"), key="night_breath")
-    st.text_area(t("chest_heaviness_lbl"), key="chest_heaviness")
-    select_with_placeholder(
-        t("breathing_type_lbl"),
-        ["nie mam takich trudności", "z nabieraniem powietrza", "z wypuszczaniem powietrza", "z oboma"],
-        key="breathing_type",
-    )
-    st.multiselect(
-        t("wheezing_lbl"),
-        ["podczas wysiłku", "podczas infekcji", "w nocy", "rano", "podczas alergii", "w zimnej pogodzie"],
-        format_func=_opt,
-        placeholder=t("wheezing_ph"),
-        key="wheezing",
-    )
-    st.text_area(t("cough_lbl"), key="cough")
-    st.subheader(t("sec_16"))
-    st.text_area(t("chest_pain_lbl"), key="chest_pain")
-    select_with_placeholder(
-        t("pressure_type_lbl"),
-        ["nie mam kłopotów z ciśnieniem", "mam skłonność do niskiego ciśnienia", "mam skłonność do wysokiego ciśnienia"],
-        key="pressure_type",
-    )
-    st.text_input(t("current_bp_lbl"), key="current_bp")
-    st.text_input(t("current_hr_lbl"), key="current_hr")
-    yes_no(t("pain_press_lbl"), key="pain_press")
-    yes_no(t("pain_position_lbl"), key="pain_position")
-    st.text_area(t("palpitations_lbl"), key="palpitations")
+    _has_form_nav = True
+    with st.form("step_form_9"):
+        st.subheader(t("sec_14"))
+        _fn9 = yes_no(t("fever_lbl"), key="fever_now")
+        st.text_area(t("if_yes_describe"), key="fever_details", disabled=(_fn9 != "tak"))
+        _hd9 = yes_no(t("headache_lbl"), key="headache_dizziness")
+        st.text_area(t("if_yes_describe"), key="headache_dizziness_details", disabled=(_hd9 != "tak"))
+        st.text_area(t("headache_assoc_lbl"), key="headache_assoc")
+        st.text_area(t("hearing_vision_lbl"), key="hearing_vision")
+        st.text_area(t("attacks_lbl"), key="attacks")
+        st.text_area(t("sinus_lbl"), key="sinus_problems")
+        st.text_area(t("nose_lbl"), key="nose_problems")
+        st.text_area(t("allergies_lbl"), key="allergies")
+        st.text_area(t("herpes_lbl"), key="herpes")
+        st.text_area(t("mouth_corners_lbl"), key="mouth_corners")
+        st.text_area(t("fresh_food_lbl"), key="fresh_food_reaction")
+        yes_no(t("epilepsy_lbl"), key="epilepsy")
+        st.text_area(t("smell_taste_lbl"), key="smell_taste")
+        st.text_input(t("colds_lbl"), key="colds")
+        st.subheader(t("sec_15"))
+        yes_no(t("throat_lbl"), key="throat_morning")
+        yes_no(t("esophagus_lbl"), key="esophagus_burning")
+        yes_no(t("asthma_lbl"), key="asthma_dx")
+        _pn9 = yes_no(t("pneumonia_lbl"), key="pneumonia")
+        st.text_area(t("pneumonia_details_lbl"), key="pneumonia_details", disabled=(_pn9 != "tak"))
+        st.text_area(t("dyspnea_lbl"), key="dyspnea")
+        st.text_area(t("night_breath_lbl"), key="night_breath")
+        st.text_area(t("chest_heaviness_lbl"), key="chest_heaviness")
+        select_with_placeholder(
+            t("breathing_type_lbl"),
+            ["nie mam takich trudności", "z nabieraniem powietrza", "z wypuszczaniem powietrza", "z oboma"],
+            key="breathing_type",
+        )
+        st.multiselect(
+            t("wheezing_lbl"),
+            ["podczas wysiłku", "podczas infekcji", "w nocy", "rano", "podczas alergii", "w zimnej pogodzie"],
+            format_func=_opt,
+            placeholder=t("wheezing_ph"),
+            key="wheezing",
+        )
+        st.text_area(t("cough_lbl"), key="cough")
+        st.subheader(t("sec_16"))
+        st.text_area(t("chest_pain_lbl"), key="chest_pain")
+        select_with_placeholder(
+            t("pressure_type_lbl"),
+            ["nie mam kłopotów z ciśnieniem", "mam skłonność do niskiego ciśnienia", "mam skłonność do wysokiego ciśnienia"],
+            key="pressure_type",
+        )
+        st.text_input(t("current_bp_lbl"), key="current_bp")
+        st.text_input(t("current_hr_lbl"), key="current_hr")
+        yes_no(t("pain_press_lbl"), key="pain_press")
+        yes_no(t("pain_position_lbl"), key="pain_position")
+        st.text_area(t("palpitations_lbl"), key="palpitations")
+        st.markdown("---")
+        _f9l, _f9r = st.columns(2)
+        with _f9l:
+            _f9_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+        with _f9r:
+            _f9_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
+    if _f9_back:
+        st.session_state["step"] -= 1
+        st.rerun()
+    elif _f9_next:
+        st.session_state["step"] += 1
+        st.rerun()
 
 # =========================================================
 # KROK 10 — Przewód pokarmowy, układ moczowy, stawy, skóra
 # =========================================================
 elif step == 10:
-    st.subheader(t("sec_17"))
-    _gip10 = yes_no(t("gi_problem_lbl"), key="gi_problem")
-    if _gip10 == "tak":
+    _has_form_nav = True
+    with st.form("step_form_10"):
+        st.subheader(t("sec_17"))
+        _gip10 = yes_no(t("gi_problem_lbl"), key="gi_problem")
         st.multiselect(
             t("gi_symptoms_lbl"),
             ["zgaga", "wzdęcia", "biegunki", "zaparcia", "hemoroidy", "gazy", "skurcze", "wymioty", "nudności"],
             format_func=_opt,
             placeholder=t("gi_symptoms_ph"),
             key="gi_symptoms",
+            disabled=(_gip10 != "tak"),
         )
-    st.text_area(t("worsening_foods_lbl"), key="worsening_foods")
-    st.text_area(t("gi_infections_lbl"), key="gi_infections")
-    st.subheader(t("sec_18"))
-    st.text_area(t("urine_lbl"), key="urine_problems")
-    select_with_placeholder(
-        t("night_urination_lbl"),
-        ["0", "1", "2", "3", "4", "5", "6", "7 lub więcej"],
-        key="night_urination",
-    )
-    select_with_placeholder(
-        t("fluids_lbl"),
-        ["1", "2", "3", "4", "5", "więcej niż 5"],
-        key="fluids",
-    )
-    st.subheader(t("sec_19"))
-    st.text_area(t("joints_lbl"), key="joints")
-    st.text_area(t("stiffness_lbl"), key="stiffness")
-    st.subheader(t("sec_20"))
-    st.text_area(t("skin_changes_lbl"), key="skin_changes")
-    st.text_area(t("skin_itch_lbl"), key="skin_itch")
-    _acne10 = yes_no(t("acne_lbl"), key="acne")
-    if _acne10 == "tak":
-        st.text_area(t("acne_details_lbl"), key="acne_details")
-    st.text_area(t("skin_sensation_lbl"), key="skin_sensation")
-    _wh10 = yes_no(t("wound_healing_lbl"), key="wound_healing")
-    if _wh10 == "tak":
-        st.text_area(t("wound_healing_details_lbl"), key="wound_healing_details")
+        st.text_area(t("worsening_foods_lbl"), key="worsening_foods")
+        st.text_area(t("gi_infections_lbl"), key="gi_infections")
+        st.subheader(t("sec_18"))
+        st.text_area(t("urine_lbl"), key="urine_problems")
+        select_with_placeholder(
+            t("night_urination_lbl"),
+            ["0", "1", "2", "3", "4", "5", "6", "7 lub więcej"],
+            key="night_urination",
+        )
+        select_with_placeholder(
+            t("fluids_lbl"),
+            ["1", "2", "3", "4", "5", "więcej niż 5"],
+            key="fluids",
+        )
+        st.subheader(t("sec_19"))
+        st.text_area(t("joints_lbl"), key="joints")
+        st.text_area(t("stiffness_lbl"), key="stiffness")
+        st.subheader(t("sec_20"))
+        st.text_area(t("skin_changes_lbl"), key="skin_changes")
+        st.text_area(t("skin_itch_lbl"), key="skin_itch")
+        _acne10 = yes_no(t("acne_lbl"), key="acne")
+        st.text_area(t("acne_details_lbl"), key="acne_details", disabled=(_acne10 != "tak"))
+        st.text_area(t("skin_sensation_lbl"), key="skin_sensation")
+        _wh10 = yes_no(t("wound_healing_lbl"), key="wound_healing")
+        st.text_area(t("wound_healing_details_lbl"), key="wound_healing_details", disabled=(_wh10 != "tak"))
+        st.markdown("---")
+        _f10l, _f10r = st.columns(2)
+        with _f10l:
+            _f10_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+        with _f10r:
+            _f10_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
+    if _f10_back:
+        st.session_state["step"] -= 1
+        st.rerun()
+    elif _f10_next:
+        st.session_state["step"] += 1
+        st.rerun()
 
 # =========================================================
 # KROK 11 — Sen, psychika, krążenie, odbyt, ginekologia
@@ -1668,18 +1706,32 @@ elif step == 11:
 # KROK 12 — Wywiad rodzinny i ważne informacje
 # =========================================================
 elif step == 12:
-    st.subheader(t("sec_25"))
-    st.text_area(t("mother_lbl"), key="mother_history")
-    st.text_area(t("father_lbl"), key="father_history")
-    st.text_area(t("mat_grandmother_lbl"), key="maternal_grandmother")
-    st.text_area(t("pat_grandmother_lbl"), key="paternal_grandmother")
-    st.text_area(t("mat_grandfather_lbl"), key="maternal_grandfather")
-    st.text_area(t("pat_grandfather_lbl"), key="paternal_grandfather")
-    st.subheader(t("sec_26"))
-    st.text_area(t("own_diagnoses_lbl"), key="own_diagnoses")
-    st.text_area(t("important_info_lbl"), key="important_info")
-    st.text_area(t("current_reason_lbl"), key="current_reason")
-    st.text_area(t("key_question_lbl"), key="key_question")
+    _has_form_nav = True
+    with st.form("step_form_12"):
+        st.subheader(t("sec_25"))
+        st.text_area(t("mother_lbl"), key="mother_history")
+        st.text_area(t("father_lbl"), key="father_history")
+        st.text_area(t("mat_grandmother_lbl"), key="maternal_grandmother")
+        st.text_area(t("pat_grandmother_lbl"), key="paternal_grandmother")
+        st.text_area(t("mat_grandfather_lbl"), key="maternal_grandfather")
+        st.text_area(t("pat_grandfather_lbl"), key="paternal_grandfather")
+        st.subheader(t("sec_26"))
+        st.text_area(t("own_diagnoses_lbl"), key="own_diagnoses")
+        st.text_area(t("important_info_lbl"), key="important_info")
+        st.text_area(t("current_reason_lbl"), key="current_reason")
+        st.text_area(t("key_question_lbl"), key="key_question")
+        st.markdown("---")
+        _f12l, _f12r = st.columns(2)
+        with _f12l:
+            _f12_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+        with _f12r:
+            _f12_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
+    if _f12_back:
+        st.session_state["step"] -= 1
+        st.rerun()
+    elif _f12_next:
+        st.session_state["step"] += 1
+        st.rerun()
 
 # =========================================================
 # KROK 13 — Podsumowanie i wysyłka
@@ -1733,26 +1785,10 @@ elif step == 13:
         consent_privacy_v = st.session_state.get("consent_privacy", False)
         contact_consent_v = st.session_state.get("contact_consent", False)
 
-        _errs13 = {}
-        if not visit_type:
-            _errs13["visit_type"] = t("err_visit_type")
-        if not first_name_clean:
-            _errs13["first_name"] = t("err_first_name")
-        if not last_name_clean:
-            _errs13["last_name"] = t("err_last_name")
-        if not validated_phone:
-            _errs13["phone"] = t("err_phone")
         if email_raw and not validated_email:
-            _errs13["email"] = t("err_email")
-        if not birth_date:
-            _errs13["birth_date"] = t("err_birth_date")
-        if not consent_true_v or not consent_visit_v or not consent_privacy_v:
-            _errs13["consent"] = t("err_consent")
-
-        if _errs13:
-            st.session_state.field_errors = _errs13
+            st.session_state.field_errors = {"email": t("err_email")}
             st.session_state["step"] = 1
-            st.session_state.scroll_target = "anchor_visit_type"
+            st.session_state.scroll_target = "anchor_email"
             st.rerun()
 
         full_name = f"{first_name_clean} {last_name_clean}".strip()
@@ -2156,66 +2192,36 @@ Zgoda na kontakt organizacyjny: {"tak" if contact_consent_v else "nie"}
 # =========================================================
 # NAWIGACJA
 # =========================================================
-st.markdown("---")
-_nav_l, _nav_r = st.columns(2)
-with _nav_l:
-    if step > 1:
-        if st.button("← Wstecz" if _lang == "pl" else "← Back", key="btn_back"):
-            st.session_state.field_errors = {}
-            st.session_state.scroll_target = None
-            st.session_state["step"] -= 1
-            st.rerun()
-with _nav_r:
-    if step < TOTAL_STEPS:
-        if st.button("Dalej →" if _lang == "pl" else "Next →", key="btn_next"):
-            if step == 1:
-                _errs1 = {}
-                _vt1 = st.session_state.get("visit_type", "")
-                _fn1 = st.session_state.get("first_name", "").strip()
-                _ln1 = st.session_state.get("last_name", "").strip()
-                _ph1 = st.session_state.get("phone", "")
-                _em1 = st.session_state.get("email", "")
-                _bd1 = st.session_state.get("birth_date_input")
-                _ct1 = st.session_state.get("consent_true", False)
-                _cv1 = st.session_state.get("consent_visit", False)
-                _cp1 = st.session_state.get("consent_privacy", False)
-                if not _vt1:
-                    _errs1["visit_type"] = t("err_visit_type")
-                if not _fn1:
-                    _errs1["first_name"] = t("err_first_name")
-                if not _ln1:
-                    _errs1["last_name"] = t("err_last_name")
-                if not validate_phone(_ph1):
-                    _errs1["phone"] = t("err_phone")
-                if _em1 and not validate_email(_em1):
-                    _errs1["email"] = t("err_email")
-                if not _bd1:
-                    _errs1["birth_date"] = t("err_birth_date")
-                if not _ct1 or not _cv1 or not _cp1:
-                    _errs1["consent"] = t("err_consent")
-                if _errs1:
-                    st.session_state.field_errors = _errs1
-                    for _fk1, _aid1 in [
-                        ("visit_type", "anchor_visit_type"),
-                        ("first_name", "anchor_first_name"),
-                        ("last_name", "anchor_last_name"),
-                        ("phone", "anchor_phone"),
-                        ("email", "anchor_email"),
-                        ("birth_date", "anchor_birth_date"),
-                        ("consent", "anchor_consent"),
-                    ]:
-                        if _fk1 in _errs1:
-                            st.session_state.scroll_target = _aid1
-                            break
-                    st.rerun()
+if not _has_form_nav:
+    st.markdown("---")
+    _nav_l, _nav_r = st.columns(2)
+    with _nav_l:
+        if step > 1:
+            if st.button("← Wstecz" if _lang == "pl" else "← Back", key="btn_back"):
+                st.session_state.field_errors = {}
+                st.session_state.scroll_target = None
+                st.session_state["step"] -= 1
+                st.rerun()
+    with _nav_r:
+        if step < TOTAL_STEPS:
+            if st.button("Dalej →" if _lang == "pl" else "Next →", key="btn_next"):
+                if step == 1:
+                    _errs1 = {}
+                    _em1 = st.session_state.get("email", "")
+                    if _em1 and not validate_email(_em1):
+                        _errs1["email"] = t("err_email")
+                    if _errs1:
+                        st.session_state.field_errors = _errs1
+                        st.session_state.scroll_target = "anchor_email"
+                        st.rerun()
+                    else:
+                        st.session_state.field_errors = {}
+                        st.session_state.scroll_target = None
+                        st.session_state["step"] += 1
+                        st.rerun()
                 else:
-                    st.session_state.field_errors = {}
-                    st.session_state.scroll_target = None
                     st.session_state["step"] += 1
                     st.rerun()
-            else:
-                st.session_state["step"] += 1
-                st.rerun()
 
 # =========================================================
 # PRZEWIJANIE DO BŁĘDU
