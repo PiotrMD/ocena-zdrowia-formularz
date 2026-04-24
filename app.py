@@ -140,10 +140,20 @@ st.markdown(
 
     @media (max-width: 768px) {
         .main .block-container {
-            padding-top: 0.3rem;
+            padding-top: 0 !important;
             padding-left: 0.6rem;
             padding-right: 0.6rem;
             padding-bottom: 3rem;
+        }
+        section[data-testid="stMain"] > div:first-child {
+            padding-top: 0 !important;
+        }
+        [data-testid="stRadio"] {
+            display: flex;
+            justify-content: center;
+        }
+        [data-testid="stRadio"] > div {
+            justify-content: center;
         }
 
         .header-card {
