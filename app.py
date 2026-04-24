@@ -34,11 +34,11 @@ st.markdown(
     <style>
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    header {visibility: hidden;}
+    header[data-testid="stHeader"] {display: none !important;}
 
     .main .block-container {
         max-width: 980px;
-        padding-top: 0.65rem;
+        padding-top: 0.15rem;
         padding-bottom: 2rem;
     }
 
@@ -1358,20 +1358,22 @@ if "lang" not in st.session_state:
 if "step" not in st.session_state:
     st.session_state["step"] = 1
 
-TOTAL_STEPS = 13
+TOTAL_STEPS = 25
 step = st.session_state["step"]
 field_errors: Dict[str, str] = st.session_state.field_errors
 _lang = st.session_state.get("lang", "pl")
-_has_form_nav = False  # set True inside form-wrapped steps
+_has_form_nav = False
 
 if "form_success" not in st.session_state:
     st.session_state["form_success"] = False
+if "symptom_count" not in st.session_state:
+    st.session_state["symptom_count"] = 1
 
 # =========================================================
 # GÓRA APLIKACJI
 # =========================================================
-_lc1, _lc2 = st.columns([6, 1])
-with _lc2:
+_, _lc_lang, _ = st.columns([2, 3, 2])
+with _lc_lang:
     st.radio(
         "",
         ["pl", "en"],
@@ -1437,7 +1439,7 @@ st.markdown(
 st.progress(step / TOTAL_STEPS)
 
 # =========================================================
-# KROK 1 — Dane kontaktowe i zgody
+# KROKI
 # =========================================================
 if step == 1:
     _has_form_nav = True
@@ -1496,14 +1498,15 @@ if step == 1:
         st.rerun()
 
 # =========================================================
-# KROK 2 — Dane osobowe
+# KROK 2 — Dane podstawowe cz. 2
 # =========================================================
 elif step == 2:
     _has_form_nav = True
     @st.fragment
     def _step2():
         _lg = st.session_state.get("lang", "pl")
-        st.subheader(t("sec_1"))
+        _h2 = "Dane podstawowe — część dalsza" if _lg == "pl" else "Basic Information — continued"
+        st.subheader(_h2)
         st.text_input(t("nationality_lbl"), key="nationality")
         _sex2 = select_with_placeholder(t("sex_lbl"), ["kobieta", "mężczyzna", "inne"], key="sex")
         if _sex2 == "inne":
@@ -1517,15 +1520,12 @@ elif step == 2:
             st.text_input(t("current_status_other_lbl"), key="current_status_other")
         st.text_input(t("profession_lbl"), key="profession")
         st.markdown("---")
-        _c1, _c2 = st.columns(2)
-        with _c1:
-            if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s2_back", use_container_width=True):
-                st.session_state["step"] -= 1
-                st.rerun()
-        with _c2:
-            if st.button("Dalej →" if _lg == "pl" else "Next →", key="s2_next", use_container_width=True):
-                st.session_state["step"] += 1
-                st.rerun()
+        if st.button("Dalej →" if _lg == "pl" else "Next →", key="s2_next", use_container_width=True):
+            st.session_state["step"] += 1
+            st.rerun()
+        if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s2_back", use_container_width=True):
+            st.session_state["step"] -= 1
+            st.rerun()
     _step2()
 
 # =========================================================
@@ -1581,47 +1581,44 @@ elif step == 3:
                 key="weight_change_amount_num",
             )
         st.markdown("---")
-        _c1, _c2 = st.columns(2)
-        with _c1:
-            if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s3_back", use_container_width=True):
-                st.session_state["step"] -= 1
-                st.rerun()
-        with _c2:
-            if st.button("Dalej →" if _lg == "pl" else "Next →", key="s3_next", use_container_width=True):
-                st.session_state["step"] += 1
-                st.rerun()
+        if st.button("Dalej →" if _lg == "pl" else "Next →", key="s3_next", use_container_width=True):
+            st.session_state["step"] += 1
+            st.rerun()
+        if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s3_back", use_container_width=True):
+            st.session_state["step"] -= 1
+            st.rerun()
     _step3()
 
 # =========================================================
-# KROK 4 — Objawy główne
+# KROK 4 — Objawy główne (dynamiczne)
 # =========================================================
 elif step == 4:
     _has_form_nav = True
-    with st.form("step_form_4"):
+    @st.fragment
+    def _step4():
+        _lg = st.session_state.get("lang", "pl")
         st.subheader(t("sec_4"))
-        st.text_input(t("symptom_lbl").format(n=1), key="symptom_1")
-        st.text_input(t("symptom_since_lbl").format(n=1), key="symptom_1_since")
-        st.text_input(t("symptom_lbl").format(n=2), key="symptom_2")
-        st.text_input(t("symptom_since_lbl").format(n=2), key="symptom_2_since")
-        st.text_input(t("symptom_lbl").format(n=3), key="symptom_3")
-        st.text_input(t("symptom_since_lbl").format(n=3), key="symptom_3_since")
-        st.text_input(t("symptom_lbl").format(n=4), key="symptom_4")
-        st.text_input(t("symptom_since_lbl").format(n=4), key="symptom_4_since")
-        st.text_input(t("symptom_lbl").format(n=5), key="symptom_5")
-        st.text_input(t("symptom_since_lbl").format(n=5), key="symptom_5_since")
+        _sc = st.session_state.get("symptom_count", 1)
+        for _si in range(1, _sc + 1):
+            if _si > 1:
+                st.markdown("---")
+            st.text_input(t("symptom_lbl").format(n=_si), key=f"symptom_{_si}")
+            st.text_input(t("symptom_since_lbl").format(n=_si), key=f"symptom_{_si}_since")
+        _add_lbl = "➕ Dodaj objaw" if _lg == "pl" else "➕ Add symptom"
+        if _sc < 10:
+            if st.button(_add_lbl, key="add_symptom"):
+                st.session_state["symptom_count"] = _sc + 1
+                st.rerun()
+        st.markdown("---")
         st.text_area(t("additional_symptoms_lbl"), key="additional_symptoms")
         st.markdown("---")
-        _f4l, _f4r = st.columns(2)
-        with _f4l:
-            _f4_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
-        with _f4r:
-            _f4_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
-    if _f4_back:
-        st.session_state["step"] -= 1
-        st.rerun()
-    elif _f4_next:
-        st.session_state["step"] += 1
-        st.rerun()
+        if st.button("Dalej →" if _lg == "pl" else "Next →", key="s4_next", use_container_width=True):
+            st.session_state["step"] += 1
+            st.rerun()
+        if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s4_back", use_container_width=True):
+            st.session_state["step"] -= 1
+            st.rerun()
+    _step4()
 
 # =========================================================
 # KROK 5 — Charakter objawów
@@ -1659,25 +1656,21 @@ elif step == 5:
         if "inne" in _if5:
             st.text_input(t("improvement_other_lbl"), key="improvement_other")
         st.markdown("---")
-        _c1, _c2 = st.columns(2)
-        with _c1:
-            if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s5_back", use_container_width=True):
-                st.session_state["step"] -= 1
-                st.rerun()
-        with _c2:
-            if st.button("Dalej →" if _lg == "pl" else "Next →", key="s5_next", use_container_width=True):
-                st.session_state["step"] += 1
-                st.rerun()
+        if st.button("Dalej →" if _lg == "pl" else "Next →", key="s5_next", use_container_width=True):
+            st.session_state["step"] += 1
+            st.rerun()
+        if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s5_back", use_container_width=True):
+            st.session_state["step"] -= 1
+            st.rerun()
     _step5()
 
 # =========================================================
-# KROK 6 — Badania, leki i dzieciństwo
+# KROK 6 — Badania i chronologia zdrowia
 # =========================================================
 elif step == 6:
     _has_form_nav = True
-    @st.fragment
-    def _step6():
-        _lg = st.session_state.get("lang", "pl")
+    _f6_back = False
+    with st.form("step_form_6"):
         st.subheader(t("sec_3"))
         st.multiselect(
             t("tests_lbl"),
@@ -1696,20 +1689,38 @@ elif step == 6:
         st.subheader(t("sec_6"))
         st.text_area(t("health_timeline_lbl"), key="health_timeline")
         st.text_area(t("current_meds_lbl"), key="current_meds")
+        st.markdown("---")
+        _f6_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
+        _f6_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+    if _f6_next:
+        st.session_state["step"] += 1
+        st.rerun()
+    elif _f6_back:
+        st.session_state["step"] -= 1
+        st.rerun()
+
+# =========================================================
+# KROK 7 — Urodzenie i dzieciństwo
+# =========================================================
+elif step == 7:
+    _has_form_nav = True
+    @st.fragment
+    def _step7():
+        _lg = st.session_state.get("lang", "pl")
         st.subheader(t("sec_13"))
-        _bd6 = select_with_placeholder(
+        _bd7 = select_with_placeholder(
             t("birth_delivery_lbl"),
             ["poród naturalny", "poród przez cesarskie cięcie", "nie wiem", "inne"],
             key="birth_delivery",
         )
-        if _bd6 == "inne":
+        if _bd7 == "inne":
             st.text_input(t("birth_delivery_other_lbl"), key="birth_delivery_other")
-        _bt6 = select_with_placeholder(
+        _bt7 = select_with_placeholder(
             t("birth_timing_lbl"),
             ["poród przedwczesny", "poród o czasie", "poród po terminie", "nie wiem", "inne"],
             key="birth_timing",
         )
-        if _bt6 == "inne":
+        if _bt7 == "inne":
             st.text_input(t("birth_timing_other_lbl"), key="birth_timing_other")
         yes_no_unknown(t("green_water_lbl"), key="green_water")
         st.text_input(t("birth_info_other_lbl"), key="birth_info_other")
@@ -1718,7 +1729,7 @@ elif step == 6:
             ["tak, do 3 miesięcy", "tak, do 6 miesięcy", "tak, powyżej 6 miesięcy", "nie", "nie wiem"],
             key="breastfeeding",
         )
-        _cd6 = st.multiselect(
+        _cd7 = st.multiselect(
             t("childhood_diseases_lbl"),
             ["astma", "atopowe zapalenie skóry", "skaza białkowa", "częste przeziębienia",
              "pobyty w szpitalu", "częste zapalenia płuc", "problemy jelitowe",
@@ -1727,122 +1738,276 @@ elif step == 6:
             placeholder=t("childhood_diseases_ph"),
             key="childhood_diseases",
         )
-        if "inne" in _cd6:
+        if "inne" in _cd7:
             st.text_input(t("childhood_diseases_other_lbl"), key="childhood_diseases_other")
         st.markdown("---")
-        _c1, _c2 = st.columns(2)
-        with _c1:
-            if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s6_back", use_container_width=True):
-                st.session_state["step"] -= 1
-                st.rerun()
-        with _c2:
-            if st.button("Dalej →" if _lg == "pl" else "Next →", key="s6_next", use_container_width=True):
-                st.session_state["step"] += 1
-                st.rerun()
-    _step6()
+        if st.button("Dalej →" if _lg == "pl" else "Next →", key="s7_next", use_container_width=True):
+            st.session_state["step"] += 1
+            st.rerun()
+        if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s7_back", use_container_width=True):
+            st.session_state["step"] -= 1
+            st.rerun()
+    _step7()
 
 # =========================================================
-# KROK 7 — Tryb życia i stres
+# KROK 8 — Tryb życia
 # =========================================================
-elif step == 7:
+elif step == 8:
     _has_form_nav = True
     @st.fragment
-    def _step7():
+    def _step8():
         _lg = st.session_state.get("lang", "pl")
         st.subheader(t("sec_7"))
-        _ls7 = select_with_placeholder(
+        _ls8 = select_with_placeholder(
             t("lifestyle_lbl"),
             ["leżący", "siedzący", "nisko aktywny", "średnio aktywny", "bardzo aktywny", "inne"],
             key="lifestyle",
         )
-        if _ls7 == "inne":
+        if _ls8 == "inne":
             st.text_input(t("lifestyle_other_lbl"), key="lifestyle_other")
-        _st7 = st.multiselect(
+        _st8 = st.multiselect(
             t("stimulants_lbl"),
             ["kawa", "herbata", "papierosy", "alkohol", "narkotyki", "słodycze", "inne"],
             format_func=_opt,
             placeholder=t("stimulants_ph"),
             key="stimulants",
         )
-        if "inne" in _st7:
+        if "inne" in _st8:
             st.text_input(t("stimulants_other_lbl"), key="stimulants_other")
         select_with_placeholder(
             t("sleep_hours_lbl"),
             ["3", "4", "5", "6", "7", "8", "9", "10", "11", "12"],
             key="sleep_hours",
         )
-        st.subheader(t("sec_12"))
-        st.text_area(t("stress_lbl"), key="strong_stress")
         st.markdown("---")
-        _c1, _c2 = st.columns(2)
-        with _c1:
-            if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s7_back", use_container_width=True):
-                st.session_state["step"] -= 1
-                st.rerun()
-        with _c2:
-            if st.button("Dalej →" if _lg == "pl" else "Next →", key="s7_next", use_container_width=True):
-                st.session_state["step"] += 1
-                st.rerun()
-    _step7()
+        if st.button("Dalej →" if _lg == "pl" else "Next →", key="s8_next", use_container_width=True):
+            st.session_state["step"] += 1
+            st.rerun()
+        if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s8_back", use_container_width=True):
+            st.session_state["step"] -= 1
+            st.rerun()
+    _step8()
 
 # =========================================================
-# KROK 8 — Podróże, zwierzęta, urazy, COVID
-# =========================================================
-elif step == 8:
-    _has_form_nav = True
-    with st.form("step_form_8"):
-        st.subheader(t("sec_8"))
-        _ta8 = yes_no(t("travel_abroad_lbl"), key="travel_abroad")
-        st.text_input(t("travel_where_lbl"), key="travel_where")
-        st.subheader(t("sec_9"))
-        _ac8 = yes_no(t("animal_contact_lbl"), key="animal_contact")
-        st.text_area(t("animal_details_lbl"), key="animal_contact_details")
-        st.subheader(t("sec_10"))
-        st.text_area(t("injuries_lbl"), key="major_injuries")
-        st.subheader(t("sec_11"))
-        _cov8 = yes_no_unknown(t("covid_lbl"), key="covid")
-        st.text_area(t("covid_details_lbl"), key="covid_details")
-        st.markdown("---")
-        _f8l, _f8r = st.columns(2)
-        with _f8l:
-            _f8_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
-        with _f8r:
-            _f8_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
-    if _f8_back:
-        st.session_state["step"] -= 1
-        st.rerun()
-    elif _f8_next:
-        st.session_state["step"] += 1
-        st.rerun()
-
-# =========================================================
-# KROK 9 — Objawy ogólne, oddechowe i sercowe
+# KROK 9 — Stres
 # =========================================================
 elif step == 9:
     _has_form_nav = True
+    _f9_back = False
     with st.form("step_form_9"):
-        st.subheader(t("sec_14"))
-        _fn9 = yes_no(t("fever_lbl"), key="fever_now")
+        st.subheader(t("sec_12"))
+        st.text_area(t("stress_lbl"), key="strong_stress")
+        st.markdown("---")
+        _f9_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
+        _f9_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+    if _f9_next:
+        st.session_state["step"] += 1
+        st.rerun()
+    elif _f9_back:
+        st.session_state["step"] -= 1
+        st.rerun()
+
+# =========================================================
+# KROK 10 — Podróże
+# =========================================================
+elif step == 10:
+    _has_form_nav = True
+    _f10_back = False
+    with st.form("step_form_10"):
+        st.subheader(t("sec_8"))
+        yes_no(t("travel_abroad_lbl"), key="travel_abroad")
+        st.text_input(t("travel_where_lbl"), key="travel_where")
+        st.markdown("---")
+        _f10_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
+        _f10_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+    if _f10_next:
+        st.session_state["step"] += 1
+        st.rerun()
+    elif _f10_back:
+        st.session_state["step"] -= 1
+        st.rerun()
+
+# =========================================================
+# KROK 11 — Zwierzęta
+# =========================================================
+elif step == 11:
+    _has_form_nav = True
+    _f11_back = False
+    with st.form("step_form_11"):
+        st.subheader(t("sec_9"))
+        yes_no(t("animal_contact_lbl"), key="animal_contact")
+        st.text_area(t("animal_details_lbl"), key="animal_contact_details")
+        st.markdown("---")
+        _f11_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
+        _f11_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+    if _f11_next:
+        st.session_state["step"] += 1
+        st.rerun()
+    elif _f11_back:
+        st.session_state["step"] -= 1
+        st.rerun()
+
+# =========================================================
+# KROK 12 — Urazy
+# =========================================================
+elif step == 12:
+    _has_form_nav = True
+    _f12_back = False
+    with st.form("step_form_12"):
+        st.subheader(t("sec_10"))
+        st.text_area(t("injuries_lbl"), key="major_injuries")
+        st.markdown("---")
+        _f12_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
+        _f12_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+    if _f12_next:
+        st.session_state["step"] += 1
+        st.rerun()
+    elif _f12_back:
+        st.session_state["step"] -= 1
+        st.rerun()
+
+# =========================================================
+# KROK 13 — COVID-19
+# =========================================================
+elif step == 13:
+    _has_form_nav = True
+    _f13_back = False
+    with st.form("step_form_13"):
+        st.subheader(t("sec_11"))
+        yes_no_unknown(t("covid_lbl"), key="covid")
+        st.text_area(t("covid_details_lbl"), key="covid_details")
+        st.markdown("---")
+        _f13_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
+        _f13_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+    if _f13_next:
+        st.session_state["step"] += 1
+        st.rerun()
+    elif _f13_back:
+        st.session_state["step"] -= 1
+        st.rerun()
+
+# =========================================================
+# KROK 14 — Objawy ogólne
+# =========================================================
+elif step == 14:
+    _has_form_nav = True
+    _f14_back = False
+    with st.form("step_form_14"):
+        _h14 = "Objawy ogólne" if _lang == "pl" else "General Symptoms"
+        st.subheader(_h14)
+        yes_no(t("fever_lbl"), key="fever_now")
         st.text_area(t("if_yes_describe"), key="fever_details")
-        _hd9 = yes_no(t("headache_lbl"), key="headache_dizziness")
+        yes_no(t("headache_lbl"), key="headache_dizziness")
         st.text_area(t("if_yes_describe"), key="headache_dizziness_details")
-        st.text_area(t("headache_assoc_lbl"), key="headache_assoc")
         st.text_area(t("hearing_vision_lbl"), key="hearing_vision")
         st.text_area(t("attacks_lbl"), key="attacks")
+        st.markdown("---")
+        _f14_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
+        _f14_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+    if _f14_next:
+        st.session_state["step"] += 1
+        st.rerun()
+    elif _f14_back:
+        st.session_state["step"] -= 1
+        st.rerun()
+
+# =========================================================
+# KROK 15 — Objawy neurologiczne
+# =========================================================
+elif step == 15:
+    _has_form_nav = True
+    _f15_back = False
+    with st.form("step_form_15"):
+        _h15 = "Objawy neurologiczne" if _lang == "pl" else "Neurological Symptoms"
+        st.subheader(_h15)
+        st.text_area(t("headache_assoc_lbl"), key="headache_assoc")
+        yes_no(t("epilepsy_lbl"), key="epilepsy")
+        st.text_area(t("smell_taste_lbl"), key="smell_taste")
+        st.markdown("---")
+        _f15_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
+        _f15_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+    if _f15_next:
+        st.session_state["step"] += 1
+        st.rerun()
+    elif _f15_back:
+        st.session_state["step"] -= 1
+        st.rerun()
+
+# =========================================================
+# KROK 16 — Górne drogi oddechowe
+# =========================================================
+elif step == 16:
+    _has_form_nav = True
+    _f16_back = False
+    with st.form("step_form_16"):
+        _h16 = "Górne drogi oddechowe" if _lang == "pl" else "Upper Respiratory Tract"
+        st.subheader(_h16)
         st.text_area(t("sinus_lbl"), key="sinus_problems")
         st.text_area(t("nose_lbl"), key="nose_problems")
+        st.markdown("---")
+        _f16_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
+        _f16_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+    if _f16_next:
+        st.session_state["step"] += 1
+        st.rerun()
+    elif _f16_back:
+        st.session_state["step"] -= 1
+        st.rerun()
+
+# =========================================================
+# KROK 17 — Alergie
+# =========================================================
+elif step == 17:
+    _has_form_nav = True
+    _f17_back = False
+    with st.form("step_form_17"):
+        _h17 = "Alergie" if _lang == "pl" else "Allergies"
+        st.subheader(_h17)
         st.text_area(t("allergies_lbl"), key="allergies")
+        st.markdown("---")
+        _f17_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
+        _f17_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+    if _f17_next:
+        st.session_state["step"] += 1
+        st.rerun()
+    elif _f17_back:
+        st.session_state["step"] -= 1
+        st.rerun()
+
+# =========================================================
+# KROK 18 — Opryszczka, zajady i reakcje pokarmowe
+# =========================================================
+elif step == 18:
+    _has_form_nav = True
+    _f18_back = False
+    with st.form("step_form_18"):
+        _h18 = "Opryszczka, zajady i reakcje pokarmowe" if _lang == "pl" else "Herpes, Angular Cheilitis and Food Reactions"
+        st.subheader(_h18)
         st.text_area(t("herpes_lbl"), key="herpes")
         st.text_area(t("mouth_corners_lbl"), key="mouth_corners")
         st.text_area(t("fresh_food_lbl"), key="fresh_food_reaction")
-        yes_no(t("epilepsy_lbl"), key="epilepsy")
-        st.text_area(t("smell_taste_lbl"), key="smell_taste")
-        st.text_input(t("colds_lbl"), key="colds")
+        st.markdown("---")
+        _f18_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
+        _f18_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+    if _f18_next:
+        st.session_state["step"] += 1
+        st.rerun()
+    elif _f18_back:
+        st.session_state["step"] -= 1
+        st.rerun()
+
+# =========================================================
+# KROK 19 — Układ oddechowy
+# =========================================================
+elif step == 19:
+    _has_form_nav = True
+    _f19_back = False
+    with st.form("step_form_19"):
         st.subheader(t("sec_15"))
         yes_no(t("throat_lbl"), key="throat_morning")
         yes_no(t("esophagus_lbl"), key="esophagus_burning")
         yes_no(t("asthma_lbl"), key="asthma_dx")
-        _pn9 = yes_no(t("pneumonia_lbl"), key="pneumonia")
+        yes_no(t("pneumonia_lbl"), key="pneumonia")
         st.text_area(t("pneumonia_details_lbl"), key="pneumonia_details")
         st.text_area(t("dyspnea_lbl"), key="dyspnea")
         st.text_area(t("night_breath_lbl"), key="night_breath")
@@ -1860,6 +2025,24 @@ elif step == 9:
             key="wheezing",
         )
         st.text_area(t("cough_lbl"), key="cough")
+        st.text_input(t("colds_lbl"), key="colds")
+        st.markdown("---")
+        _f19_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
+        _f19_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+    if _f19_next:
+        st.session_state["step"] += 1
+        st.rerun()
+    elif _f19_back:
+        st.session_state["step"] -= 1
+        st.rerun()
+
+# =========================================================
+# KROK 20 — Układ sercowo-naczyniowy
+# =========================================================
+elif step == 20:
+    _has_form_nav = True
+    _f20_back = False
+    with st.form("step_form_20"):
         st.subheader(t("sec_16"))
         st.text_area(t("chest_pain_lbl"), key="chest_pain")
         select_with_placeholder(
@@ -1873,26 +2056,24 @@ elif step == 9:
         yes_no(t("pain_position_lbl"), key="pain_position")
         st.text_area(t("palpitations_lbl"), key="palpitations")
         st.markdown("---")
-        _f9l, _f9r = st.columns(2)
-        with _f9l:
-            _f9_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
-        with _f9r:
-            _f9_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
-    if _f9_back:
-        st.session_state["step"] -= 1
-        st.rerun()
-    elif _f9_next:
+        _f20_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
+        _f20_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+    if _f20_next:
         st.session_state["step"] += 1
+        st.rerun()
+    elif _f20_back:
+        st.session_state["step"] -= 1
         st.rerun()
 
 # =========================================================
-# KROK 10 — Przewód pokarmowy, układ moczowy, stawy, skóra
+# KROK 21 — Przewód pokarmowy
 # =========================================================
-elif step == 10:
+elif step == 21:
     _has_form_nav = True
-    with st.form("step_form_10"):
+    _f21_back = False
+    with st.form("step_form_21"):
         st.subheader(t("sec_17"))
-        _gip10 = yes_no(t("gi_problem_lbl"), key="gi_problem")
+        yes_no(t("gi_problem_lbl"), key="gi_problem")
         st.multiselect(
             t("gi_symptoms_lbl"),
             ["zgaga", "wzdęcia", "biegunki", "zaparcia", "hemoroidy", "gazy", "skurcze", "wymioty", "nudności"],
@@ -1902,6 +2083,23 @@ elif step == 10:
         )
         st.text_area(t("worsening_foods_lbl"), key="worsening_foods")
         st.text_area(t("gi_infections_lbl"), key="gi_infections")
+        st.markdown("---")
+        _f21_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
+        _f21_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+    if _f21_next:
+        st.session_state["step"] += 1
+        st.rerun()
+    elif _f21_back:
+        st.session_state["step"] -= 1
+        st.rerun()
+
+# =========================================================
+# KROK 22 — Układ moczowy, stawy i skóra
+# =========================================================
+elif step == 22:
+    _has_form_nav = True
+    _f22_back = False
+    with st.form("step_form_22"):
         st.subheader(t("sec_18"))
         st.text_area(t("urine_lbl"), key="urine_problems")
         select_with_placeholder(
@@ -1920,31 +2118,28 @@ elif step == 10:
         st.subheader(t("sec_20"))
         st.text_area(t("skin_changes_lbl"), key="skin_changes")
         st.text_area(t("skin_itch_lbl"), key="skin_itch")
-        _acne10 = yes_no(t("acne_lbl"), key="acne")
+        yes_no(t("acne_lbl"), key="acne")
         st.text_area(t("acne_details_lbl"), key="acne_details")
         st.text_area(t("skin_sensation_lbl"), key="skin_sensation")
-        _wh10 = yes_no(t("wound_healing_lbl"), key="wound_healing")
+        yes_no(t("wound_healing_lbl"), key="wound_healing")
         st.text_area(t("wound_healing_details_lbl"), key="wound_healing_details")
         st.markdown("---")
-        _f10l, _f10r = st.columns(2)
-        with _f10l:
-            _f10_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
-        with _f10r:
-            _f10_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
-    if _f10_back:
-        st.session_state["step"] -= 1
-        st.rerun()
-    elif _f10_next:
+        _f22_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
+        _f22_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+    if _f22_next:
         st.session_state["step"] += 1
+        st.rerun()
+    elif _f22_back:
+        st.session_state["step"] -= 1
         st.rerun()
 
 # =========================================================
-# KROK 11 — Sen, psychika, krążenie, odbyt, ginekologia
+# KROK 23 — Sen, psychika, krążenie, odbyt, ginekologia
 # =========================================================
-elif step == 11:
+elif step == 23:
     _has_form_nav = True
     @st.fragment
-    def _step11():
+    def _step23():
         _lg = st.session_state.get("lang", "pl")
         st.subheader(t("sec_21"))
         yes_no(t("sleep_problem_lbl"), key="sleep_problem")
@@ -1966,42 +2161,40 @@ elif step == 11:
         st.text_area(t("tingling_lbl"), key="tingling")
         st.text_area(t("varicose_lbl"), key="varicose")
         st.subheader(t("sec_23"))
-        _ap11 = st.multiselect(
+        _ap23 = st.multiselect(
             t("anal_problems_lbl"),
             ["hemoroidy", "stany zapalne błony śluzowej odbytu", "pieczenie", "świąd", "grzybica", "inne"],
             format_func=_opt,
             placeholder=t("anal_problems_ph"),
             key="anal_problems",
         )
-        if "inne" in _ap11:
+        if "inne" in _ap23:
             st.text_input(t("anal_other_lbl"), key="anal_other")
         st.subheader(t("sec_24"))
-        _sex11 = st.session_state.get("sex", "")
-        if _sex11 == "kobieta":
+        _sex23 = st.session_state.get("sex", "")
+        if _sex23 == "kobieta":
             st.text_area(t("gyn_problems_lbl"), key="gyn_problems")
             st.text_area(t("menstruation_lbl"), key="menstruation")
             st.text_input(t("first_menses_lbl"), key="first_menses")
             st.text_input(t("last_menses_lbl"), key="last_menses_text", help=t("last_menses_help"))
-        elif _sex11 == "mężczyzna":
+        elif _sex23 == "mężczyzna":
             select_with_placeholder(t("potency_lbl"), ["nie", "czasami", "często"], key="potency")
         st.markdown("---")
-        _c1, _c2 = st.columns(2)
-        with _c1:
-            if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s11_back", use_container_width=True):
-                st.session_state["step"] -= 1
-                st.rerun()
-        with _c2:
-            if st.button("Dalej →" if _lg == "pl" else "Next →", key="s11_next", use_container_width=True):
-                st.session_state["step"] += 1
-                st.rerun()
-    _step11()
+        if st.button("Dalej →" if _lg == "pl" else "Next →", key="s23_next", use_container_width=True):
+            st.session_state["step"] += 1
+            st.rerun()
+        if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s23_back", use_container_width=True):
+            st.session_state["step"] -= 1
+            st.rerun()
+    _step23()
 
 # =========================================================
-# KROK 12 — Wywiad rodzinny i ważne informacje
+# KROK 24 — Wywiad rodzinny, rozpoznania i zgody
 # =========================================================
-elif step == 12:
+elif step == 24:
     _has_form_nav = True
-    with st.form("step_form_12"):
+    _f24_back = False
+    with st.form("step_form_24"):
         st.subheader(t("sec_25"))
         st.text_area(t("mother_lbl"), key="mother_history")
         st.text_area(t("father_lbl"), key="father_history")
@@ -2021,31 +2214,25 @@ elif step == 12:
         st.checkbox(t("consent_privacy"), key="consent_privacy")
         st.checkbox(t("contact_consent"), key="contact_consent")
         st.markdown("---")
-        _f12l, _f12r = st.columns(2)
-        with _f12l:
-            _f12_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
-        with _f12r:
-            _f12_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
-    if _f12_back:
-        st.session_state["step"] -= 1
-        st.rerun()
-    elif _f12_next:
+        _f24_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
+        _f24_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+    if _f24_next:
         st.session_state["step"] += 1
+        st.rerun()
+    elif _f24_back:
+        st.session_state["step"] -= 1
         st.rerun()
 
 # =========================================================
-# KROK 13 — Podsumowanie i wysyłka
+# KROK 25 — Podsumowanie i wysyłka
 # =========================================================
-elif step == 13:
+elif step == 25:
     _sum_h = "Podsumowanie" if _lang == "pl" else "Summary"
     st.subheader(_sum_h)
     _s_fn = st.session_state.get("first_name", "").strip()
     _s_ln = st.session_state.get("last_name", "").strip()
     _s_ph = st.session_state.get("phone", "")
     _s_bd = st.session_state.get("birth_date_input")
-    _s_s1 = st.session_state.get("symptom_1", "")
-    _s_s2 = st.session_state.get("symptom_2", "")
-    _s_s3 = st.session_state.get("symptom_3", "")
     _sum_rows = []
     if _s_fn or _s_ln:
         _sum_rows.append(("Pacjent" if _lang == "pl" else "Patient", f"{_s_fn} {_s_ln}".strip()))
@@ -2053,18 +2240,21 @@ elif step == 13:
         _sum_rows.append(("Telefon" if _lang == "pl" else "Phone", _s_ph))
     if _s_bd:
         _sum_rows.append(("Data urodzenia" if _lang == "pl" else "Date of birth", _s_bd.strftime("%d.%m.%Y")))
-    if _s_s1:
-        _sum_rows.append(("Objaw 1" if _lang == "pl" else "Symptom 1", _s_s1))
-    if _s_s2:
-        _sum_rows.append(("Objaw 2" if _lang == "pl" else "Symptom 2", _s_s2))
-    if _s_s3:
-        _sum_rows.append(("Objaw 3" if _lang == "pl" else "Symptom 3", _s_s3))
+    _sc_disp = st.session_state.get("symptom_count", 1)
+    for _si in range(1, _sc_disp + 1):
+        _sv = st.session_state.get(f"symptom_{_si}", "")
+        if _sv:
+            _lbl = f"Objaw {_si}" if _lang == "pl" else f"Symptom {_si}"
+            _sum_rows.append((_lbl, _sv))
     for _slbl, _sval in _sum_rows:
         st.markdown(f"**{_slbl}:** {_sval}")
     st.markdown("---")
 
+    if st.button("← Wstecz" if _lang == "pl" else "← Back", key="s25_back", use_container_width=True):
+        st.session_state["step"] -= 1
+        st.rerun()
     st.markdown('<div class="send-button">', unsafe_allow_html=True)
-    send_clicked = st.button(t("send_btn"), key="send_button")
+    send_clicked = st.button(t("send_btn"), key="send_button", use_container_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
     if send_clicked:
@@ -2106,16 +2296,7 @@ elif step == 13:
         _wca = st.session_state.get("weight_change_amount_num")
         weight_change_amount = str(_wca) if _wca is not None else ""
         performed_tests = st.session_state.get("performed_tests", [])
-        symptom_1 = st.session_state.get("symptom_1", "")
-        symptom_1_since = st.session_state.get("symptom_1_since", "")
-        symptom_2 = st.session_state.get("symptom_2", "")
-        symptom_2_since = st.session_state.get("symptom_2_since", "")
-        symptom_3 = st.session_state.get("symptom_3", "")
-        symptom_3_since = st.session_state.get("symptom_3_since", "")
-        symptom_4 = st.session_state.get("symptom_4", "")
-        symptom_4_since = st.session_state.get("symptom_4_since", "")
-        symptom_5 = st.session_state.get("symptom_5", "")
-        symptom_5_since = st.session_state.get("symptom_5_since", "")
+        _scount = st.session_state.get("symptom_count", 1)
         additional_symptoms = st.session_state.get("additional_symptoms", "")
         symptom_pattern = st.session_state.get("symptom_pattern", "")
         symptom_periodicity = st.session_state.get("symptom_periodicity", "")
@@ -2228,16 +2409,11 @@ elif step == 13:
         last_menses = parse_polish_date(last_menses_text) if last_menses_text else None
 
         main_symptom_rows = []
-        if nonempty(symptom_1):
-            main_symptom_rows.append(f"1. {symptom_1}" + (f" - od {symptom_1_since}" if nonempty(symptom_1_since) else ""))
-        if nonempty(symptom_2):
-            main_symptom_rows.append(f"2. {symptom_2}" + (f" - od {symptom_2_since}" if nonempty(symptom_2_since) else ""))
-        if nonempty(symptom_3):
-            main_symptom_rows.append(f"3. {symptom_3}" + (f" - od {symptom_3_since}" if nonempty(symptom_3_since) else ""))
-        if nonempty(symptom_4):
-            main_symptom_rows.append(f"4. {symptom_4}" + (f" - od {symptom_4_since}" if nonempty(symptom_4_since) else ""))
-        if nonempty(symptom_5):
-            main_symptom_rows.append(f"5. {symptom_5}" + (f" - od {symptom_5_since}" if nonempty(symptom_5_since) else ""))
+        for _si in range(1, _scount + 1):
+            _sym = st.session_state.get(f"symptom_{_si}", "")
+            _sym_since = st.session_state.get(f"symptom_{_si}_since", "")
+            if nonempty(_sym):
+                main_symptom_rows.append(f"{_si}. {_sym}" + (f" - od {_sym_since}" if nonempty(_sym_since) else ""))
 
         pdf_data = {
             "full_name": full_name,
@@ -2417,9 +2593,9 @@ Zgoda na kontakt organizacyjny: {"tak" if contact_consent_v else "nie"}
             "profession", "height_cm_text", "weight_kg_text",
             "physical_score", "mental_score", "weight_change", "weight_change_amount_num",
             "performed_tests",
-            "symptom_1", "symptom_1_since", "symptom_2", "symptom_2_since",
-            "symptom_3", "symptom_3_since", "symptom_4", "symptom_4_since",
-            "symptom_5", "symptom_5_since", "additional_symptoms",
+            *[f"symptom_{_i}" for _i in range(1, 11)],
+            *[f"symptom_{_i}_since" for _i in range(1, 11)],
+            "symptom_count", "additional_symptoms",
             "symptom_pattern", "symptom_periodicity", "symptom_past",
             "worsening_factors", "worsening_other", "improvement_factors", "improvement_other",
             "health_timeline", "current_meds",
