@@ -148,12 +148,12 @@ st.markdown(
         section[data-testid="stMain"] > div:first-child {
             padding-top: 0 !important;
         }
-        [data-testid="stRadio"] {
-            display: flex;
-            justify-content: center;
-        }
-        [data-testid="stRadio"] > div {
-            justify-content: center;
+        div[data-testid="stRadio"],
+        div[data-testid="stRadio"] > div,
+        div[data-testid="stRadio"] > div > div {
+            display: flex !important;
+            justify-content: center !important;
+            width: 100% !important;
         }
 
         .header-card {
@@ -257,15 +257,14 @@ components.html(
                     if (!isNav(btn)) return;
                     btn._navBusy = true;
                     btn.addEventListener('click', function () {
-                        var txt = (this.textContent || '').trim();
-                        this.disabled = true;
-                        this.style.opacity = '0.55';
+                        var el = this;
+                        var txt = (el.textContent || '').trim();
+                        el.style.opacity = '0.55';
                         if (txt.indexOf('Wyślij') !== -1 || txt.indexOf('Submit') !== -1) {
-                            this.innerHTML = '&#9203; Wysyłanie…';
-                        } else if (txt.indexOf('Wstecz') !== -1 || txt.indexOf('Back') !== -1) {
-                            this.innerHTML = '&#9203; …';
+                            el.innerHTML = '&#9203; Wysyłanie…';
+                            setTimeout(function() { el.disabled = true; }, 300);
                         } else {
-                            this.innerHTML = '&#9203; Ładowanie…';
+                            el.innerHTML = '&#9203; Ładowanie…';
                         }
                     });
                 });
@@ -1382,7 +1381,7 @@ if "symptom_count" not in st.session_state:
 # =========================================================
 # GÓRA APLIKACJI
 # =========================================================
-_, _lc_lang, _ = st.columns([2, 3, 2])
+_, _lc_lang, _ = st.columns([1, 4, 1])
 with _lc_lang:
     st.radio(
         "",
@@ -2245,6 +2244,7 @@ elif step == 24:
 # KROK 25 — Podsumowanie i wysyłka
 # =========================================================
 elif step == 25:
+    _has_form_nav = True
     _sum_h = "Podsumowanie" if _lang == "pl" else "Summary"
     st.subheader(_sum_h)
     _s_fn = st.session_state.get("first_name", "").strip()
