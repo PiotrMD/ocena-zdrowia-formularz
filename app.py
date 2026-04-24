@@ -1,7 +1,9 @@
-﻿import os
+﻿import json
+import os
 import re
 import smtplib
 import tempfile
+import uuid
 from datetime import date, datetime
 from email.message import EmailMessage
 from typing import Any, Dict, List, Optional
@@ -1356,8 +1358,119 @@ def calc_progress(values: List[Any]) -> int:
 
 
 # =========================================================
+# KLUCZE FORMULARZA I PERSYSTENCJA DRAFTU
+# =========================================================
+_FORM_KEYS = [
+    "visit_type", "first_name", "last_name", "phone", "email", "birth_date_input",
+    "nationality", "sex", "sex_other", "current_status", "current_status_other",
+    "profession", "height_cm_text", "weight_kg_text",
+    "physical_score", "mental_score", "weight_change", "weight_change_amount_num",
+    "performed_tests",
+    *[f"symptom_{_i}" for _i in range(1, 11)],
+    *[f"symptom_{_i}_since" for _i in range(1, 11)],
+    "symptom_count", "additional_symptoms",
+    "symptom_pattern", "symptom_periodicity", "symptom_past",
+    "worsening_factors", "worsening_other", "improvement_factors", "improvement_other",
+    "health_timeline", "current_meds",
+    "lifestyle", "lifestyle_other", "stimulants", "stimulants_other", "sleep_hours",
+    "travel_abroad", "travel_where",
+    "animal_contact", "animal_contact_details",
+    "major_injuries", "covid", "covid_details", "strong_stress",
+    "birth_delivery", "birth_delivery_other", "birth_timing", "birth_timing_other",
+    "green_water", "birth_info_other", "breastfeeding",
+    "childhood_diseases", "childhood_diseases_other",
+    "fever_now", "fever_details", "headache_dizziness", "headache_dizziness_details",
+    "headache_assoc", "hearing_vision", "attacks", "sinus_problems", "nose_problems",
+    "allergies", "herpes", "mouth_corners", "fresh_food_reaction", "epilepsy",
+    "smell_taste", "colds",
+    "throat_morning", "esophagus_burning", "asthma_dx", "pneumonia", "pneumonia_details",
+    "dyspnea", "night_breath", "chest_heaviness", "breathing_type", "wheezing", "cough",
+    "chest_pain", "pressure_type", "current_bp", "current_hr",
+    "pain_press", "pain_position", "palpitations",
+    "gi_problem", "gi_symptoms", "worsening_foods", "gi_infections",
+    "urine_problems", "night_urination", "fluids",
+    "joints", "stiffness",
+    "skin_changes", "skin_itch", "acne", "acne_details", "skin_sensation",
+    "wound_healing", "wound_healing_details",
+    "sleep_problem", "sleep_problem_types", "psych_contact", "psych_dx",
+    "edema", "edema_details", "calf_pain", "cold_fingers", "tingling", "varicose",
+    "anal_problems", "anal_other",
+    "gyn_problems", "menstruation", "first_menses", "last_menses_text", "potency",
+    "mother_history", "father_history", "maternal_grandmother", "paternal_grandmother",
+    "maternal_grandfather", "paternal_grandfather",
+    "own_diagnoses", "important_info", "current_reason", "key_question",
+    "consent_true", "consent_visit", "consent_privacy", "contact_consent",
+]
+
+_DRAFT_DIR = "/tmp"
+
+
+def _draft_path(sid: str) -> str:
+    return os.path.join(_DRAFT_DIR, f"form_draft_{sid}.json")
+
+
+def _save_draft(sid: str):
+    try:
+        data: Dict[str, Any] = {"_step": st.session_state.get("step", 1)}
+        for k in _FORM_KEYS:
+            v = st.session_state.get(k)
+            if v is None:
+                continue
+            if isinstance(v, (date, datetime)):
+                data[k] = v.isoformat()
+            else:
+                data[k] = v
+        with open(_draft_path(sid), "w", encoding="utf-8") as _f:
+            json.dump(data, _f, ensure_ascii=False, default=str)
+    except Exception:
+        pass
+
+
+def _load_draft(sid: str):
+    path = _draft_path(sid)
+    if not os.path.exists(path):
+        return
+    try:
+        with open(path, encoding="utf-8") as _f:
+            data = json.load(_f)
+        for k, v in data.items():
+            if k == "_step":
+                st.session_state["step"] = int(v)
+            elif k == "birth_date_input" and v:
+                try:
+                    st.session_state[k] = date.fromisoformat(v)
+                except Exception:
+                    pass
+            elif k not in st.session_state:
+                st.session_state[k] = v
+    except Exception:
+        pass
+
+
+def _delete_draft(sid: str):
+    try:
+        path = _draft_path(sid)
+        if os.path.exists(path):
+            os.remove(path)
+    except Exception:
+        pass
+
+
+# =========================================================
 # STAN SESJI
 # =========================================================
+# Session ID — persystuje w URL, pozwala odtworzyć draft po restarcie serwera
+if "sid" not in st.session_state:
+    _url_sid = st.query_params.get("sid", "")
+    if _url_sid:
+        st.session_state["sid"] = _url_sid
+        _load_draft(_url_sid)   # przywróć dane jeśli sesja świeża
+    else:
+        st.session_state["sid"] = str(uuid.uuid4())[:12]
+_sid: str = st.session_state["sid"]
+if st.query_params.get("sid") != _sid:
+    st.query_params["sid"] = _sid
+
 if "field_errors" not in st.session_state:
     st.session_state.field_errors = {}
 if "scroll_target" not in st.session_state:
@@ -1443,6 +1556,7 @@ if st.session_state["form_success"]:
         unsafe_allow_html=True,
     )
     st.markdown(t("org_info"))
+    _delete_draft(_sid)
     st.stop()
 
 # =========================================================
@@ -2605,48 +2719,6 @@ Data i godzina wypełnienia formularza: {submitted_at}
 Zgoda na kontakt organizacyjny: {"tak" if contact_consent_v else "nie"}
 """
 
-        _FORM_KEYS = [
-            "visit_type", "first_name", "last_name", "phone", "email", "birth_date_input",
-            "nationality", "sex", "sex_other", "current_status", "current_status_other",
-            "profession", "height_cm_text", "weight_kg_text",
-            "physical_score", "mental_score", "weight_change", "weight_change_amount_num",
-            "performed_tests",
-            *[f"symptom_{_i}" for _i in range(1, 11)],
-            *[f"symptom_{_i}_since" for _i in range(1, 11)],
-            "symptom_count", "additional_symptoms",
-            "symptom_pattern", "symptom_periodicity", "symptom_past",
-            "worsening_factors", "worsening_other", "improvement_factors", "improvement_other",
-            "health_timeline", "current_meds",
-            "lifestyle", "lifestyle_other", "stimulants", "stimulants_other", "sleep_hours",
-            "travel_abroad", "travel_where",
-            "animal_contact", "animal_contact_details",
-            "major_injuries", "covid", "covid_details", "strong_stress",
-            "birth_delivery", "birth_delivery_other", "birth_timing", "birth_timing_other",
-            "green_water", "birth_info_other", "breastfeeding",
-            "childhood_diseases", "childhood_diseases_other",
-            "fever_now", "fever_details", "headache_dizziness", "headache_dizziness_details",
-            "headache_assoc", "hearing_vision", "attacks", "sinus_problems", "nose_problems",
-            "allergies", "herpes", "mouth_corners", "fresh_food_reaction", "epilepsy",
-            "smell_taste", "colds",
-            "throat_morning", "esophagus_burning", "asthma_dx", "pneumonia", "pneumonia_details",
-            "dyspnea", "night_breath", "chest_heaviness", "breathing_type", "wheezing", "cough",
-            "chest_pain", "pressure_type", "current_bp", "current_hr",
-            "pain_press", "pain_position", "palpitations",
-            "gi_problem", "gi_symptoms", "worsening_foods", "gi_infections",
-            "urine_problems", "night_urination", "fluids",
-            "joints", "stiffness",
-            "skin_changes", "skin_itch", "acne", "acne_details", "skin_sensation",
-            "wound_healing", "wound_healing_details",
-            "sleep_problem", "sleep_problem_types", "psych_contact", "psych_dx",
-            "edema", "edema_details", "calf_pain", "cold_fingers", "tingling", "varicose",
-            "anal_problems", "anal_other",
-            "gyn_problems", "menstruation", "first_menses", "last_menses_text", "potency",
-            "mother_history", "father_history", "maternal_grandmother", "paternal_grandmother",
-            "maternal_grandfather", "paternal_grandfather",
-            "own_diagnoses", "important_info", "current_reason", "key_question",
-            "consent_true", "consent_visit", "consent_privacy", "contact_consent",
-        ]
-
         _status = st.empty()
         _status.info(t("sending"))
         pdf_path = None
@@ -2667,6 +2739,7 @@ Zgoda na kontakt organizacyjny: {"tak" if contact_consent_v else "nie"}
             st.session_state.field_errors = {}
             st.session_state.scroll_target = None
             st.session_state["form_success"] = True
+            _delete_draft(_sid)
             for _k in _FORM_KEYS:
                 st.session_state.pop(_k, None)
             st.session_state["step"] = 1
@@ -2720,3 +2793,7 @@ if not _has_form_nav:
 # =========================================================
 if st.session_state.scroll_target:
     scroll_to_anchor(st.session_state.scroll_target)
+
+# Zapisz draft po każdym renderze
+if not st.session_state.get("form_success"):
+    _save_draft(_sid)
