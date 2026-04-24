@@ -1166,7 +1166,7 @@ def make_pdf(data: Dict[str, Any]) -> str:
         story,
         "Dane identyfikacyjne",
         [
-            f"Pacjent: {data['initials']}",
+            f"Pacjent: {data.get('full_name') or data['initials']}",
             f"Telefon kontaktowy: {data['phone']}",
             f"Data urodzenia: {data['birth_date']}",
                 f"Data i godzina wypełnienia formularza: {data['submitted_at']}",
@@ -2184,6 +2184,7 @@ elif step == 13:
             main_symptom_rows.append(f"5. {symptom_5}" + (f" - od {symptom_5_since}" if nonempty(symptom_5_since) else ""))
 
         pdf_data = {
+            "full_name": full_name,
             "initials": patient_initials,
             "phone": validated_phone,
             "birth_date": birth_date.strftime("%d.%m.%Y") if birth_date else "",
