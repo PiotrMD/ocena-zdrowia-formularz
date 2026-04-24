@@ -1408,24 +1408,28 @@ st.markdown(
 # STRONA SUKCESU
 # =========================================================
 if st.session_state["form_success"]:
+    _success_title = "Formularz wysłany pomyślnie!" if _lang == "pl" else "Form submitted successfully!"
+    _success_body = (
+        "Dziękujemy za wypełnienie wywiadu lekarskiego.<br>Formularz został przesłany do lekarza."
+        if _lang == "pl"
+        else "Thank you for completing the medical interview.<br>Your form has been sent to the doctor."
+    )
     st.markdown(
-        """
+        f"""
         <div style="text-align:center;padding:40px 24px;border-radius:18px;
         border:1px solid rgba(46,125,50,0.4);background:rgba(46,125,50,0.06);margin:20px 0;">
             <div style="font-size:3rem;margin-bottom:16px;">✅</div>
             <div style="font-size:1.5rem;font-weight:800;color:#2E7D32;margin-bottom:12px;">
-                Formularz wysłany pomyślnie!
+                {_success_title}
             </div>
             <div style="font-size:1rem;opacity:0.85;line-height:1.7;">
-                Dziękujemy za wypełnienie wywiadu lekarskiego.<br>
-                Formularz został przesłany do lekarza.<br><br>
-                Jeśli podałeś adres e-mail, otrzymasz potwierdzenie<br>
-                wraz z instrukcją jak przesłać wyniki badań.
+                {_success_body}
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
+    st.markdown(t("org_info"))
     st.stop()
 
 # =========================================================
