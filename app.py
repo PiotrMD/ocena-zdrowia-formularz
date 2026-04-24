@@ -1448,13 +1448,13 @@ elif step == 2:
         st.subheader(t("sec_1"))
         st.text_input(t("nationality_lbl"), key="nationality")
         _sex2 = select_with_placeholder(t("sex_lbl"), ["kobieta", "mężczyzna", "inne"], key="sex")
-        st.text_input(t("sex_other_lbl"), key="sex_other", disabled=(_sex2 != "inne"))
+        st.text_input(t("sex_other_lbl"), key="sex_other")
         _cst2 = select_with_placeholder(
             t("current_status_lbl"),
             ["pracujący", "dziecko", "uczeń", "student", "emeryt", "inne"],
             key="current_status",
         )
-        st.text_input(t("current_status_other_lbl"), key="current_status_other", disabled=(_cst2 != "inne"))
+        st.text_input(t("current_status_other_lbl"), key="current_status_other")
         st.text_input(t("profession_lbl"), key="profession")
         st.markdown("---")
         _f2l, _f2r = st.columns(2)
@@ -1514,7 +1514,6 @@ elif step == 3:
             step=0.5, format="%.1f",
             placeholder=t("weight_kg_placeholder"),
             key="weight_change_amount_num",
-            disabled=(_wch3 not in ["wzrosła", "spadła"]),
         )
         st.markdown("---")
         _f3l, _f3r = st.columns(2)
@@ -1581,7 +1580,7 @@ elif step == 5:
             placeholder=t("worsening_factors_ph"),
             key="worsening_factors",
         )
-        st.text_input(t("worsening_other_lbl"), key="worsening_other", disabled=("inne" not in _wf5))
+        st.text_input(t("worsening_other_lbl"), key="worsening_other")
         _if5 = st.multiselect(
             t("improvement_factors_lbl"),
             ["wypoczynek", "wysiłek", "głód", "posiłek", "inne"],
@@ -1589,7 +1588,7 @@ elif step == 5:
             placeholder=t("improvement_factors_ph"),
             key="improvement_factors",
         )
-        st.text_input(t("improvement_other_lbl"), key="improvement_other", disabled=("inne" not in _if5))
+        st.text_input(t("improvement_other_lbl"), key="improvement_other")
         st.markdown("---")
         _f5l, _f5r = st.columns(2)
         with _f5l:
@@ -1633,13 +1632,13 @@ elif step == 6:
             ["poród naturalny", "poród przez cesarskie cięcie", "nie wiem", "inne"],
             key="birth_delivery",
         )
-        st.text_input(t("birth_delivery_other_lbl"), key="birth_delivery_other", disabled=(_bd6 != "inne"))
+        st.text_input(t("birth_delivery_other_lbl"), key="birth_delivery_other")
         _bt6 = select_with_placeholder(
             t("birth_timing_lbl"),
             ["poród przedwczesny", "poród o czasie", "poród po terminie", "nie wiem", "inne"],
             key="birth_timing",
         )
-        st.text_input(t("birth_timing_other_lbl"), key="birth_timing_other", disabled=(_bt6 != "inne"))
+        st.text_input(t("birth_timing_other_lbl"), key="birth_timing_other")
         yes_no_unknown(t("green_water_lbl"), key="green_water")
         st.text_input(t("birth_info_other_lbl"), key="birth_info_other")
         select_with_placeholder(
@@ -1656,7 +1655,7 @@ elif step == 6:
             placeholder=t("childhood_diseases_ph"),
             key="childhood_diseases",
         )
-        st.text_input(t("childhood_diseases_other_lbl"), key="childhood_diseases_other", disabled=("inne" not in _cd6))
+        st.text_input(t("childhood_diseases_other_lbl"), key="childhood_diseases_other")
         st.markdown("---")
         _f6l, _f6r = st.columns(2)
         with _f6l:
@@ -1682,7 +1681,7 @@ elif step == 7:
             ["leżący", "siedzący", "nisko aktywny", "średnio aktywny", "bardzo aktywny", "inne"],
             key="lifestyle",
         )
-        st.text_input(t("lifestyle_other_lbl"), key="lifestyle_other", disabled=(_ls7 != "inne"))
+        st.text_input(t("lifestyle_other_lbl"), key="lifestyle_other")
         _st7 = st.multiselect(
             t("stimulants_lbl"),
             ["kawa", "herbata", "papierosy", "alkohol", "narkotyki", "słodycze", "inne"],
@@ -1690,7 +1689,7 @@ elif step == 7:
             placeholder=t("stimulants_ph"),
             key="stimulants",
         )
-        st.text_input(t("stimulants_other_lbl"), key="stimulants_other", disabled=("inne" not in _st7))
+        st.text_input(t("stimulants_other_lbl"), key="stimulants_other")
         select_with_placeholder(
             t("sleep_hours_lbl"),
             ["3", "4", "5", "6", "7", "8", "9", "10", "11", "12"],
@@ -1719,15 +1718,15 @@ elif step == 8:
     with st.form("step_form_8"):
         st.subheader(t("sec_8"))
         _ta8 = yes_no(t("travel_abroad_lbl"), key="travel_abroad")
-        st.text_input(t("travel_where_lbl"), key="travel_where", disabled=(_ta8 != "tak"))
+        st.text_input(t("travel_where_lbl"), key="travel_where")
         st.subheader(t("sec_9"))
         _ac8 = yes_no(t("animal_contact_lbl"), key="animal_contact")
-        st.text_area(t("animal_details_lbl"), key="animal_contact_details", disabled=(_ac8 != "tak"))
+        st.text_area(t("animal_details_lbl"), key="animal_contact_details")
         st.subheader(t("sec_10"))
         st.text_area(t("injuries_lbl"), key="major_injuries")
         st.subheader(t("sec_11"))
         _cov8 = yes_no_unknown(t("covid_lbl"), key="covid")
-        st.text_area(t("covid_details_lbl"), key="covid_details", disabled=(_cov8 != "tak"))
+        st.text_area(t("covid_details_lbl"), key="covid_details")
         st.markdown("---")
         _f8l, _f8r = st.columns(2)
         with _f8l:
@@ -1749,9 +1748,9 @@ elif step == 9:
     with st.form("step_form_9"):
         st.subheader(t("sec_14"))
         _fn9 = yes_no(t("fever_lbl"), key="fever_now")
-        st.text_area(t("if_yes_describe"), key="fever_details", disabled=(_fn9 != "tak"))
+        st.text_area(t("if_yes_describe"), key="fever_details")
         _hd9 = yes_no(t("headache_lbl"), key="headache_dizziness")
-        st.text_area(t("if_yes_describe"), key="headache_dizziness_details", disabled=(_hd9 != "tak"))
+        st.text_area(t("if_yes_describe"), key="headache_dizziness_details")
         st.text_area(t("headache_assoc_lbl"), key="headache_assoc")
         st.text_area(t("hearing_vision_lbl"), key="hearing_vision")
         st.text_area(t("attacks_lbl"), key="attacks")
@@ -1769,7 +1768,7 @@ elif step == 9:
         yes_no(t("esophagus_lbl"), key="esophagus_burning")
         yes_no(t("asthma_lbl"), key="asthma_dx")
         _pn9 = yes_no(t("pneumonia_lbl"), key="pneumonia")
-        st.text_area(t("pneumonia_details_lbl"), key="pneumonia_details", disabled=(_pn9 != "tak"))
+        st.text_area(t("pneumonia_details_lbl"), key="pneumonia_details")
         st.text_area(t("dyspnea_lbl"), key="dyspnea")
         st.text_area(t("night_breath_lbl"), key="night_breath")
         st.text_area(t("chest_heaviness_lbl"), key="chest_heaviness")
@@ -1825,7 +1824,6 @@ elif step == 10:
             format_func=_opt,
             placeholder=t("gi_symptoms_ph"),
             key="gi_symptoms",
-            disabled=(_gip10 != "tak"),
         )
         st.text_area(t("worsening_foods_lbl"), key="worsening_foods")
         st.text_area(t("gi_infections_lbl"), key="gi_infections")
@@ -1848,10 +1846,10 @@ elif step == 10:
         st.text_area(t("skin_changes_lbl"), key="skin_changes")
         st.text_area(t("skin_itch_lbl"), key="skin_itch")
         _acne10 = yes_no(t("acne_lbl"), key="acne")
-        st.text_area(t("acne_details_lbl"), key="acne_details", disabled=(_acne10 != "tak"))
+        st.text_area(t("acne_details_lbl"), key="acne_details")
         st.text_area(t("skin_sensation_lbl"), key="skin_sensation")
         _wh10 = yes_no(t("wound_healing_lbl"), key="wound_healing")
-        st.text_area(t("wound_healing_details_lbl"), key="wound_healing_details", disabled=(_wh10 != "tak"))
+        st.text_area(t("wound_healing_details_lbl"), key="wound_healing_details")
         st.markdown("---")
         _f10l, _f10r = st.columns(2)
         with _f10l:
@@ -1880,13 +1878,12 @@ elif step == 11:
             format_func=_opt,
             placeholder=t("sleep_types_ph"),
             key="sleep_problem_types",
-            disabled=(_sp11 != "tak"),
         )
         select_with_placeholder(t("psych_contact_lbl"), ["nie", "psycholog", "psychiatra", "oba"], key="psych_contact")
         st.text_area(t("psych_dx_lbl"), key="psych_dx")
         st.subheader(t("sec_22"))
         _ed11 = yes_no(t("edema_lbl"), key="edema")
-        st.text_area(t("edema_details_lbl"), key="edema_details", disabled=(_ed11 != "tak"))
+        st.text_area(t("edema_details_lbl"), key="edema_details")
         st.text_area(t("calf_pain_lbl"), key="calf_pain")
         st.text_area(t("cold_fingers_lbl"), key="cold_fingers")
         st.text_area(t("tingling_lbl"), key="tingling")
@@ -1899,7 +1896,7 @@ elif step == 11:
             placeholder=t("anal_problems_ph"),
             key="anal_problems",
         )
-        st.text_input(t("anal_other_lbl"), key="anal_other", disabled=("inne" not in _ap11))
+        st.text_input(t("anal_other_lbl"), key="anal_other")
         st.subheader(t("sec_24"))
         _sex11 = st.session_state.get("sex", "")
         if _sex11 == "kobieta":
