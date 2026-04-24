@@ -1457,8 +1457,9 @@ if step == 1:
         'src="https://www.youtube.com/embed/qdwtGE9k4GY" allowfullscreen></iframe></div>',
         unsafe_allow_html=True,
     )
-    if "email" in field_errors:
-        error_box(field_errors["email"])
+    for _fk in ["first_name", "phone", "email", "birth_date"]:
+        if _fk in field_errors:
+            error_box(field_errors[_fk])
     with st.form("step_form_1"):
         st.subheader(t("sec_1"))
         st.text_input(t("first_name_lbl"), key="first_name")
@@ -1476,9 +1477,19 @@ if step == 1:
         st.markdown("---")
         _f1_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
     if _f1_next:
+        _errs1 = {}
+        if not st.session_state.get("first_name", "").strip():
+            _errs1["first_name"] = t("err_first_name")
+        _ph1 = st.session_state.get("phone", "")
+        if not validate_phone(_ph1):
+            _errs1["phone"] = t("err_phone")
         _em1 = st.session_state.get("email", "")
-        if _em1 and not validate_email(_em1):
-            st.session_state.field_errors = {"email": t("err_email")}
+        if not validate_email(_em1):
+            _errs1["email"] = t("err_email")
+        if st.session_state.get("birth_date_input") is None:
+            _errs1["birth_date"] = t("err_birth_date")
+        if _errs1:
+            st.session_state.field_errors = _errs1
         else:
             st.session_state.field_errors = {}
             st.session_state["step"] += 1
