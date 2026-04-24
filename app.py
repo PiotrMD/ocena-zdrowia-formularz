@@ -1101,8 +1101,7 @@ def make_pdf(data: Dict[str, Any]) -> str:
             f"Pacjent: {data['initials']}",
             f"Telefon kontaktowy: {data['phone']}",
             f"Data urodzenia: {data['birth_date']}",
-            f"Rodzaj wizyty: {data['visit_type']}",
-            f"Data i godzina wypełnienia formularza: {data['submitted_at']}",
+                f"Data i godzina wypełnienia formularza: {data['submitted_at']}",
         ],
         styles_dict,
     )
@@ -1264,10 +1263,6 @@ if step == 1:
         unsafe_allow_html=True,
     )
     st.subheader(t("sec_1"))
-    st.markdown('<div id="anchor_visit_type" class="field-anchor"></div>', unsafe_allow_html=True)
-    select_with_placeholder(t("visit_type_lbl"), ["Pierwsza", "Kontrolna"], key="visit_type")
-    if "visit_type" in field_errors and not st.session_state.get("visit_type", ""):
-        error_box(field_errors["visit_type"])
     st.markdown('<div id="anchor_first_name" class="field-anchor"></div>', unsafe_allow_html=True)
     st.text_input(t("first_name_lbl"), key="first_name")
     if "first_name" in field_errors and not st.session_state.get("first_name", "").strip():
@@ -1741,7 +1736,6 @@ elif step == 13:
     st.subheader(_sum_h)
     _s_fn = st.session_state.get("first_name", "").strip()
     _s_ln = st.session_state.get("last_name", "").strip()
-    _s_vt = st.session_state.get("visit_type", "")
     _s_ph = st.session_state.get("phone", "")
     _s_bd = st.session_state.get("birth_date_input")
     _s_s1 = st.session_state.get("symptom_1", "")
@@ -1750,8 +1744,6 @@ elif step == 13:
     _sum_rows = []
     if _s_fn or _s_ln:
         _sum_rows.append(("Pacjent" if _lang == "pl" else "Patient", f"{_s_fn} {_s_ln}".strip()))
-    if _s_vt:
-        _sum_rows.append(("Rodzaj wizyty" if _lang == "pl" else "Visit type", _opt(_s_vt)))
     if _s_ph:
         _sum_rows.append(("Telefon" if _lang == "pl" else "Phone", _s_ph))
     if _s_bd:
@@ -1772,7 +1764,6 @@ elif step == 13:
 
     if send_clicked:
         _sex_s = st.session_state.get("sex", "")
-        visit_type = st.session_state.get("visit_type", "")
         first_name_clean = st.session_state.get("first_name", "").strip()
         last_name_clean = st.session_state.get("last_name", "").strip()
         phone_raw = st.session_state.get("phone", "")
@@ -1947,7 +1938,6 @@ elif step == 13:
             "initials": patient_initials,
             "phone": validated_phone,
             "birth_date": birth_date.strftime("%d.%m.%Y") if birth_date else "",
-            "visit_type": visit_type,
             "submitted_at": submitted_at,
             "sec_basic": [
                 f"Płeć: {sex_other if nonempty(sex_other) else sex}" if nonempty(sex) else "",
@@ -2111,7 +2101,6 @@ Imię i nazwisko: {full_name}
 Telefon kontaktowy: {validated_phone}
 Adres e-mail: {validated_email or ""}
 Data urodzenia: {birth_date.strftime("%d.%m.%Y") if birth_date else ""}
-Rodzaj wizyty: {visit_type}
 Data i godzina wypełnienia formularza: {submitted_at}
 Zgoda na kontakt organizacyjny: {"tak" if contact_consent_v else "nie"}
 """
