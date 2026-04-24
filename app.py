@@ -1410,9 +1410,13 @@ st.markdown(
 if st.session_state["form_success"]:
     _success_title = "Formularz wysłany pomyślnie!" if _lang == "pl" else "Form submitted successfully!"
     _success_body = (
-        "Dziękujemy za wypełnienie wywiadu lekarskiego.<br>Formularz został przesłany do lekarza."
+        "Dziękujemy za wypełnienie wywiadu lekarskiego.<br>Formularz został przesłany do lekarza.<br><br>"
+        "Na podany adres e-mail wysłaliśmy potwierdzenie z instrukcją jak przesłać wyniki badań.<br>"
+        "<small>Jeśli nie widzisz wiadomości, sprawdź folder <strong>Spam</strong>.</small>"
         if _lang == "pl"
-        else "Thank you for completing the medical interview.<br>Your form has been sent to the doctor."
+        else "Thank you for completing the medical interview.<br>Your form has been sent to the doctor.<br><br>"
+        "We sent a confirmation email with instructions on how to submit your test results.<br>"
+        "<small>If you don't see the message, please check your <strong>Spam</strong> folder.</small>"
     )
     st.markdown(
         f"""
