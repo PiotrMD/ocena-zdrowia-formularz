@@ -1839,12 +1839,6 @@ with _lc_en:
         st.session_state["lang"] = "en"
         st.rerun()
 
-if os.path.exists("logo.PNG"):
-    st.image("logo.PNG", use_container_width=True)
-elif os.path.exists("logo.png"):
-    st.image("logo.png", use_container_width=True)
-elif os.path.exists("Logo OCENA ZDROWIA.PNG"):
-    st.image("Logo OCENA ZDROWIA.PNG", use_container_width=True)
 
 st.markdown(
     f"""
