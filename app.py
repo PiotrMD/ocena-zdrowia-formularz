@@ -2690,13 +2690,26 @@ elif step == 25:
     st.markdown("</div>", unsafe_allow_html=True)
 
     if send_clicked:
-        _sex_s = st.session_state.get("sex", "")
         _fd = st.session_state.get("_form_data", {})
-        first_name_clean = (st.session_state.get("first_name") or _fd.get("first_name", "")).strip()
-        last_name_clean = (st.session_state.get("last_name") or _fd.get("last_name", "")).strip()
-        phone_raw = st.session_state.get("phone") or _fd.get("phone", "")
-        email_raw = st.session_state.get("email") or _fd.get("email", "")
-        birth_date = st.session_state.get("birth_date_input") or _fd.get("birth_date_input")
+
+        def _g(key, default=None):
+            """Czyta z session_state; jeśli brak — z _form_data (trwały magazyn)."""
+            v = st.session_state.get(key)
+            if v is None:
+                v = _fd.get(key)
+            return v if v is not None else (default if default is not None else "")
+
+        def _gl(key):
+            """Jak _g ale domyślnie zwraca []."""
+            v = _g(key, None)
+            return v if isinstance(v, list) else ([] if v is None or v == "" else [v])
+
+        _sex_s = _g("sex")
+        first_name_clean = _g("first_name", "").strip()
+        last_name_clean = _g("last_name", "").strip()
+        phone_raw = _g("phone", "")
+        email_raw = _g("email", "")
+        birth_date = _g("birth_date_input")
         validated_phone = validate_phone(phone_raw)
         validated_email = validate_email(email_raw) if email_raw else None
         consent_true_v = st.session_state.get("consent_true", False)
@@ -2714,137 +2727,137 @@ elif step == 25:
         patient_initials = initials(full_name)
         submitted_at = datetime.now().strftime("%d.%m.%Y, %H:%M")
 
-        nationality = st.session_state.get("nationality", "")
+        nationality = _g("nationality")
         sex = _sex_s
-        sex_other = st.session_state.get("sex_other", "") if sex == "inne" else ""
-        current_status = st.session_state.get("current_status", "")
-        current_status_other = st.session_state.get("current_status_other", "") if current_status == "inne" else ""
-        profession = st.session_state.get("profession", "")
-        height_cm = parse_optional_float(st.session_state.get("height_cm_text", ""))
-        weight_kg = parse_optional_float(st.session_state.get("weight_kg_text", ""))
+        sex_other = _g("sex_other") if sex == "inne" else ""
+        current_status = _g("current_status")
+        current_status_other = _g("current_status_other") if current_status == "inne" else ""
+        profession = _g("profession")
+        height_cm = parse_optional_float(_g("height_cm_text"))
+        weight_kg = parse_optional_float(_g("weight_kg_text"))
         bmi = bmi_calc(weight_kg, height_cm)
-        physical_score = st.session_state.get("physical_score", 5)
-        mental_score = st.session_state.get("mental_score", 5)
-        weight_change = st.session_state.get("weight_change", "")
-        _wca = st.session_state.get("weight_change_amount_num")
-        weight_change_amount = str(_wca) if _wca is not None else ""
-        performed_tests = st.session_state.get("performed_tests", [])
-        _scount = st.session_state.get("symptom_count", 1)
-        additional_symptoms = st.session_state.get("additional_symptoms", "")
-        symptom_pattern = st.session_state.get("symptom_pattern", "")
-        symptom_periodicity = st.session_state.get("symptom_periodicity", "")
-        symptom_past = st.session_state.get("symptom_past", "")
-        worsening_factors = st.session_state.get("worsening_factors", [])
-        worsening_other = st.session_state.get("worsening_other", "") if "inne" in worsening_factors else ""
-        improvement_factors = st.session_state.get("improvement_factors", [])
-        improvement_other = st.session_state.get("improvement_other", "") if "inne" in improvement_factors else ""
-        health_timeline = st.session_state.get("health_timeline", "")
-        current_meds = st.session_state.get("current_meds", "")
-        lifestyle = st.session_state.get("lifestyle", "")
-        lifestyle_other = st.session_state.get("lifestyle_other", "") if lifestyle == "inne" else ""
-        stimulants = st.session_state.get("stimulants", [])
-        stimulants_other = st.session_state.get("stimulants_other", "") if "inne" in stimulants else ""
-        sleep_hours = st.session_state.get("sleep_hours", "")
-        travel_abroad = st.session_state.get("travel_abroad", "")
-        travel_where = st.session_state.get("travel_where", "") if travel_abroad == "tak" else ""
-        animal_contact = st.session_state.get("animal_contact", "")
-        animal_contact_details = st.session_state.get("animal_contact_details", "") if animal_contact == "tak" else ""
-        major_injuries = st.session_state.get("major_injuries", "")
-        covid = st.session_state.get("covid", "")
-        covid_details = st.session_state.get("covid_details", "") if covid == "tak" else ""
-        strong_stress = st.session_state.get("strong_stress", "")
-        birth_delivery = st.session_state.get("birth_delivery", "")
-        birth_delivery_other = st.session_state.get("birth_delivery_other", "") if birth_delivery == "inne" else ""
-        birth_timing = st.session_state.get("birth_timing", "")
-        birth_timing_other = st.session_state.get("birth_timing_other", "") if birth_timing == "inne" else ""
-        green_water = st.session_state.get("green_water", "")
-        birth_info_other = st.session_state.get("birth_info_other", "")
-        breastfeeding = st.session_state.get("breastfeeding", "")
-        childhood_diseases = st.session_state.get("childhood_diseases", [])
-        childhood_diseases_other = st.session_state.get("childhood_diseases_other", "") if "inne" in childhood_diseases else ""
-        fever_now = st.session_state.get("fever_now", "")
-        fever_details = st.session_state.get("fever_details", "") if fever_now == "tak" else ""
-        headache_dizziness = st.session_state.get("headache_dizziness", "")
-        headache_dizziness_details = st.session_state.get("headache_dizziness_details", "") if headache_dizziness == "tak" else ""
-        headache_assoc = st.session_state.get("headache_assoc", "")
-        hearing_vision = st.session_state.get("hearing_vision", "")
-        attacks = st.session_state.get("attacks", "")
-        sinus_problems = st.session_state.get("sinus_problems", "")
-        nose_problems = st.session_state.get("nose_problems", "")
-        allergies = st.session_state.get("allergies", "")
-        herpes = st.session_state.get("herpes", "")
-        mouth_corners = st.session_state.get("mouth_corners", "")
-        fresh_food_reaction = st.session_state.get("fresh_food_reaction", "")
-        epilepsy = st.session_state.get("epilepsy", "")
-        smell_taste = st.session_state.get("smell_taste", "")
-        colds = st.session_state.get("colds", "")
-        throat_morning = st.session_state.get("throat_morning", "")
-        esophagus_burning = st.session_state.get("esophagus_burning", "")
-        asthma_dx = st.session_state.get("asthma_dx", "")
-        pneumonia = st.session_state.get("pneumonia", "")
-        pneumonia_details = st.session_state.get("pneumonia_details", "") if pneumonia == "tak" else ""
-        dyspnea = st.session_state.get("dyspnea", "")
-        night_breath = st.session_state.get("night_breath", "")
-        chest_heaviness = st.session_state.get("chest_heaviness", "")
-        breathing_type = st.session_state.get("breathing_type", "")
-        wheezing = st.session_state.get("wheezing", [])
-        cough = st.session_state.get("cough", "")
-        chest_pain = st.session_state.get("chest_pain", "")
-        pressure_type = st.session_state.get("pressure_type", "")
-        current_bp = st.session_state.get("current_bp", "")
-        current_hr = st.session_state.get("current_hr", "")
-        pain_press = st.session_state.get("pain_press", "")
-        pain_position = st.session_state.get("pain_position", "")
-        palpitations = st.session_state.get("palpitations", "")
-        gi_problem = st.session_state.get("gi_problem", "")
-        gi_symptoms = st.session_state.get("gi_symptoms", []) if gi_problem == "tak" else []
-        worsening_foods = st.session_state.get("worsening_foods", "")
-        gi_infections = st.session_state.get("gi_infections", "")
-        urine_problems = st.session_state.get("urine_problems", "")
-        night_urination = st.session_state.get("night_urination", "")
-        fluids = st.session_state.get("fluids", "")
-        joints = st.session_state.get("joints", "")
-        stiffness = st.session_state.get("stiffness", "")
-        skin_changes = st.session_state.get("skin_changes", "")
-        skin_itch = st.session_state.get("skin_itch", "")
-        acne = st.session_state.get("acne", "")
-        acne_details = st.session_state.get("acne_details", "") if acne == "tak" else ""
-        skin_sensation = st.session_state.get("skin_sensation", "")
-        wound_healing = st.session_state.get("wound_healing", "")
-        wound_healing_details = st.session_state.get("wound_healing_details", "") if wound_healing == "tak" else ""
-        sleep_problem = st.session_state.get("sleep_problem", "")
-        sleep_problem_types = st.session_state.get("sleep_problem_types", []) if sleep_problem == "tak" else []
-        psych_contact = st.session_state.get("psych_contact", "")
-        psych_dx = st.session_state.get("psych_dx", "")
-        edema = st.session_state.get("edema", "")
-        edema_details = st.session_state.get("edema_details", "") if edema == "tak" else ""
-        calf_pain = st.session_state.get("calf_pain", "")
-        cold_fingers = st.session_state.get("cold_fingers", "")
-        tingling = st.session_state.get("tingling", "")
-        varicose = st.session_state.get("varicose", "")
-        anal_problems = st.session_state.get("anal_problems", [])
-        anal_other = st.session_state.get("anal_other", "") if "inne" in anal_problems else ""
-        gyn_problems = st.session_state.get("gyn_problems", "") if sex == "kobieta" else ""
-        menstruation = st.session_state.get("menstruation", "") if sex == "kobieta" else ""
-        first_menses = st.session_state.get("first_menses", "") if sex == "kobieta" else ""
-        last_menses_text = st.session_state.get("last_menses_text", "") if sex == "kobieta" else ""
-        potency = st.session_state.get("potency", "") if sex == "mężczyzna" else ""
-        mother_history = st.session_state.get("mother_history", "")
-        father_history = st.session_state.get("father_history", "")
-        maternal_grandmother = st.session_state.get("maternal_grandmother", "")
-        paternal_grandmother = st.session_state.get("paternal_grandmother", "")
-        maternal_grandfather = st.session_state.get("maternal_grandfather", "")
-        paternal_grandfather = st.session_state.get("paternal_grandfather", "")
-        own_diagnoses = st.session_state.get("own_diagnoses", "")
-        important_info = st.session_state.get("important_info", "")
-        current_reason = st.session_state.get("current_reason", "")
-        key_question = st.session_state.get("key_question", "")
+        physical_score = _g("physical_score", 5)
+        mental_score = _g("mental_score", 5)
+        weight_change = _g("weight_change")
+        _wca = _g("weight_change_amount_num")
+        weight_change_amount = str(_wca) if _wca not in (None, "") else ""
+        performed_tests = _gl("performed_tests")
+        _scount = _g("symptom_count", 1)
+        additional_symptoms = _g("additional_symptoms")
+        symptom_pattern = _g("symptom_pattern")
+        symptom_periodicity = _g("symptom_periodicity")
+        symptom_past = _g("symptom_past")
+        worsening_factors = _gl("worsening_factors")
+        worsening_other = _g("worsening_other") if "inne" in worsening_factors else ""
+        improvement_factors = _gl("improvement_factors")
+        improvement_other = _g("improvement_other") if "inne" in improvement_factors else ""
+        health_timeline = _g("health_timeline")
+        current_meds = _g("current_meds")
+        lifestyle = _g("lifestyle")
+        lifestyle_other = _g("lifestyle_other") if lifestyle == "inne" else ""
+        stimulants = _gl("stimulants")
+        stimulants_other = _g("stimulants_other") if "inne" in stimulants else ""
+        sleep_hours = _g("sleep_hours")
+        travel_abroad = _g("travel_abroad")
+        travel_where = _g("travel_where") if travel_abroad == "tak" else ""
+        animal_contact = _g("animal_contact")
+        animal_contact_details = _g("animal_contact_details") if animal_contact == "tak" else ""
+        major_injuries = _g("major_injuries")
+        covid = _g("covid")
+        covid_details = _g("covid_details") if covid == "tak" else ""
+        strong_stress = _g("strong_stress")
+        birth_delivery = _g("birth_delivery")
+        birth_delivery_other = _g("birth_delivery_other") if birth_delivery == "inne" else ""
+        birth_timing = _g("birth_timing")
+        birth_timing_other = _g("birth_timing_other") if birth_timing == "inne" else ""
+        green_water = _g("green_water")
+        birth_info_other = _g("birth_info_other")
+        breastfeeding = _g("breastfeeding")
+        childhood_diseases = _gl("childhood_diseases")
+        childhood_diseases_other = _g("childhood_diseases_other") if "inne" in childhood_diseases else ""
+        fever_now = _g("fever_now")
+        fever_details = _g("fever_details") if fever_now == "tak" else ""
+        headache_dizziness = _g("headache_dizziness")
+        headache_dizziness_details = _g("headache_dizziness_details") if headache_dizziness == "tak" else ""
+        headache_assoc = _g("headache_assoc")
+        hearing_vision = _g("hearing_vision")
+        attacks = _g("attacks")
+        sinus_problems = _g("sinus_problems")
+        nose_problems = _g("nose_problems")
+        allergies = _g("allergies")
+        herpes = _g("herpes")
+        mouth_corners = _g("mouth_corners")
+        fresh_food_reaction = _g("fresh_food_reaction")
+        epilepsy = _g("epilepsy")
+        smell_taste = _g("smell_taste")
+        colds = _g("colds")
+        throat_morning = _g("throat_morning")
+        esophagus_burning = _g("esophagus_burning")
+        asthma_dx = _g("asthma_dx")
+        pneumonia = _g("pneumonia")
+        pneumonia_details = _g("pneumonia_details") if pneumonia == "tak" else ""
+        dyspnea = _g("dyspnea")
+        night_breath = _g("night_breath")
+        chest_heaviness = _g("chest_heaviness")
+        breathing_type = _g("breathing_type")
+        wheezing = _gl("wheezing")
+        cough = _g("cough")
+        chest_pain = _g("chest_pain")
+        pressure_type = _g("pressure_type")
+        current_bp = _g("current_bp")
+        current_hr = _g("current_hr")
+        pain_press = _g("pain_press")
+        pain_position = _g("pain_position")
+        palpitations = _g("palpitations")
+        gi_problem = _g("gi_problem")
+        gi_symptoms = _gl("gi_symptoms") if gi_problem == "tak" else []
+        worsening_foods = _g("worsening_foods")
+        gi_infections = _g("gi_infections")
+        urine_problems = _g("urine_problems")
+        night_urination = _g("night_urination")
+        fluids = _g("fluids")
+        joints = _g("joints")
+        stiffness = _g("stiffness")
+        skin_changes = _g("skin_changes")
+        skin_itch = _g("skin_itch")
+        acne = _g("acne")
+        acne_details = _g("acne_details") if acne == "tak" else ""
+        skin_sensation = _g("skin_sensation")
+        wound_healing = _g("wound_healing")
+        wound_healing_details = _g("wound_healing_details") if wound_healing == "tak" else ""
+        sleep_problem = _g("sleep_problem")
+        sleep_problem_types = _gl("sleep_problem_types") if sleep_problem == "tak" else []
+        psych_contact = _g("psych_contact")
+        psych_dx = _g("psych_dx")
+        edema = _g("edema")
+        edema_details = _g("edema_details") if edema == "tak" else ""
+        calf_pain = _g("calf_pain")
+        cold_fingers = _g("cold_fingers")
+        tingling = _g("tingling")
+        varicose = _g("varicose")
+        anal_problems = _gl("anal_problems")
+        anal_other = _g("anal_other") if "inne" in anal_problems else ""
+        gyn_problems = _g("gyn_problems") if sex in ("kobieta", "inne", "") else ""
+        menstruation = _g("menstruation") if sex == "kobieta" else ""
+        first_menses = _g("first_menses") if sex == "kobieta" else ""
+        last_menses_text = _g("last_menses_text") if sex == "kobieta" else ""
+        potency = _g("potency") if sex in ("mężczyzna", "inne", "") else ""
+        mother_history = _g("mother_history")
+        father_history = _g("father_history")
+        maternal_grandmother = _g("maternal_grandmother")
+        paternal_grandmother = _g("paternal_grandmother")
+        maternal_grandfather = _g("maternal_grandfather")
+        paternal_grandfather = _g("paternal_grandfather")
+        own_diagnoses = _g("own_diagnoses")
+        important_info = _g("important_info")
+        current_reason = _g("current_reason")
+        key_question = _g("key_question")
         last_menses = parse_polish_date(last_menses_text) if last_menses_text else None
 
         main_symptom_rows = []
         for _si in range(1, _scount + 1):
-            _sym = st.session_state.get(f"symptom_{_si}", "")
-            _sym_since = st.session_state.get(f"symptom_{_si}_since", "")
+            _sym = _g(f"symptom_{_si}")
+            _sym_since = _g(f"symptom_{_si}_since")
             if nonempty(_sym):
                 main_symptom_rows.append(f"{_si}. {_sym}" + (f" - od {_sym_since}" if nonempty(_sym_since) else ""))
 
