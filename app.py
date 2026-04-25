@@ -25,7 +25,7 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 st.set_page_config(
     page_title="Ocena stanu zdrowia – wywiad lekarski",
     layout="centered",
-    initial_sidebar_state="auto",
+    initial_sidebar_state="collapsed",
 )
 
 # =========================================================
@@ -1778,16 +1778,26 @@ if "symptom_count" not in st.session_state:
 # =========================================================
 # GÓRA APLIKACJI
 # =========================================================
-_, _lc_lang, _ = st.columns([1, 4, 1])
-with _lc_lang:
-    st.radio(
-        "",
-        ["pl", "en"],
-        key="lang",
-        horizontal=True,
-        format_func=lambda x: "🇵🇱 PL" if x == "pl" else "🇬🇧 EN",
-        label_visibility="collapsed",
-    )
+_lc_gap, _lc_pl, _lc_en = st.columns([8, 1, 1])
+_cur_lang = st.session_state.get("lang", "pl")
+with _lc_pl:
+    if st.button(
+        "🇵🇱 PL",
+        key="_btn_lang_pl",
+        type="primary" if _cur_lang == "pl" else "secondary",
+        use_container_width=True,
+    ):
+        st.session_state["lang"] = "pl"
+        st.rerun()
+with _lc_en:
+    if st.button(
+        "🇬🇧 EN",
+        key="_btn_lang_en",
+        type="primary" if _cur_lang == "en" else "secondary",
+        use_container_width=True,
+    ):
+        st.session_state["lang"] = "en"
+        st.rerun()
 
 if os.path.exists("logo.PNG"):
     st.image("logo.PNG", use_container_width=True)
@@ -1884,32 +1894,40 @@ st.markdown(
 st.progress(step / TOTAL_STEPS)
 
 # =========================================================
-# NAWIGACJA BOCZNA — szybki powrót do dowolnego poprzedniego kroku
+# NAWIGACJA — szybki powrót do dowolnego poprzedniego kroku
 # =========================================================
-if not st.session_state.get("form_success"):
-    _nav_title = "Nawigacja" if _lang == "pl" else "Navigation"
-    _nav_hint  = "Kliknij, by wrócić do poprzedniego kroku" if _lang == "pl" else "Click to return to a previous step"
-    with st.sidebar:
-        st.markdown(f"### {_nav_title}")
-        st.caption(_nav_hint)
+if not st.session_state.get("form_success") and step > 1:
+    _nav_exp_label = (
+        f"☰  Nawigacja — wróć do poprzedniego kroku"
+        if _lang == "pl"
+        else "☰  Navigation — return to a previous step"
+    )
+    with st.expander(_nav_exp_label, expanded=False):
+        _nav_cols = st.columns(3)
         for _i, _sname in enumerate(_step_names, 1):
-            if _i < step:
-                if st.button(f"{_i}. {_sname}", key=f"_nav_s{_i}", use_container_width=True):
-                    st.session_state["step"] = _i
-                    st.rerun()
-            elif _i == step:
-                st.markdown(
-                    f"<div style='padding:6px 12px;background:#1a3a5c;color:#c9a84c;"
-                    f"border-radius:6px;font-weight:700;margin-bottom:4px;'>"
-                    f"▶ {_i}. {_sname}</div>",
-                    unsafe_allow_html=True,
-                )
-            else:
-                st.markdown(
-                    f"<div style='padding:6px 12px;color:#8093a8;margin-bottom:4px;'>"
-                    f"{_i}. {_sname}</div>",
-                    unsafe_allow_html=True,
-                )
+            with _nav_cols[(_i - 1) % 3]:
+                if _i < step:
+                    if st.button(
+                        f"✓ {_i}. {_sname}",
+                        key=f"_nav_s{_i}",
+                        use_container_width=True,
+                    ):
+                        st.session_state["step"] = _i
+                        st.rerun()
+                elif _i == step:
+                    st.markdown(
+                        f"<div style='padding:5px 8px;background:#1a3a5c;color:#c9a84c;"
+                        f"border-radius:6px;font-size:0.82rem;font-weight:700;"
+                        f"text-align:center;margin-bottom:4px;'>"
+                        f"▶ {_i}. {_sname}</div>",
+                        unsafe_allow_html=True,
+                    )
+                else:
+                    st.markdown(
+                        f"<div style='padding:5px 8px;color:#b0b8c4;font-size:0.82rem;"
+                        f"margin-bottom:4px;'>○ {_i}. {_sname}</div>",
+                        unsafe_allow_html=True,
+                    )
 
 # =========================================================
 # KROKI
