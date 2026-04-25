@@ -1934,41 +1934,29 @@ if not st.session_state.get("form_success"):
         st.rerun()
 
     if _nav_is_open:
-        with st.container():
-            for _row in range(13):
-                _rcols = st.columns(2)
-                for _ci in range(2):
-                    _ni = _row * 2 + _ci + 1
-                    if _ni > 25:
-                        break
-                    _nsname = _step_names[_ni - 1]
-                    with _rcols[_ci]:
-                        if _ni < step:
-                            if st.button(
-                                f"✓  {_ni}. {_nsname}",
-                                key=f"_nav_s{_ni}",
-                                use_container_width=True,
-                                type="primary",
-                            ):
-                                st.session_state["step"] = _ni
-                                st.rerun()
-                        elif _ni == step:
-                            st.markdown(
-                                f"<div style='background:#c9a84c;color:#132743;"
-                                f"font-weight:700;border-radius:8px;padding:7px 12px;"
-                                f"font-size:0.88rem;margin-bottom:6px;"
-                                f"box-shadow:0 2px 8px rgba(201,168,76,0.3);'>"
-                                f"▶  {_ni}. {_nsname}</div>",
-                                unsafe_allow_html=True,
-                            )
-                        else:
-                            st.markdown(
-                                f"<div style='background:rgba(19,39,67,0.04);"
-                                f"color:#c5cdd6;border-radius:8px;padding:7px 12px;"
-                                f"font-size:0.88rem;margin-bottom:6px;'>"
-                                f"○  {_ni}. {_nsname}</div>",
-                                unsafe_allow_html=True,
-                            )
+        for _ni in range(1, step):
+            _nsname = _step_names[_ni - 1]
+            if st.button(
+                f"✓  {_ni}. {_nsname}",
+                key=f"_nav_s{_ni}",
+                use_container_width=True,
+                type="primary",
+            ):
+                st.session_state["step"] = _ni
+                st.rerun()
+        st.markdown(
+            f"<div style='background:#c9a84c;color:#132743;font-weight:700;"
+            f"border-radius:8px;padding:8px 14px;font-size:0.9rem;margin-bottom:4px;'>"
+            f"▶  {step}. {_step_names[step - 1]}</div>",
+            unsafe_allow_html=True,
+        )
+        if step < TOTAL_STEPS:
+            _remaining = TOTAL_STEPS - step
+            st.caption(
+                f"+ {_remaining} kolejnych kroków"
+                if _lang == "pl"
+                else f"+ {_remaining} more steps"
+            )
 
 # =========================================================
 # KROKI
