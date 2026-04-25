@@ -2581,6 +2581,16 @@ elif step == 23:
             st.text_input(t("last_menses_lbl"), key="last_menses_text", help=t("last_menses_help"))
         elif _sex23 == "mężczyzna":
             select_with_placeholder(t("potency_lbl"), ["nie", "czasami", "często"], key="potency")
+            st.text_area(
+                "Inne dolegliwości andrologiczne lub urogenitalne" if _lg == "pl" else "Other andrological or urogenital complaints",
+                key="gyn_problems",
+            )
+        else:
+            st.text_area(
+                "Dolegliwości ginekologiczne lub andrologiczne — opisz" if _lg == "pl" else "Gynecological or andrological complaints — describe",
+                key="gyn_problems",
+            )
+            select_with_placeholder(t("potency_lbl"), ["nie", "czasami", "często"], key="potency")
         st.markdown("---")
         if st.button("Dalej →" if _lg == "pl" else "Next →", key="s23_next", use_container_width=True):
             st.session_state["step"] += 1
