@@ -377,6 +377,51 @@ st.markdown(
         margin: 1.25rem 0 !important;
     }
 
+    /* ── NAVIGATION EXPANDER ── */
+    [data-testid="stExpander"] {
+        background: #ffffff !important;
+        border-radius: 14px !important;
+        border: 1.5px solid rgba(19, 39, 67, 0.1) !important;
+        box-shadow: 0 1px 6px rgba(19, 39, 67, 0.04) !important;
+        overflow: hidden !important;
+        margin-bottom: 12px !important;
+    }
+    [data-testid="stExpander"] summary {
+        background: #ffffff !important;
+        color: #132743 !important;
+        font-weight: 600 !important;
+        font-size: 0.9rem !important;
+        padding: 12px 16px !important;
+    }
+    [data-testid="stExpander"] summary:hover {
+        background: #f4f6fb !important;
+    }
+    [data-testid="stExpander"] summary p,
+    [data-testid="stExpander"] summary span {
+        color: #132743 !important;
+    }
+    [data-testid="stExpander"] > div[data-testid="stExpanderDetails"] {
+        background: #ffffff !important;
+        padding: 8px 12px 14px !important;
+    }
+
+    /* ── PRIMARY BUTTONS (nav kroków + aktywny język) ── */
+    [data-testid="stBaseButton-primary"] button {
+        background: linear-gradient(135deg, #1a3a5c 0%, #1d4a74 100%) !important;
+        color: #ffffff !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-weight: 700 !important;
+        font-size: 0.88rem !important;
+        box-shadow: 0 2px 8px rgba(26, 58, 92, 0.2) !important;
+        transition: all 0.18s ease !important;
+    }
+    [data-testid="stBaseButton-primary"] button:hover {
+        background: linear-gradient(135deg, #1d4a74 0%, #245d8f 100%) !important;
+        box-shadow: 0 4px 14px rgba(26, 58, 92, 0.3) !important;
+        transform: translateY(-1px) !important;
+    }
+
     /* ── ERROR BOX ── */
     .field-error-box {
         border: 1.5px solid #c0392b;
@@ -1898,36 +1943,48 @@ st.progress(step / TOTAL_STEPS)
 # =========================================================
 if not st.session_state.get("form_success"):
     _nav_exp_label = (
-        "☰  Nawigacja kroków"
+        "Nawigacja kroków"
         if _lang == "pl"
-        else "☰  Step navigation"
+        else "Step navigation"
     )
-    with st.expander(_nav_exp_label, expanded=True):
-        _nav_cols = st.columns(3)
-        for _i, _sname in enumerate(_step_names, 1):
-            with _nav_cols[(_i - 1) % 3]:
-                if _i < step:
-                    if st.button(
-                        f"✓ {_i}. {_sname}",
-                        key=f"_nav_s{_i}",
-                        use_container_width=True,
-                    ):
-                        st.session_state["step"] = _i
-                        st.rerun()
-                elif _i == step:
-                    st.markdown(
-                        f"<div style='padding:5px 8px;background:#1a3a5c;color:#c9a84c;"
-                        f"border-radius:6px;font-size:0.82rem;font-weight:700;"
-                        f"text-align:center;margin-bottom:4px;'>"
-                        f"▶ {_i}. {_sname}</div>",
-                        unsafe_allow_html=True,
-                    )
-                else:
-                    st.markdown(
-                        f"<div style='padding:5px 8px;color:#b0b8c4;font-size:0.82rem;"
-                        f"margin-bottom:4px;'>○ {_i}. {_sname}</div>",
-                        unsafe_allow_html=True,
-                    )
+    with st.expander(_nav_exp_label, expanded=False):
+        for _row in range(5):
+            _rcols = st.columns(5)
+            for _ci in range(5):
+                _ni = _row * 5 + _ci + 1
+                _nsname = _step_names[_ni - 1]
+                with _rcols[_ci]:
+                    if _ni < step:
+                        if st.button(
+                            str(_ni),
+                            key=f"_nav_s{_ni}",
+                            use_container_width=True,
+                            type="primary",
+                            help=_nsname,
+                        ):
+                            st.session_state["step"] = _ni
+                            st.rerun()
+                    elif _ni == step:
+                        st.markdown(
+                            f"<div style='text-align:center;background:#c9a84c;"
+                            f"color:#132743;font-weight:800;border-radius:8px;"
+                            f"padding:7px 0;font-size:0.9rem;margin-bottom:6px;"
+                            f"box-shadow:0 2px 8px rgba(201,168,76,0.3);'>{_ni}</div>",
+                            unsafe_allow_html=True,
+                        )
+                    else:
+                        st.markdown(
+                            f"<div style='text-align:center;background:rgba(19,39,67,0.05);"
+                            f"color:#c5cdd6;border-radius:8px;padding:7px 0;"
+                            f"font-size:0.9rem;margin-bottom:6px;'>{_ni}</div>",
+                            unsafe_allow_html=True,
+                        )
+        _nav_hint_txt = (
+            "Najedz na numer, by zobaczyć nazwę kroku. Kliknij, by tam wrócić."
+            if _lang == "pl"
+            else "Hover over a number to see the step name. Click to navigate back."
+        )
+        st.caption(_nav_hint_txt)
 
 # =========================================================
 # KROKI
