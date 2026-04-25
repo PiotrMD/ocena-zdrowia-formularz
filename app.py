@@ -23,129 +23,413 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 # KONFIGURACJA STRONY
 # =========================================================
 st.set_page_config(
-    page_title="Ocena stanu zdrowia - wywiad lekarski",
+    page_title="Ocena stanu zdrowia – wywiad lekarski",
     layout="centered",
     initial_sidebar_state="collapsed",
 )
 
 # =========================================================
-# CSS
+# CSS — Premium Design
 # =========================================================
 st.markdown(
     """
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap');
+
+    /* ── Ukryj chrome Streamlita ── */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header[data-testid="stHeader"] {display: none !important;}
 
+    /* ── Layout ── */
+    html, body, .stApp {
+        background-color: #f4f6fb !important;
+    }
     .main .block-container {
-        max-width: 980px;
-        padding-top: 0.15rem;
-        padding-bottom: 2rem;
+        max-width: 860px;
+        padding-top: 1.6rem;
+        padding-bottom: 3rem;
     }
 
+    /* ── Globalna czcionka ── */
+    html, body, [class*="css"], p, label, span, div,
+    input, textarea, select, button {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    }
+
+    /* ── HEADER CARD ── */
     .header-card {
-        padding: 20px 24px;
-        border-radius: 18px;
-        border: 1px solid rgba(120,120,120,0.22);
-        margin-bottom: 14px;
-        background: rgba(250,250,250,0.03);
+        background: linear-gradient(145deg, #132743 0%, #1a3a5c 60%, #1e4876 100%);
+        padding: 36px 44px 28px;
+        border-radius: 22px;
+        margin-bottom: 20px;
         text-align: center;
+        color: white;
+        box-shadow: 0 12px 40px rgba(19, 39, 67, 0.28), 0 2px 8px rgba(19, 39, 67, 0.12);
+        position: relative;
+        overflow: hidden;
     }
-
+    .header-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, transparent 5%, #c9a84c 30%, #e8c96b 50%, #c9a84c 70%, transparent 95%);
+    }
+    .header-card::after {
+        content: '';
+        position: absolute;
+        bottom: -40px; right: -40px;
+        width: 180px; height: 180px;
+        border-radius: 50%;
+        background: rgba(201, 168, 76, 0.06);
+        pointer-events: none;
+    }
     .header-title {
-        font-size: 2.1rem;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 2rem;
         font-weight: 800;
-        letter-spacing: 0.04em;
+        letter-spacing: 0.14em;
         margin: 0 0 4px 0;
+        color: #ffffff;
+        text-transform: uppercase;
     }
-
     .header-subtitle {
-        font-size: 1.15rem;
-        font-weight: 700;
-        margin: 0 0 12px 0;
+        font-size: 1rem;
+        font-weight: 400;
+        letter-spacing: 0.08em;
+        margin: 0 0 18px 0;
+        color: rgba(255,255,255,0.72);
+        text-transform: uppercase;
     }
-
     .header-divider {
         border: none;
-        border-top: 1px solid rgba(120,120,120,0.22);
-        margin: 10px 0;
+        border-top: 1px solid rgba(201, 168, 76, 0.35);
+        margin: 0 40px 14px;
     }
-
     .header-doctor {
-        font-size: 1rem;
-        margin: 8px 0 2px 0;
+        font-size: 1.05rem;
+        color: rgba(255,255,255,0.88);
+        font-weight: 500;
+        margin: 0 0 3px 0;
+        letter-spacing: 0.02em;
     }
-
     .header-site {
-        font-size: 1rem;
+        font-size: 0.95rem;
         font-weight: 700;
-        margin: 2px 0;
+        color: #c9a84c;
+        letter-spacing: 0.06em;
+        margin: 0 0 8px 0;
     }
-
     .header-contact {
-        font-size: 0.9rem;
-        opacity: 0.8;
-        margin: 4px 0 0 0;
+        font-size: 0.83rem;
+        color: rgba(255,255,255,0.52);
+        margin: 0;
+        letter-spacing: 0.01em;
     }
 
+    /* ── WELCOME CARD ── */
     .welcome-card {
-        padding: 20px 24px;
+        background: #ffffff;
+        padding: 28px 32px;
         border-radius: 18px;
-        border: 1px solid rgba(120,120,120,0.22);
-        margin-bottom: 16px;
-        background: rgba(250,250,250,0.03);
+        border: 1px solid rgba(19, 39, 67, 0.07);
+        margin-bottom: 20px;
+        box-shadow: 0 2px 14px rgba(19, 39, 67, 0.06);
+        line-height: 1.8;
+        color: #2c3e50;
+        font-size: 0.97rem;
+    }
+    .welcome-privacy {
+        margin-top: 18px;
+        padding-top: 16px;
+        border-top: 1px solid rgba(19, 39, 67, 0.07);
+        font-size: 0.83rem;
+        color: #8093a8;
         line-height: 1.65;
     }
 
-    .welcome-privacy {
-        margin-top: 14px;
-        padding-top: 14px;
-        border-top: 1px solid rgba(120,120,120,0.18);
-        font-size: 0.88rem;
-        opacity: 0.72;
-    }
-
+    /* ── PROGRESS BOX ── */
     .progress-box {
-        padding: 12px 14px;
+        background: #ffffff;
+        padding: 14px 20px 12px;
         border-radius: 14px;
-        border: 1px solid rgba(120,120,120,0.22);
-        margin-top: 6px;
-        margin-bottom: 16px;
-        background: rgba(250,250,250,0.02);
+        border: 1px solid rgba(19, 39, 67, 0.08);
+        margin-bottom: 10px;
+        box-shadow: 0 1px 6px rgba(19, 39, 67, 0.04);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .progress-label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #8093a8;
+    }
+    .progress-step-name {
+        font-size: 0.97rem;
+        font-weight: 700;
+        color: #132743;
+        margin-top: 1px;
+    }
+    .progress-pct {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #c9a84c;
+        letter-spacing: -0.02em;
+        line-height: 1;
     }
 
+    /* Streamlit progress bar override */
+    [data-testid="stProgress"] {
+        margin-top: 6px !important;
+        margin-bottom: 18px !important;
+    }
+    [data-testid="stProgress"] > div {
+        background-color: rgba(19, 39, 67, 0.07) !important;
+        border-radius: 99px !important;
+        height: 5px !important;
+    }
+    [data-testid="stProgress"] > div > div {
+        background: linear-gradient(90deg, #1a3a5c 0%, #c9a84c 100%) !important;
+        border-radius: 99px !important;
+        transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    /* ── FORM CARD (st.form wrapper) ── */
+    [data-testid="stForm"] {
+        background: #ffffff !important;
+        border-radius: 18px !important;
+        border: 1px solid rgba(19, 39, 67, 0.08) !important;
+        box-shadow: 0 2px 14px rgba(19, 39, 67, 0.05) !important;
+        padding: 4px 8px 8px !important;
+    }
+
+    /* ── SECTION SUBHEADERS ── */
+    h2[data-testid="stHeading"], h3[data-testid="stHeading"] {
+        color: #132743 !important;
+        font-weight: 700 !important;
+        font-size: 1.05rem !important;
+        letter-spacing: 0.01em !important;
+        padding-bottom: 10px !important;
+        border-bottom: 2px solid rgba(201, 168, 76, 0.3) !important;
+        margin-bottom: 16px !important;
+    }
+
+    /* ── INPUTS & TEXTAREAS ── */
+    [data-baseweb="input"] > div,
+    [data-baseweb="textarea"] > div {
+        border-radius: 10px !important;
+        border-color: rgba(19, 39, 67, 0.18) !important;
+        background: #fafbfd !important;
+        transition: border-color 0.2s, box-shadow 0.2s !important;
+    }
+    [data-baseweb="input"] > div:focus-within,
+    [data-baseweb="textarea"] > div:focus-within {
+        border-color: #1a3a5c !important;
+        box-shadow: 0 0 0 3px rgba(26, 58, 92, 0.1) !important;
+        background: #ffffff !important;
+    }
+    [data-baseweb="input"] input,
+    [data-baseweb="textarea"] textarea {
+        background: transparent !important;
+        color: #132743 !important;
+        font-weight: 400 !important;
+    }
+
+    /* ── SELECT / COMBOBOX ── */
+    [data-baseweb="select"] > div {
+        border-radius: 10px !important;
+        border-color: rgba(19, 39, 67, 0.18) !important;
+        background: #fafbfd !important;
+    }
+    [data-baseweb="select"] > div:focus-within {
+        border-color: #1a3a5c !important;
+        box-shadow: 0 0 0 3px rgba(26, 58, 92, 0.1) !important;
+    }
+
+    /* Multiselect tags */
+    [data-baseweb="tag"] {
+        background: rgba(26, 58, 92, 0.1) !important;
+        border-color: rgba(26, 58, 92, 0.2) !important;
+        border-radius: 6px !important;
+        color: #132743 !important;
+    }
+
+    /* ── SLIDER ── */
+    [data-testid="stSlider"] [role="slider"] {
+        background-color: #1a3a5c !important;
+        border: 3px solid #ffffff !important;
+        box-shadow: 0 0 0 2px #1a3a5c, 0 2px 6px rgba(26,58,92,0.3) !important;
+    }
+    [data-testid="stSlider"] [data-testid="stTickBar"] {
+        color: #8093a8 !important;
+    }
+    /* filled track */
+    [data-testid="stSlider"] > div > div > div:nth-child(2) {
+        background: linear-gradient(90deg, #1a3a5c, #2e6da4) !important;
+    }
+
+    /* ── BUTTONS ── */
+
+    /* Dalej → (form submit) */
+    [data-testid="stFormSubmitButton"] button {
+        background: linear-gradient(135deg, #1a3a5c 0%, #1d4a74 100%) !important;
+        color: #ffffff !important;
+        border: none !important;
+        border-radius: 12px !important;
+        font-weight: 700 !important;
+        font-size: 0.97rem !important;
+        height: 52px !important;
+        letter-spacing: 0.03em !important;
+        box-shadow: 0 4px 16px rgba(26, 58, 92, 0.28) !important;
+        transition: all 0.2s ease !important;
+    }
+    [data-testid="stFormSubmitButton"] button:hover {
+        background: linear-gradient(135deg, #1d4a74 0%, #245d8f 100%) !important;
+        box-shadow: 0 6px 22px rgba(26, 58, 92, 0.38) !important;
+        transform: translateY(-1px) !important;
+    }
+
+    /* Dalej/Wstecz (regular buttons outside form) */
+    [data-testid="stBaseButton-secondary"] button {
+        border-radius: 12px !important;
+        font-weight: 600 !important;
+        height: 48px !important;
+        border-color: rgba(19, 39, 67, 0.2) !important;
+        color: #132743 !important;
+        background: #ffffff !important;
+        transition: all 0.18s ease !important;
+    }
+    [data-testid="stBaseButton-secondary"] button:hover {
+        border-color: #1a3a5c !important;
+        background: rgba(26, 58, 92, 0.04) !important;
+    }
+
+    /* Wyślij button */
     .send-button > button {
         width: 100%;
-        height: 3.25rem;
-        font-size: 1.05rem;
-        font-weight: 700;
-        border-radius: 12px;
+        height: 3.5rem;
+        font-size: 1.05rem !important;
+        font-weight: 700 !important;
+        border-radius: 14px !important;
+        background: linear-gradient(135deg, #1a3a5c 0%, #c9a84c 100%) !important;
+        color: white !important;
+        border: none !important;
+        box-shadow: 0 6px 22px rgba(26, 58, 92, 0.3) !important;
+        letter-spacing: 0.04em !important;
+        transition: all 0.2s ease !important;
+    }
+    .send-button > button:hover {
+        box-shadow: 0 8px 28px rgba(26, 58, 92, 0.42) !important;
+        transform: translateY(-1px) !important;
     }
 
+    /* ── CHECKBOXES & RADIO ── */
+    [data-testid="stCheckbox"] label,
+    [data-testid="stRadio"] label {
+        font-weight: 500 !important;
+        color: #2c3e50 !important;
+    }
+    [data-baseweb="checkbox"] span:first-child {
+        border-radius: 5px !important;
+        border-color: rgba(19, 39, 67, 0.3) !important;
+    }
+
+    /* ── WIDGET LABELS ── */
+    [data-testid="stWidgetLabel"] p,
+    label[data-testid="stWidgetLabel"] {
+        font-weight: 600 !important;
+        font-size: 0.92rem !important;
+        color: #2c3e50 !important;
+        letter-spacing: 0.01em !important;
+    }
+
+    /* ── HR DIVIDER ── */
+    hr {
+        border: none !important;
+        border-top: 1px solid rgba(19, 39, 67, 0.08) !important;
+        margin: 1.25rem 0 !important;
+    }
+
+    /* ── ERROR BOX ── */
+    .field-error-box {
+        border: 1.5px solid #c0392b;
+        border-left: 4px solid #c0392b;
+        border-radius: 10px;
+        padding: 10px 14px;
+        color: #c0392b;
+        background: rgba(192, 57, 43, 0.05);
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-top: -0.1rem;
+        margin-bottom: 0.85rem;
+    }
     .field-anchor {
         position: relative;
         top: -95px;
         visibility: hidden;
     }
 
-    .field-error-box {
-        border: 2px solid #d93025;
-        border-radius: 10px;
-        padding: 10px 12px;
-        color: #d93025;
-        background: rgba(217, 48, 37, 0.06);
-        font-weight: 600;
-        margin-top: -0.15rem;
-        margin-bottom: 0.9rem;
+    /* ── VIDEO EMBED ── */
+    .video-wrapper {
+        position: relative;
+        padding-bottom: 56.25%;
+        height: 0;
+        overflow: hidden;
+        border-radius: 16px;
+        box-shadow: 0 8px 30px rgba(19, 39, 67, 0.18);
+        margin: 18px 0;
+    }
+    .video-wrapper iframe {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        border: 0;
     }
 
+    /* ── HELP TEXT ── */
+    [data-testid="stHelp"] {
+        color: #8093a8 !important;
+        font-size: 0.82rem !important;
+    }
+
+    /* ── SUCCESS PAGE ── */
+    .success-card {
+        background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+        border: 1.5px solid rgba(34, 139, 69, 0.3);
+        border-radius: 22px;
+        padding: 48px 40px;
+        text-align: center;
+        box-shadow: 0 8px 30px rgba(34, 139, 69, 0.1);
+        margin: 24px 0;
+    }
+    .success-icon {
+        font-size: 3.5rem;
+        margin-bottom: 16px;
+        display: block;
+    }
+    .success-title {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: #166534;
+        margin-bottom: 14px;
+    }
+    .success-body {
+        font-size: 1rem;
+        color: #374151;
+        line-height: 1.75;
+    }
+
+    /* ── RESPONSIVE — Mobile ── */
     @media (max-width: 768px) {
         .main .block-container {
-            padding-top: 0 !important;
-            padding-left: 0.6rem;
-            padding-right: 0.6rem;
-            padding-bottom: 3rem;
+            padding-top: 0.5rem !important;
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+            padding-bottom: 3.5rem;
         }
         section[data-testid="stMain"] > div:first-child {
             padding-top: 0 !important;
@@ -157,85 +441,37 @@ st.markdown(
             justify-content: center !important;
             width: 100% !important;
         }
-
-        .header-card {
-            padding: 14px 16px;
-            border-radius: 14px;
-            margin-bottom: 10px;
-        }
-
-        .header-title {
-            font-size: 1.45rem;
-        }
-
-        .header-subtitle {
-            font-size: 0.95rem;
-        }
-
-        .header-doctor, .header-site, .header-contact {
-            font-size: 0.85rem;
-        }
-
-        .welcome-card {
-            padding: 14px 16px;
-            font-size: 0.95rem;
-        }
-
-        .progress-box {
-            padding: 10px 12px;
-            font-size: 0.95rem;
-        }
-
-        /* Pola formularza — min 16px zapobiega zoom na iOS */
-        input[type="text"],
-        input[type="email"],
-        input[type="tel"],
-        input[type="number"],
-        textarea,
-        select,
+        .header-card { padding: 22px 20px 18px; border-radius: 16px; }
+        .header-title { font-size: 1.5rem; letter-spacing: 0.08em; }
+        .header-subtitle { font-size: 0.85rem; }
+        .header-divider { margin: 0 16px 10px; }
+        .header-doctor, .header-site { font-size: 0.9rem; }
+        .header-contact { font-size: 0.78rem; }
+        .welcome-card { padding: 18px 18px; font-size: 0.92rem; }
+        .progress-box { flex-direction: column; align-items: flex-start; gap: 4px; }
+        .progress-pct { font-size: 1.25rem; }
+        /* Anty-zoom iOS */
+        input[type="text"], input[type="email"], input[type="tel"],
+        input[type="number"], textarea, select,
         [data-baseweb="input"] input,
         [data-baseweb="textarea"] textarea,
         [data-baseweb="select"] input {
             font-size: 16px !important;
-            min-height: 48px;
+            min-height: 46px;
         }
-
-        /* Większe przyciski nawigacji */
         [data-testid="stFormSubmitButton"] button,
         .send-button > button {
             min-height: 52px !important;
-            font-size: 1.05rem !important;
-            font-weight: 700 !important;
-            border-radius: 12px !important;
-        }
-
-        /* Etykiety pól */
-        label, [data-testid="stWidgetLabel"] {
             font-size: 1rem !important;
         }
-
-        /* Suwaki — większy obszar dotyku */
-        [data-testid="stSlider"] {
-            padding-top: 8px;
-            padding-bottom: 8px;
+        [data-testid="stBaseButton-secondary"] button {
+            min-height: 48px !important;
         }
-
-        /* Checkboxy i radio — większy obszar */
+        label, [data-testid="stWidgetLabel"] { font-size: 0.95rem !important; }
+        [data-testid="stSlider"] { padding-top: 8px; padding-bottom: 8px; }
         [data-testid="stCheckbox"] label,
-        [data-testid="stRadio"] label {
-            font-size: 1rem !important;
-            padding: 6px 0;
-        }
-
-        /* Separator formularza */
-        hr {
-            margin: 1rem 0;
-        }
-
-        /* Subheadery */
-        h2, h3 {
-            font-size: 1.15rem !important;
-        }
+        [data-testid="stRadio"] label { font-size: 0.97rem !important; padding: 5px 0; }
+        h2[data-testid="stHeading"], h3[data-testid="stHeading"] { font-size: 1rem !important; }
     }
     </style>
     """,
@@ -916,9 +1152,11 @@ def _opt(x: str) -> str:
 # SECRETS / ENV
 # =========================================================
 def get_secret(name: str) -> str:
-    value = os.getenv(name)
+    value = st.secrets.get(name) if hasattr(st, "secrets") else None
     if not value:
-        st.error(f"Brakuje zmiennej środowiskowej: {name}")
+        value = os.getenv(name)
+    if not value:
+        st.error(f"Brakuje zmiennej środowiskowej lub wpisu w secrets.toml: {name}")
         st.stop()
     return value
 
@@ -1518,7 +1756,7 @@ st.markdown(
         <div class="header-title">{t("header_title")}</div>
         <div class="header-subtitle">{t("header_subtitle")}</div>
         <hr class="header-divider">
-        <div class="header-doctor">dr n. med. Piotr Niedziałkowski</div>
+        <div class="header-doctor">dr&nbsp;n.&nbsp;med.&nbsp;Piotr&nbsp;Niedziałkowski</div>
         <div class="header-site">www.ocenazdrowia.pl</div>
         <div class="header-contact">{t("header_contact")}</div>
     </div>
@@ -1532,25 +1770,24 @@ st.markdown(
 if st.session_state["form_success"]:
     _success_title = "Formularz wysłany pomyślnie!" if _lang == "pl" else "Form submitted successfully!"
     _success_body = (
-        "Dziękujemy za wypełnienie wywiadu lekarskiego.<br>Formularz został przesłany do lekarza.<br><br>"
-        "Na podany adres e-mail wysłaliśmy potwierdzenie z instrukcją jak przesłać wyniki badań.<br>"
-        "<small>Jeśli nie widzisz wiadomości, sprawdź folder <strong>Spam</strong>.</small>"
+        "Dziękujemy za wypełnienie wywiadu lekarskiego.<br>"
+        "Formularz został przesłany do lekarza.<br><br>"
+        "Na podany adres e-mail wysłaliśmy potwierdzenie<br>"
+        "z instrukcją jak przesłać wyniki badań.<br>"
+        "<small style='color:#6b7280;'>Jeśli nie widzisz wiadomości, sprawdź folder <strong>Spam</strong>.</small>"
         if _lang == "pl"
-        else "Thank you for completing the medical interview.<br>Your form has been sent to the doctor.<br><br>"
-        "We sent a confirmation email with instructions on how to submit your test results.<br>"
-        "<small>If you don't see the message, please check your <strong>Spam</strong> folder.</small>"
+        else "Thank you for completing the medical interview.<br>"
+        "Your form has been sent to the doctor.<br><br>"
+        "We sent a confirmation email with instructions<br>"
+        "on how to submit your test results.<br>"
+        "<small style='color:#6b7280;'>If you don't see the message, please check your <strong>Spam</strong> folder.</small>"
     )
     st.markdown(
         f"""
-        <div style="text-align:center;padding:40px 24px;border-radius:18px;
-        border:1px solid rgba(46,125,50,0.4);background:rgba(46,125,50,0.06);margin:20px 0;">
-            <div style="font-size:3rem;margin-bottom:16px;">✅</div>
-            <div style="font-size:1.5rem;font-weight:800;color:#2E7D32;margin-bottom:12px;">
-                {_success_title}
-            </div>
-            <div style="font-size:1rem;opacity:0.85;line-height:1.7;">
-                {_success_body}
-            </div>
+        <div class="success-card">
+            <span class="success-icon">✅</span>
+            <div class="success-title">{_success_title}</div>
+            <div class="success-body">{_success_body}</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1562,9 +1799,40 @@ if st.session_state["form_success"]:
 # =========================================================
 # PASEK POSTĘPU
 # =========================================================
-_step_label = f"Krok {step} z {TOTAL_STEPS}" if _lang == "pl" else f"Step {step} of {TOTAL_STEPS}"
+_STEP_NAMES_PL = [
+    "Dane osobowe", "Dane szczegółowe", "Wzrost i masa ciała",
+    "Badania diagnostyczne", "Objawy główne", "Charakter objawów",
+    "Chronologia i leki", "Tryb życia", "Podróże", "Kontakt ze zwierzętami",
+    "Urazy", "COVID-19", "Stres", "Urodzenie i dzieciństwo",
+    "Neurologia i objawy ogólne", "Układ oddechowy", "Serce i naczynia",
+    "Przewód pokarmowy", "Układ moczowy", "Stawy i mięśnie",
+    "Skóra", "Sen i psychika", "Krążenie obwodowe",
+    "Ginekologia / andrologia", "Wywiad rodzinny i podsumowanie",
+]
+_STEP_NAMES_EN = [
+    "Personal data", "Additional details", "Height & Weight",
+    "Diagnostics", "Main symptoms", "Symptom characteristics",
+    "Timeline & Medications", "Lifestyle", "Travel", "Animal contact",
+    "Injuries", "COVID-19", "Stress", "Birth & Childhood",
+    "Neurology", "Respiratory", "Cardiovascular",
+    "Digestive", "Urinary", "Joints & Muscles",
+    "Skin", "Sleep & Mental health", "Peripheral circulation",
+    "Gynecology / Andrology", "Family history & Summary",
+]
+_step_names = _STEP_NAMES_PL if _lang == "pl" else _STEP_NAMES_EN
+_current_step_name = _step_names[min(step - 1, len(_step_names) - 1)]
+_step_of = f"Krok {step} / {TOTAL_STEPS}" if _lang == "pl" else f"Step {step} / {TOTAL_STEPS}"
+_pct_val = int(round((step / TOTAL_STEPS) * 100))
 st.markdown(
-    f"<div class='progress-box'><b>{_step_label}</b></div>",
+    f"""
+    <div class="progress-box">
+        <div>
+            <div class="progress-label">{_step_of}</div>
+            <div class="progress-step-name">{_current_step_name}</div>
+        </div>
+        <div class="progress-pct">{_pct_val}%</div>
+    </div>
+    """,
     unsafe_allow_html=True,
 )
 st.progress(step / TOTAL_STEPS)
@@ -1584,10 +1852,9 @@ if step == 1:
         unsafe_allow_html=True,
     )
     st.markdown(
-        '<div style="margin:16px 0;position:relative;padding-bottom:56.25%;height:0;overflow:hidden;'
-        'border-radius:14px;box-shadow:0 6px 24px rgba(0,0,0,0.18);">'
-        '<iframe style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" '
-        'src="https://www.youtube.com/embed/qdwtGE9k4GY" allowfullscreen></iframe></div>',
+        '<div class="video-wrapper">'
+        '<iframe src="https://www.youtube.com/embed/qdwtGE9k4GY" allowfullscreen></iframe>'
+        '</div>',
         unsafe_allow_html=True,
     )
     for _fk in ["first_name", "phone", "email", "birth_date"]:

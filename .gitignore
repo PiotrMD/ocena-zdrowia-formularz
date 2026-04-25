@@ -72,6 +72,9 @@ typings/
 .env
 .env.test
 
+# Streamlit secrets (zawierają hasła — nie wrzucaj do git!)
+.streamlit/secrets.toml
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 
