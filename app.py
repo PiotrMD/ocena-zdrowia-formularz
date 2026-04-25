@@ -314,8 +314,8 @@ st.markdown(
         transform: translateY(-1px) !important;
     }
 
-    /* Dalej/Wstecz (regular buttons outside form) */
-    [data-testid="stBaseButton-secondary"] button {
+    /* Wstecz (secondary buttons) */
+    button[data-testid="stBaseButton-secondary"] {
         border-radius: 12px !important;
         font-weight: 600 !important;
         height: 48px !important;
@@ -324,7 +324,7 @@ st.markdown(
         background: #ffffff !important;
         transition: all 0.18s ease !important;
     }
-    [data-testid="stBaseButton-secondary"] button:hover {
+    button[data-testid="stBaseButton-secondary"]:hover {
         border-color: #1a3a5c !important;
         background: rgba(26, 58, 92, 0.04) !important;
     }
@@ -383,8 +383,9 @@ st.markdown(
         text-align: left !important;
     }
 
-    /* ── PRIMARY BUTTONS (nav kroków + aktywny język) ── */
-    [data-testid="stBaseButton-primary"] button {
+    /* ── PRIMARY BUTTONS (Dalej, nav kroków, aktywny język, Wyślij) ── */
+    button[data-testid="stBaseButton-primary"],
+    [data-testid="stFormSubmitButton"] button {
         background: linear-gradient(135deg, #1a3a5c 0%, #1d4a74 100%) !important;
         color: #ffffff !important;
         border: none !important;
@@ -394,7 +395,8 @@ st.markdown(
         box-shadow: 0 2px 8px rgba(26, 58, 92, 0.2) !important;
         transition: all 0.18s ease !important;
     }
-    [data-testid="stBaseButton-primary"] button:hover {
+    button[data-testid="stBaseButton-primary"]:hover,
+    [data-testid="stFormSubmitButton"] button:hover {
         background: linear-gradient(135deg, #1d4a74 0%, #245d8f 100%) !important;
         box-shadow: 0 4px 14px rgba(26, 58, 92, 0.3) !important;
         transform: translateY(-1px) !important;
@@ -506,11 +508,11 @@ st.markdown(
             min-height: 46px;
         }
         [data-testid="stFormSubmitButton"] button,
-        .send-button > button {
+        button[data-testid="stBaseButton-primary"] {
             min-height: 52px !important;
             font-size: 1rem !important;
         }
-        [data-testid="stBaseButton-secondary"] button {
+        button[data-testid="stBaseButton-secondary"] {
             min-height: 48px !important;
         }
         label, [data-testid="stWidgetLabel"] { font-size: 0.95rem !important; }
@@ -575,7 +577,7 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
     "pl": {
         "header_title": "OCENA STANU ZDROWIA",
         "header_subtitle": "Wywiad lekarski",
-        "header_contact": "W sprawie pytań proszę kontaktować się z recepcją: +48 690 584 584",
+        "header_contact": "Recepcja: +48 690 584 584 &nbsp;·&nbsp; English-speaking patients: +48 609 857 377",
         "welcome_text": (
             "Szanowni Państwo,<br><br>"
             "każda wizyta jest przygotowywana indywidualnie.<br>"
@@ -589,7 +591,7 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
             "Dane nie są przechowywane w bazie aplikacji. "
             "Po wysłaniu przekazywane są wyłącznie lekarzowi w formie wiadomości e-mail i dokumentu PDF."
         ),
-        "send_btn": "Wyślij",
+        "send_btn": "✉ Wyślij formularz do lekarza",
         "sending": "Wysyłanie formularza…",
         "form_sent": "Formularz został wysłany. Dziękujemy.",
         "consent_true": "Oświadczam, że podane informacje są prawdziwe.",
@@ -813,7 +815,7 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
     "en": {
         "header_title": "HEALTH ASSESSMENT",
         "header_subtitle": "Medical Interview",
-        "header_contact": "For questions, please contact reception: +48 690 584 584",
+        "header_contact": "Reception: +48 690 584 584 &nbsp;·&nbsp; English-speaking patients: +48 609 857 377",
         "welcome_text": (
             "Dear Patient,<br><br>"
             "each visit is prepared individually.<br>"
@@ -827,7 +829,7 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
             "Data is not stored in the application database. "
             "After submission, it is sent exclusively to the doctor via email and PDF document."
         ),
-        "send_btn": "Submit",
+        "send_btn": "✉ Submit form to the doctor",
         "sending": "Sending form…",
         "form_sent": "Form submitted successfully. Thank you.",
         "consent_true": "I declare that the information provided is true.",
@@ -2054,6 +2056,7 @@ elif step == 2:
         if _cst2 == "inne":
             st.text_input(t("current_status_other_lbl"), key="current_status_other")
         st.text_input(t("profession_lbl"), key="profession")
+        st.write("")
         st.markdown("---")
         if st.button("Dalej →" if _lg == "pl" else "Next →", key="s2_next", use_container_width=True, type="primary"):
             st.session_state["step"] += 1
@@ -2917,9 +2920,7 @@ elif step == 32:
     if st.button("← Wstecz" if _lang == "pl" else "← Back", key="s32_back", use_container_width=True):
         st.session_state["step"] -= 1
         st.rerun()
-    st.markdown('<div class="send-button">', unsafe_allow_html=True)
-    send_clicked = st.button(t("send_btn"), key="send_button", use_container_width=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+    send_clicked = st.button(t("send_btn"), key="send_button", use_container_width=True, type="primary")
 
     if send_clicked:
         _fd = st.session_state.get("_form_data", {})
