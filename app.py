@@ -2691,11 +2691,12 @@ elif step == 25:
 
     if send_clicked:
         _sex_s = st.session_state.get("sex", "")
-        first_name_clean = st.session_state.get("first_name", "").strip()
-        last_name_clean = st.session_state.get("last_name", "").strip()
-        phone_raw = st.session_state.get("phone", "")
-        email_raw = st.session_state.get("email", "")
-        birth_date = st.session_state.get("birth_date_input")
+        _fd = st.session_state.get("_form_data", {})
+        first_name_clean = (st.session_state.get("first_name") or _fd.get("first_name", "")).strip()
+        last_name_clean = (st.session_state.get("last_name") or _fd.get("last_name", "")).strip()
+        phone_raw = st.session_state.get("phone") or _fd.get("phone", "")
+        email_raw = st.session_state.get("email") or _fd.get("email", "")
+        birth_date = st.session_state.get("birth_date_input") or _fd.get("birth_date_input")
         validated_phone = validate_phone(phone_raw)
         validated_email = validate_email(email_raw) if email_raw else None
         consent_true_v = st.session_state.get("consent_true", False)
@@ -3033,8 +3034,6 @@ Zgoda na kontakt organizacyjny: {"tak" if contact_consent_v else "nie"}
                 pdf_path=pdf_path,
                 filename=pdf_filename,
             )
-            if validated_email:
-                send_confirmation_to_patient(validated_email, full_name, _lang)
             _status.empty()
             st.session_state.field_errors = {}
             st.session_state.scroll_target = None
@@ -3042,7 +3041,13 @@ Zgoda na kontakt organizacyjny: {"tak" if contact_consent_v else "nie"}
             _delete_draft(_sid)
             for _k in _FORM_KEYS:
                 st.session_state.pop(_k, None)
+            st.session_state["_form_data"] = {}
             st.session_state["step"] = 1
+            if validated_email:
+                try:
+                    send_confirmation_to_patient(validated_email, full_name, _lang)
+                except Exception as _mail_err:
+                    st.warning(f"Formularz wysłany, ale nie udało się wysłać potwierdzenia na e-mail pacjenta: {_mail_err}")
             st.rerun()
         except Exception as e:
             _status.empty()
