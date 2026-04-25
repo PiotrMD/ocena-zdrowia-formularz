@@ -2920,22 +2920,20 @@ elif step == 32:
     _s_fn = st.session_state.get("first_name", "").strip()
     _s_ln = st.session_state.get("last_name", "").strip()
     _s_ph = st.session_state.get("phone", "")
+    _s_em = st.session_state.get("email", "")
     _s_bd = st.session_state.get("birth_date_input")
-    _sum_rows = []
-    if _s_fn or _s_ln:
-        _sum_rows.append(("Pacjent" if _lang == "pl" else "Patient", f"{_s_fn} {_s_ln}".strip()))
-    if _s_ph:
-        _sum_rows.append(("Telefon" if _lang == "pl" else "Phone", _s_ph))
+    _s_age = None
     if _s_bd:
-        _sum_rows.append(("Data urodzenia" if _lang == "pl" else "Date of birth", _s_bd.strftime("%d.%m.%Y")))
-    _sc_disp = st.session_state.get("symptom_count", 1)
-    for _si in range(1, _sc_disp + 1):
-        _sv = st.session_state.get(f"symptom_{_si}", "")
-        if _sv:
-            _lbl = f"Objaw {_si}" if _lang == "pl" else f"Symptom {_si}"
-            _sum_rows.append((_lbl, _sv))
-    for _slbl, _sval in _sum_rows:
-        st.markdown(f"**{_slbl}:** {_sval}")
+        _today = date.today()
+        _s_age = _today.year - _s_bd.year - ((_today.month, _today.day) < (_s_bd.month, _s_bd.day))
+    if _s_fn or _s_ln:
+        st.markdown(f"**{'Pacjent' if _lang == 'pl' else 'Patient'}:** {f'{_s_fn} {_s_ln}'.strip()}")
+    if _s_ph:
+        st.markdown(f"**{'Telefon' if _lang == 'pl' else 'Phone'}:** {_s_ph}")
+    if _s_em:
+        st.markdown(f"**E-mail:** {_s_em}")
+    if _s_age is not None:
+        st.markdown(f"**{'Wiek' if _lang == 'pl' else 'Age'}:** {_s_age} {'lat' if _lang == 'pl' else 'years'}")
     st.markdown("---")
 
     if st.button("← Wstecz" if _lang == "pl" else "← Back", key="s32_back", use_container_width=True, type="primary"):
