@@ -1935,49 +1935,40 @@ if not st.session_state.get("form_success"):
 
     if _nav_is_open:
         with st.container():
-            st.markdown(
-                "<div style='background:#ffffff;border:1.5px solid rgba(19,39,67,0.1);"
-                "border-radius:0 0 14px 14px;padding:14px 12px 10px;margin-top:-4px;'>",
-                unsafe_allow_html=True,
-            )
-            for _row in range(5):
-                _rcols = st.columns(5)
-                for _ci in range(5):
-                    _ni = _row * 5 + _ci + 1
+            for _row in range(13):
+                _rcols = st.columns(2)
+                for _ci in range(2):
+                    _ni = _row * 2 + _ci + 1
+                    if _ni > 25:
+                        break
                     _nsname = _step_names[_ni - 1]
                     with _rcols[_ci]:
                         if _ni < step:
                             if st.button(
-                                str(_ni),
+                                f"✓  {_ni}. {_nsname}",
                                 key=f"_nav_s{_ni}",
                                 use_container_width=True,
                                 type="primary",
-                                help=_nsname,
                             ):
                                 st.session_state["step"] = _ni
                                 st.rerun()
                         elif _ni == step:
                             st.markdown(
-                                f"<div style='text-align:center;background:#c9a84c;"
-                                f"color:#132743;font-weight:800;border-radius:8px;"
-                                f"padding:7px 0;font-size:0.9rem;margin-bottom:6px;"
-                                f"box-shadow:0 2px 8px rgba(201,168,76,0.3);'>{_ni}</div>",
+                                f"<div style='background:#c9a84c;color:#132743;"
+                                f"font-weight:700;border-radius:8px;padding:7px 12px;"
+                                f"font-size:0.88rem;margin-bottom:6px;"
+                                f"box-shadow:0 2px 8px rgba(201,168,76,0.3);'>"
+                                f"▶  {_ni}. {_nsname}</div>",
                                 unsafe_allow_html=True,
                             )
                         else:
                             st.markdown(
-                                f"<div style='text-align:center;background:rgba(19,39,67,0.05);"
-                                f"color:#c5cdd6;border-radius:8px;padding:7px 0;"
-                                f"font-size:0.9rem;margin-bottom:6px;'>{_ni}</div>",
+                                f"<div style='background:rgba(19,39,67,0.04);"
+                                f"color:#c5cdd6;border-radius:8px;padding:7px 12px;"
+                                f"font-size:0.88rem;margin-bottom:6px;'>"
+                                f"○  {_ni}. {_nsname}</div>",
                                 unsafe_allow_html=True,
                             )
-            _nav_hint_txt = (
-                "Najedz na numer aby zobaczyc nazwe kroku. Kliknij aby tam wrocic."
-                if _lang == "pl"
-                else "Hover a number to see the step name. Click to navigate back."
-            )
-            st.caption(_nav_hint_txt)
-            st.markdown("</div>", unsafe_allow_html=True)
 
 # =========================================================
 # KROKI
