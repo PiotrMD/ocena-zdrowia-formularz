@@ -2057,7 +2057,6 @@ if step == 1:
 # =========================================================
 elif step == 2:
     _has_form_nav = True
-    @st.fragment
     def _step2():
         _lg = st.session_state.get("lang", "pl")
         _h2 = "Dane podstawowe — część dalsza" if _lg == "pl" else "Basic Information — continued"
@@ -2089,7 +2088,6 @@ elif step == 2:
 # =========================================================
 elif step == 3:
     _has_form_nav = True
-    @st.fragment
     def _step3():
         _lg = st.session_state.get("lang", "pl")
         _bmi_title = "Wzrost, masa ciała i BMI" if _lg == "pl" else "Height, Weight and BMI"
@@ -2151,7 +2149,6 @@ elif step == 3:
 # =========================================================
 elif step == 4:
     _has_form_nav = True
-    @st.fragment
     def _step4():
         _lg = st.session_state.get("lang", "pl")
         st.subheader(t("sec_4"))
@@ -2182,7 +2179,6 @@ elif step == 4:
 # =========================================================
 elif step == 5:
     _has_form_nav = True
-    @st.fragment
     def _step5():
         _lg = st.session_state.get("lang", "pl")
         st.subheader(t("sec_5"))
@@ -2261,7 +2257,6 @@ elif step == 6:
 # =========================================================
 elif step == 7:
     _has_form_nav = True
-    @st.fragment
     def _step7():
         _lg = st.session_state.get("lang", "pl")
         st.subheader(t("sec_13"))
@@ -2311,7 +2306,6 @@ elif step == 7:
 # =========================================================
 elif step == 8:
     _has_form_nav = True
-    @st.fragment
     def _step8():
         _lg = st.session_state.get("lang", "pl")
         st.subheader(t("sec_7"))
@@ -2808,7 +2802,6 @@ elif step == 27:
 # =========================================================
 elif step == 28:
     _has_form_nav = True
-    @st.fragment
     def _step28():
         _lg = st.session_state.get("lang", "pl")
         st.subheader(t("sec_24"))
