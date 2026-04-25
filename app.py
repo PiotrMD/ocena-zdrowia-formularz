@@ -25,7 +25,7 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 st.set_page_config(
     page_title="Ocena stanu zdrowia – wywiad lekarski",
     layout="centered",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="auto",
 )
 
 # =========================================================
@@ -1859,6 +1859,34 @@ st.markdown(
     unsafe_allow_html=True,
 )
 st.progress(step / TOTAL_STEPS)
+
+# =========================================================
+# NAWIGACJA BOCZNA — szybki powrót do dowolnego poprzedniego kroku
+# =========================================================
+if not st.session_state.get("form_success"):
+    _nav_title = "Nawigacja" if _lang == "pl" else "Navigation"
+    _nav_hint  = "Kliknij, by wrócić do poprzedniego kroku" if _lang == "pl" else "Click to return to a previous step"
+    with st.sidebar:
+        st.markdown(f"### {_nav_title}")
+        st.caption(_nav_hint)
+        for _i, _sname in enumerate(_step_names, 1):
+            if _i < step:
+                if st.button(f"{_i}. {_sname}", key=f"_nav_s{_i}", use_container_width=True):
+                    st.session_state["step"] = _i
+                    st.rerun()
+            elif _i == step:
+                st.markdown(
+                    f"<div style='padding:6px 12px;background:#1a3a5c;color:#c9a84c;"
+                    f"border-radius:6px;font-weight:700;margin-bottom:4px;'>"
+                    f"▶ {_i}. {_sname}</div>",
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.markdown(
+                    f"<div style='padding:6px 12px;color:#8093a8;margin-bottom:4px;'>"
+                    f"{_i}. {_sname}</div>",
+                    unsafe_allow_html=True,
+                )
 
 # =========================================================
 # KROKI
