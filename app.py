@@ -261,8 +261,7 @@ st.markdown(
     }
 
     /* ── SELECT / COMBOBOX ── */
-    [data-baseweb="select"] > div,
-    [data-baseweb="select"] {
+    [data-baseweb="select"] > div {
         border-radius: 10px !important;
         border: 1.5px solid rgba(19, 39, 67, 0.14) !important;
         background: #f7f9fc !important;
@@ -270,13 +269,11 @@ st.markdown(
         min-height: 46px !important;
         transition: border-color 0.2s, box-shadow 0.2s !important;
     }
-    [data-baseweb="select"] > div:hover,
-    [data-baseweb="select"]:hover {
+    [data-baseweb="select"] > div:hover {
         border-color: rgba(19, 39, 67, 0.32) !important;
         background: #f0f4fa !important;
     }
-    [data-baseweb="select"] > div:focus-within,
-    [data-baseweb="select"]:focus-within {
+    [data-baseweb="select"] > div:focus-within {
         border-color: #1a3a5c !important;
         box-shadow: 0 0 0 3px rgba(26, 58, 92, 0.12) !important;
         background: #ffffff !important;
