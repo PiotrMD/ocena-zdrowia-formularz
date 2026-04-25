@@ -2124,9 +2124,10 @@ elif step == 3:
         st.subheader(t("sec_2"))
         st.slider(t("physical_score_lbl"), min_value=0, max_value=10, value=5, key="physical_score")
         st.slider(t("mental_score_lbl"), min_value=0, max_value=10, value=5, key="mental_score")
-        _wch3 = select_with_placeholder(
+        select_with_placeholder(
             t("weight_change_lbl"), ["wzrosła", "spadła", "bez zmian"], key="weight_change"
         )
+        _wch3 = st.session_state.get("weight_change", "")
         if _wch3 in ["wzrosła", "spadła"]:
             _wc_lbl = t("weight_change_grew_lbl") if _wch3 == "wzrosła" else t("weight_change_fell_lbl")
             st.number_input(
