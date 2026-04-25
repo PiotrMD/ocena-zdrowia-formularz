@@ -1722,6 +1722,25 @@ if "lang" not in st.session_state:
 if "step" not in st.session_state:
     st.session_state["step"] = 1
 
+# ── Trwały magazyn wartości formularza ──────────────────────
+# Streamlit czyści widget-keys gdy widget przestaje być renderowany
+# (np. przy zmianie kroku). _form_data to zwykły dict w session_state
+# — nie jest traktowany jako widget, więc nigdy nie jest czyszczony.
+# Dzięki temu cofnięcie do poprzedniego kroku przywraca wpisane dane.
+if "_form_data" not in st.session_state:
+    st.session_state["_form_data"] = {}
+
+# Zapisz aktualne wartości widgetów do trwałego magazynu
+for _fk in _FORM_KEYS:
+    _fv = st.session_state.get(_fk)
+    if _fv is not None:
+        st.session_state["_form_data"][_fk] = _fv
+
+# Przywróć wartości które Streamlit wyczyścił (widget był niewidoczny)
+for _fk in _FORM_KEYS:
+    if _fk not in st.session_state and _fk in st.session_state["_form_data"]:
+        st.session_state[_fk] = st.session_state["_form_data"][_fk]
+
 TOTAL_STEPS = 25
 step = st.session_state["step"]
 field_errors: Dict[str, str] = st.session_state.field_errors
