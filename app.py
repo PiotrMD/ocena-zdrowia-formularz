@@ -219,25 +219,31 @@ st.markdown(
     }
 
     /* ── INPUTS & TEXTAREAS ── */
+    [data-baseweb="input"],
     [data-baseweb="input"] > div,
+    [data-baseweb="textarea"],
     [data-baseweb="textarea"] > div {
-        border-radius: 12px !important;
-        border: 1.5px solid rgba(19, 39, 67, 0.13) !important;
-        background: #ffffff !important;
-        box-shadow: 0 1px 4px rgba(19, 39, 67, 0.05), inset 0 1px 2px rgba(0,0,0,0.02) !important;
-        transition: border-color 0.22s, box-shadow 0.22s, background 0.22s !important;
-        min-height: 52px !important;
+        border-radius: 10px !important;
+        border: 1.5px solid rgba(19, 39, 67, 0.14) !important;
+        background: #f7f9fc !important;
+        box-shadow: none !important;
+        transition: border-color 0.2s, box-shadow 0.2s, background 0.2s !important;
+        min-height: 46px !important;
     }
+    [data-baseweb="input"]:hover,
     [data-baseweb="input"] > div:hover,
+    [data-baseweb="textarea"]:hover,
     [data-baseweb="textarea"] > div:hover {
-        border-color: rgba(19, 39, 67, 0.28) !important;
-        box-shadow: 0 2px 8px rgba(19, 39, 67, 0.08), inset 0 1px 2px rgba(0,0,0,0.02) !important;
+        border-color: rgba(19, 39, 67, 0.32) !important;
+        background: #f0f4fa !important;
     }
+    [data-baseweb="input"]:focus-within,
     [data-baseweb="input"] > div:focus-within,
+    [data-baseweb="textarea"]:focus-within,
     [data-baseweb="textarea"] > div:focus-within {
-        border-color: #c9a84c !important;
-        box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.15), 0 2px 8px rgba(19, 39, 67, 0.08) !important;
-        background: #fffef9 !important;
+        border-color: #1a3a5c !important;
+        box-shadow: 0 0 0 3px rgba(26, 58, 92, 0.12) !important;
+        background: #ffffff !important;
     }
     [data-baseweb="input"] input,
     [data-baseweb="textarea"] textarea {
@@ -245,30 +251,35 @@ st.markdown(
         color: #132743 !important;
         font-weight: 400 !important;
         font-size: 0.97rem !important;
-        padding: 4px 4px !important;
+        padding: 4px 8px !important;
     }
     [data-baseweb="input"] input::placeholder,
     [data-baseweb="textarea"] textarea::placeholder {
-        color: #b0b8c4 !important;
+        color: #a8b4c2 !important;
         font-weight: 300 !important;
+        font-style: italic !important;
     }
 
     /* ── SELECT / COMBOBOX ── */
-    [data-baseweb="select"] > div {
-        border-radius: 12px !important;
-        border: 1.5px solid rgba(19, 39, 67, 0.13) !important;
+    [data-baseweb="select"] > div,
+    [data-baseweb="select"] {
+        border-radius: 10px !important;
+        border: 1.5px solid rgba(19, 39, 67, 0.14) !important;
+        background: #f7f9fc !important;
+        box-shadow: none !important;
+        min-height: 46px !important;
+        transition: border-color 0.2s, box-shadow 0.2s !important;
+    }
+    [data-baseweb="select"] > div:hover,
+    [data-baseweb="select"]:hover {
+        border-color: rgba(19, 39, 67, 0.32) !important;
+        background: #f0f4fa !important;
+    }
+    [data-baseweb="select"] > div:focus-within,
+    [data-baseweb="select"]:focus-within {
+        border-color: #1a3a5c !important;
+        box-shadow: 0 0 0 3px rgba(26, 58, 92, 0.12) !important;
         background: #ffffff !important;
-        box-shadow: 0 1px 4px rgba(19, 39, 67, 0.05), inset 0 1px 2px rgba(0,0,0,0.02) !important;
-        min-height: 52px !important;
-        transition: border-color 0.22s, box-shadow 0.22s !important;
-    }
-    [data-baseweb="select"] > div:hover {
-        border-color: rgba(19, 39, 67, 0.28) !important;
-    }
-    [data-baseweb="select"] > div:focus-within {
-        border-color: #c9a84c !important;
-        box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.15), 0 2px 8px rgba(19, 39, 67, 0.08) !important;
-        background: #fffef9 !important;
     }
 
     /* Multiselect tags */
@@ -536,7 +547,24 @@ components.html(
             var txt = (btn.textContent || '').trim();
             return NAV_WORDS.some(function (w) { return txt.indexOf(w) !== -1; });
         }
+        function styleLangBtns() {
+            try {
+                window.parent.document.querySelectorAll('button').forEach(function (btn) {
+                    var txt = (btn.textContent || '').trim();
+                    if (txt === 'PL' || txt === 'EN') {
+                        btn.style.setProperty('border-radius', '18px', 'important');
+                        btn.style.setProperty('min-height', '32px', 'important');
+                        btn.style.setProperty('height', '32px', 'important');
+                        btn.style.setProperty('padding', '0 18px', 'important');
+                        btn.style.setProperty('font-size', '0.78rem', 'important');
+                        btn.style.setProperty('letter-spacing', '0.1em', 'important');
+                        btn.style.setProperty('font-weight', '700', 'important');
+                    }
+                });
+            } catch (e) {}
+        }
         function attach() {
+            styleLangBtns();
             try {
                 window.parent.document.querySelectorAll('button').forEach(function (btn) {
                     if (btn._navBusy) return;
@@ -1805,24 +1833,18 @@ if "symptom_count" not in st.session_state:
 # =========================================================
 # GÓRA APLIKACJI
 # =========================================================
-_lc_gap, _lc_pl, _lc_en = st.columns([8, 1, 1])
 _cur_lang = st.session_state.get("lang", "pl")
+_lc_gap, _lc_pl, _lc_en = st.columns([8, 1, 1])
 with _lc_pl:
-    if st.button(
-        "🇵🇱 PL",
-        key="_btn_lang_pl",
-        type="primary" if _cur_lang == "pl" else "secondary",
-        use_container_width=True,
-    ):
+    if st.button("PL", key="_btn_lang_pl",
+                 type="primary" if _cur_lang == "pl" else "secondary",
+                 use_container_width=True):
         st.session_state["lang"] = "pl"
         st.rerun()
 with _lc_en:
-    if st.button(
-        "🇬🇧 EN",
-        key="_btn_lang_en",
-        type="primary" if _cur_lang == "en" else "secondary",
-        use_container_width=True,
-    ):
+    if st.button("EN", key="_btn_lang_en",
+                 type="primary" if _cur_lang == "en" else "secondary",
+                 use_container_width=True):
         st.session_state["lang"] = "en"
         st.rerun()
 
@@ -1935,27 +1957,27 @@ def _nav_toggle_cb():
 def _nav_go_cb(target_step: int):
     st.session_state["step"] = target_step
     st.session_state["_nav_open"] = False
+    st.session_state["_nav_needs_rerun"] = True
 
-if not st.session_state.get("form_success"):
-    _nav_is_open = st.session_state["_nav_open"]
-    _nav_label = (
-        ("Zwiń nawigację" if _nav_is_open else "Rozwiń nawigację")
-        if _lang == "pl"
-        else ("Close navigation" if _nav_is_open else "Open navigation")
-    )
-    st.button(
-        _nav_label,
-        key="_nav_toggle",
-        on_click=_nav_toggle_cb,
-        use_container_width=True,
-    )
+@st.fragment
+def _render_nav():
+    _lg = st.session_state.get("lang", "pl")
+    _stp = st.session_state.get("step", 1)
+    _snames = _STEP_NAMES_PL if _lg == "pl" else _STEP_NAMES_EN
+    _is_open = st.session_state.get("_nav_open", False)
 
-    if _nav_is_open:
-        if step > 1:
-            for _ni in range(1, step):
-                _nsname = _step_names[_ni - 1]
+    _lbl = (
+        ("Zwiń nawigację ▲" if _is_open else "Rozwiń nawigację ▼")
+        if _lg == "pl"
+        else ("Close navigation ▲" if _is_open else "Open navigation ▼")
+    )
+    st.button(_lbl, key="_nav_toggle", on_click=_nav_toggle_cb, use_container_width=True)
+
+    if _is_open:
+        if _stp > 1:
+            for _ni in range(1, _stp):
                 st.button(
-                    f"✓  {_ni}. {_nsname}",
+                    f"✓  {_ni}. {_snames[_ni - 1]}",
                     key=f"_nav_s{_ni}",
                     on_click=_nav_go_cb,
                     args=(_ni,),
@@ -1965,16 +1987,21 @@ if not st.session_state.get("form_success"):
         st.markdown(
             f"<div style='background:#c9a84c;color:#132743;font-weight:700;"
             f"border-radius:8px;padding:8px 14px;font-size:0.9rem;margin-bottom:4px;'>"
-            f"▶  {step}. {_step_names[step - 1]}</div>",
+            f"▶  {_stp}. {_snames[_stp - 1]}</div>",
             unsafe_allow_html=True,
         )
-        if step < TOTAL_STEPS:
-            _remaining = TOTAL_STEPS - step
+        if _stp < TOTAL_STEPS:
+            _rem = TOTAL_STEPS - _stp
             st.caption(
-                f"+ {_remaining} kolejnych kroków"
-                if _lang == "pl"
-                else f"+ {_remaining} more steps"
+                f"+ {_rem} kolejnych kroków" if _lg == "pl" else f"+ {_rem} more steps"
             )
+
+    if st.session_state.get("_nav_needs_rerun"):
+        del st.session_state["_nav_needs_rerun"]
+        st.rerun()
+
+if not st.session_state.get("form_success"):
+    _render_nav()
 
 # =========================================================
 # KROKI
