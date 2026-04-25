@@ -1152,7 +1152,11 @@ def _opt(x: str) -> str:
 # SECRETS / ENV
 # =========================================================
 def get_secret(name: str) -> str:
-    value = st.secrets.get(name) if hasattr(st, "secrets") else None
+    value = None
+    try:
+        value = st.secrets.get(name) if hasattr(st, "secrets") else None
+    except Exception:
+        pass
     if not value:
         value = os.getenv(name)
     if not value:
