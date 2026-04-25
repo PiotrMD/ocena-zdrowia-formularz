@@ -10,14 +10,6 @@ from typing import Any, Dict, List, Optional
 
 import streamlit as st
 import streamlit.components.v1 as components
-from reportlab.lib.enums import TA_CENTER, TA_LEFT
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-from reportlab.lib.units import mm
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.pdfgen import canvas
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
 # =========================================================
 # KONFIGURACJA STRONY
@@ -34,8 +26,6 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap');
-
     /* ── Ukryj chrome Streamlita ── */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
@@ -54,7 +44,7 @@ st.markdown(
     /* ── Globalna czcionka ── */
     html, body, [class*="css"], p, label, span, div,
     input, textarea, select, button {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif !important;
     }
 
     /* ── HEADER CARD ── */
@@ -86,7 +76,7 @@ st.markdown(
         pointer-events: none;
     }
     .header-title {
-        font-family: 'Inter', sans-serif !important;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif !important;
         font-size: 2rem;
         font-weight: 800;
         letter-spacing: 0.14em;
@@ -570,12 +560,11 @@ components.html(
                     btn.addEventListener('click', function () {
                         var el = this;
                         var txt = (el.textContent || '').trim();
-                        el.style.opacity = '0.55';
+                        el.style.opacity = '0.6';
+                        el.style.pointerEvents = 'none';
                         if (txt.indexOf('Wyślij') !== -1 || txt.indexOf('Submit') !== -1) {
                             el.innerHTML = '&#9203; Wysyłanie…';
                             setTimeout(function() { el.disabled = true; }, 300);
-                        } else {
-                            el.innerHTML = '&#9203; Ładowanie…';
                         }
                     });
                 });
@@ -1406,64 +1395,66 @@ def scroll_to_anchor(anchor_id: str):
     )
 
 
-def register_fonts():
-    regular_font = "Helvetica"
-    bold_font = "Helvetica-Bold"
-
-    if os.path.exists("DejaVuSans.ttf"):
-        pdfmetrics.registerFont(TTFont("DejaVuSans", "DejaVuSans.ttf"))
-        regular_font = "DejaVuSans"
-
-    if os.path.exists("DejaVuSans-Bold.ttf"):
-        pdfmetrics.registerFont(TTFont("DejaVuSans-Bold", "DejaVuSans-Bold.ttf"))
-        bold_font = "DejaVuSans-Bold"
-    elif regular_font == "DejaVuSans":
-        bold_font = "DejaVuSans"
-
-    return regular_font, bold_font
-
-
-class NumberedCanvas(canvas.Canvas):
-    def __init__(self, *args, **kwargs):
-        self._font_name = kwargs.pop("font_name", "Helvetica")
-        super().__init__(*args, **kwargs)
-        self._saved_page_states = []
-
-    def showPage(self):
-        self._saved_page_states.append(dict(self.__dict__))
-        self._startPage()
-
-    def save(self):
-        page_count = len(self._saved_page_states) + 1
-        for state in self._saved_page_states:
-            self.__dict__.update(state)
-            self.draw_page_number(page_count)
-            super().showPage()
-        self.draw_page_number(page_count)
-        super().save()
-
-    def draw_page_number(self, page_count: int):
-        self.setFont(self._font_name, 9)
-        self.drawCentredString(A4[0] / 2, 10 * mm, f"Strona {self._pageNumber} / {page_count}")
-
-
-def add_pdf_section(story, title: str, rows: List[str], styles_dict):
-    clean_rows = [r for r in rows if nonempty(r)]
-    story.append(Paragraph(title, styles_dict["section"]))
-    story.append(Spacer(1, 2.2 * mm))
-
-    if clean_rows:
-        for row in clean_rows:
-            story.append(Paragraph(row.replace("\n", "<br/>"), styles_dict["body"]))
-            story.append(Spacer(1, 1.2 * mm))
-    else:
-        story.append(Paragraph("Brak danych.", styles_dict["body"]))
-        story.append(Spacer(1, 1.2 * mm))
-
-    story.append(Spacer(1, 2.5 * mm))
-
-
 def make_pdf(data: Dict[str, Any]) -> str:
+    # Lazy import — reportlab ładuje się tylko przy wysyłaniu formularza
+    from reportlab.lib.enums import TA_CENTER, TA_LEFT
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+    from reportlab.lib.units import mm
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    from reportlab.pdfgen import canvas
+    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
+
+    def register_fonts():
+        regular_font = "Helvetica"
+        bold_font = "Helvetica-Bold"
+        if os.path.exists("DejaVuSans.ttf"):
+            pdfmetrics.registerFont(TTFont("DejaVuSans", "DejaVuSans.ttf"))
+            regular_font = "DejaVuSans"
+        if os.path.exists("DejaVuSans-Bold.ttf"):
+            pdfmetrics.registerFont(TTFont("DejaVuSans-Bold", "DejaVuSans-Bold.ttf"))
+            bold_font = "DejaVuSans-Bold"
+        elif regular_font == "DejaVuSans":
+            bold_font = "DejaVuSans"
+        return regular_font, bold_font
+
+    class NumberedCanvas(canvas.Canvas):
+        def __init__(self, *args, **kwargs):
+            self._font_name = kwargs.pop("font_name", "Helvetica")
+            super().__init__(*args, **kwargs)
+            self._saved_page_states = []
+
+        def showPage(self):
+            self._saved_page_states.append(dict(self.__dict__))
+            self._startPage()
+
+        def save(self):
+            page_count = len(self._saved_page_states) + 1
+            for state in self._saved_page_states:
+                self.__dict__.update(state)
+                self.draw_page_number(page_count)
+                super().showPage()
+            self.draw_page_number(page_count)
+            super().save()
+
+        def draw_page_number(self, page_count: int):
+            self.setFont(self._font_name, 9)
+            self.drawCentredString(A4[0] / 2, 10 * mm, f"Strona {self._pageNumber} / {page_count}")
+
+    def add_pdf_section(story, title: str, rows: List[str], styles_dict):
+        clean_rows = [r for r in rows if nonempty(r)]
+        story.append(Paragraph(title, styles_dict["section"]))
+        story.append(Spacer(1, 2.2 * mm))
+        if clean_rows:
+            for row in clean_rows:
+                story.append(Paragraph(row.replace("\n", "<br/>"), styles_dict["body"]))
+                story.append(Spacer(1, 1.2 * mm))
+        else:
+            story.append(Paragraph("Brak danych.", styles_dict["body"]))
+            story.append(Spacer(1, 1.2 * mm))
+        story.append(Spacer(1, 2.5 * mm))
+
     regular_font, bold_font = register_fonts()
 
     tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
