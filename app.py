@@ -221,33 +221,54 @@ st.markdown(
     /* ── INPUTS & TEXTAREAS ── */
     [data-baseweb="input"] > div,
     [data-baseweb="textarea"] > div {
-        border-radius: 10px !important;
-        border-color: rgba(19, 39, 67, 0.18) !important;
-        background: #fafbfd !important;
-        transition: border-color 0.2s, box-shadow 0.2s !important;
+        border-radius: 12px !important;
+        border: 1.5px solid rgba(19, 39, 67, 0.13) !important;
+        background: #ffffff !important;
+        box-shadow: 0 1px 4px rgba(19, 39, 67, 0.05), inset 0 1px 2px rgba(0,0,0,0.02) !important;
+        transition: border-color 0.22s, box-shadow 0.22s, background 0.22s !important;
+        min-height: 52px !important;
+    }
+    [data-baseweb="input"] > div:hover,
+    [data-baseweb="textarea"] > div:hover {
+        border-color: rgba(19, 39, 67, 0.28) !important;
+        box-shadow: 0 2px 8px rgba(19, 39, 67, 0.08), inset 0 1px 2px rgba(0,0,0,0.02) !important;
     }
     [data-baseweb="input"] > div:focus-within,
     [data-baseweb="textarea"] > div:focus-within {
-        border-color: #1a3a5c !important;
-        box-shadow: 0 0 0 3px rgba(26, 58, 92, 0.1) !important;
-        background: #ffffff !important;
+        border-color: #c9a84c !important;
+        box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.15), 0 2px 8px rgba(19, 39, 67, 0.08) !important;
+        background: #fffef9 !important;
     }
     [data-baseweb="input"] input,
     [data-baseweb="textarea"] textarea {
         background: transparent !important;
         color: #132743 !important;
         font-weight: 400 !important;
+        font-size: 0.97rem !important;
+        padding: 4px 4px !important;
+    }
+    [data-baseweb="input"] input::placeholder,
+    [data-baseweb="textarea"] textarea::placeholder {
+        color: #b0b8c4 !important;
+        font-weight: 300 !important;
     }
 
     /* ── SELECT / COMBOBOX ── */
     [data-baseweb="select"] > div {
-        border-radius: 10px !important;
-        border-color: rgba(19, 39, 67, 0.18) !important;
-        background: #fafbfd !important;
+        border-radius: 12px !important;
+        border: 1.5px solid rgba(19, 39, 67, 0.13) !important;
+        background: #ffffff !important;
+        box-shadow: 0 1px 4px rgba(19, 39, 67, 0.05), inset 0 1px 2px rgba(0,0,0,0.02) !important;
+        min-height: 52px !important;
+        transition: border-color 0.22s, box-shadow 0.22s !important;
+    }
+    [data-baseweb="select"] > div:hover {
+        border-color: rgba(19, 39, 67, 0.28) !important;
     }
     [data-baseweb="select"] > div:focus-within {
-        border-color: #1a3a5c !important;
-        box-shadow: 0 0 0 3px rgba(26, 58, 92, 0.1) !important;
+        border-color: #c9a84c !important;
+        box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.15), 0 2px 8px rgba(19, 39, 67, 0.08) !important;
+        background: #fffef9 !important;
     }
 
     /* Multiselect tags */
@@ -342,9 +363,11 @@ st.markdown(
     [data-testid="stWidgetLabel"] p,
     label[data-testid="stWidgetLabel"] {
         font-weight: 600 !important;
-        font-size: 0.92rem !important;
-        color: #2c3e50 !important;
-        letter-spacing: 0.01em !important;
+        font-size: 0.88rem !important;
+        color: #5a6b7e !important;
+        letter-spacing: 0.04em !important;
+        text-transform: uppercase !important;
+        margin-bottom: 4px !important;
     }
 
     /* ── HR DIVIDER ── */
