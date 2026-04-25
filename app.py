@@ -1896,13 +1896,13 @@ st.progress(step / TOTAL_STEPS)
 # =========================================================
 # NAWIGACJA — szybki powrót do dowolnego poprzedniego kroku
 # =========================================================
-if not st.session_state.get("form_success") and step > 1:
+if not st.session_state.get("form_success"):
     _nav_exp_label = (
-        f"☰  Nawigacja — wróć do poprzedniego kroku"
+        "☰  Nawigacja kroków"
         if _lang == "pl"
-        else "☰  Navigation — return to a previous step"
+        else "☰  Step navigation"
     )
-    with st.expander(_nav_exp_label, expanded=False):
+    with st.expander(_nav_exp_label, expanded=True):
         _nav_cols = st.columns(3)
         for _i, _sname in enumerate(_step_names, 1):
             with _nav_cols[(_i - 1) % 3]:
