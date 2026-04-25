@@ -563,9 +563,9 @@ components.html(
                     btn.addEventListener('click', function () {
                         var el = this;
                         var txt = (el.textContent || '').trim();
-                        el.style.opacity = '0.6';
-                        el.style.pointerEvents = 'none';
                         if (txt.indexOf('Wyślij') !== -1 || txt.indexOf('Submit') !== -1) {
+                            el.style.opacity = '0.6';
+                            el.style.pointerEvents = 'none';
                             el.innerHTML = '&#9203; Wysyłanie…';
                             setTimeout(function() { el.disabled = true; }, 300);
                         }
