@@ -553,12 +553,12 @@ components.html(
                     var txt = (btn.textContent || '').trim();
                     if (txt === 'PL' || txt === 'EN') {
                         btn.style.setProperty('border-radius', '18px', 'important');
-                        btn.style.setProperty('min-height', '32px', 'important');
-                        btn.style.setProperty('height', '32px', 'important');
-                        btn.style.setProperty('padding', '0 18px', 'important');
-                        btn.style.setProperty('font-size', '0.78rem', 'important');
+                        btn.style.setProperty('font-size', '0.8rem', 'important');
                         btn.style.setProperty('letter-spacing', '0.1em', 'important');
                         btn.style.setProperty('font-weight', '700', 'important');
+                        btn.style.setProperty('white-space', 'nowrap', 'important');
+                        btn.style.setProperty('overflow', 'hidden', 'important');
+                        btn.style.setProperty('text-overflow', 'ellipsis', 'important');
                     }
                 });
             } catch (e) {}
@@ -1834,7 +1834,7 @@ if "symptom_count" not in st.session_state:
 # GÓRA APLIKACJI
 # =========================================================
 _cur_lang = st.session_state.get("lang", "pl")
-_lc_gap, _lc_pl, _lc_en = st.columns([8, 1, 1])
+_lc_gap, _lc_pl, _lc_en = st.columns([5, 1, 1])
 with _lc_pl:
     if st.button("PL", key="_btn_lang_pl",
                  type="primary" if _cur_lang == "pl" else "secondary",
