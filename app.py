@@ -2014,7 +2014,7 @@ if step == 1:
             key="birth_date_input",
         )
         st.markdown("---")
-        _f1_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
+        _f1_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True, type="primary")
     if _f1_next:
         _errs1 = {}
         if not st.session_state.get("first_name", "").strip():
@@ -2228,8 +2228,8 @@ elif step == 6:
         st.text_area(t("health_timeline_lbl"), key="health_timeline")
         st.text_area(t("current_meds_lbl"), key="current_meds")
         st.markdown("---")
-        _f6_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
-        _f6_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+        _f6_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True, type="primary")
+        _f6_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True, type="primary")
     if _f6_next:
         st.session_state["step"] += 1
         st.rerun()
@@ -2336,8 +2336,8 @@ elif step == 9:
         st.subheader(t("sec_12"))
         st.text_area(t("stress_lbl"), key="strong_stress")
         st.markdown("---")
-        _f9_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
-        _f9_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+        _f9_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True, type="primary")
+        _f9_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True, type="primary")
     if _f9_next:
         st.session_state["step"] += 1
         st.rerun()
@@ -2356,8 +2356,8 @@ elif step == 10:
         yes_no(t("travel_abroad_lbl"), key="travel_abroad")
         st.text_input(t("travel_where_lbl"), key="travel_where")
         st.markdown("---")
-        _f10_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
-        _f10_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+        _f10_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True, type="primary")
+        _f10_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True, type="primary")
     if _f10_next:
         st.session_state["step"] += 1
         st.rerun()
@@ -2376,8 +2376,8 @@ elif step == 11:
         yes_no(t("animal_contact_lbl"), key="animal_contact")
         st.text_area(t("animal_details_lbl"), key="animal_contact_details")
         st.markdown("---")
-        _f11_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
-        _f11_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+        _f11_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True, type="primary")
+        _f11_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True, type="primary")
     if _f11_next:
         st.session_state["step"] += 1
         st.rerun()
@@ -2395,8 +2395,8 @@ elif step == 12:
         st.subheader(t("sec_10"))
         st.text_area(t("injuries_lbl"), key="major_injuries")
         st.markdown("---")
-        _f12_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
-        _f12_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+        _f12_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True, type="primary")
+        _f12_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True, type="primary")
     if _f12_next:
         st.session_state["step"] += 1
         st.rerun()
@@ -2415,8 +2415,8 @@ elif step == 13:
         yes_no_unknown(t("covid_lbl"), key="covid")
         st.text_area(t("covid_details_lbl"), key="covid_details")
         st.markdown("---")
-        _f13_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
-        _f13_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+        _f13_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True, type="primary")
+        _f13_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True, type="primary")
     if _f13_next:
         st.session_state["step"] += 1
         st.rerun()
@@ -2440,8 +2440,8 @@ elif step == 14:
         st.text_area(t("hearing_vision_lbl"), key="hearing_vision")
         st.text_area(t("attacks_lbl"), key="attacks")
         st.markdown("---")
-        _f14_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
-        _f14_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+        _f14_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True, type="primary")
+        _f14_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True, type="primary")
     if _f14_next:
         st.session_state["step"] += 1
         st.rerun()
@@ -2462,8 +2462,8 @@ elif step == 15:
         yes_no(t("epilepsy_lbl"), key="epilepsy")
         st.text_area(t("smell_taste_lbl"), key="smell_taste")
         st.markdown("---")
-        _f15_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
-        _f15_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+        _f15_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True, type="primary")
+        _f15_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True, type="primary")
     if _f15_next:
         st.session_state["step"] += 1
         st.rerun()
@@ -2483,8 +2483,8 @@ elif step == 16:
         st.text_area(t("sinus_lbl"), key="sinus_problems")
         st.text_area(t("nose_lbl"), key="nose_problems")
         st.markdown("---")
-        _f16_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
-        _f16_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+        _f16_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True, type="primary")
+        _f16_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True, type="primary")
     if _f16_next:
         st.session_state["step"] += 1
         st.rerun()
@@ -2503,8 +2503,8 @@ elif step == 17:
         st.subheader(_h17)
         st.text_area(t("allergies_lbl"), key="allergies")
         st.markdown("---")
-        _f17_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
-        _f17_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+        _f17_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True, type="primary")
+        _f17_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True, type="primary")
     if _f17_next:
         st.session_state["step"] += 1
         st.rerun()
@@ -2525,8 +2525,8 @@ elif step == 18:
         st.text_area(t("mouth_corners_lbl"), key="mouth_corners")
         st.text_area(t("fresh_food_lbl"), key="fresh_food_reaction")
         st.markdown("---")
-        _f18_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
-        _f18_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+        _f18_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True, type="primary")
+        _f18_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True, type="primary")
     if _f18_next:
         st.session_state["step"] += 1
         st.rerun()
@@ -2565,8 +2565,8 @@ elif step == 19:
         st.text_area(t("cough_lbl"), key="cough")
         st.text_input(t("colds_lbl"), key="colds")
         st.markdown("---")
-        _f19_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
-        _f19_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+        _f19_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True, type="primary")
+        _f19_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True, type="primary")
     if _f19_next:
         st.session_state["step"] += 1
         st.rerun()
@@ -2594,8 +2594,8 @@ elif step == 20:
         yes_no(t("pain_position_lbl"), key="pain_position")
         st.text_area(t("palpitations_lbl"), key="palpitations")
         st.markdown("---")
-        _f20_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
-        _f20_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+        _f20_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True, type="primary")
+        _f20_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True, type="primary")
     if _f20_next:
         st.session_state["step"] += 1
         st.rerun()
@@ -2622,8 +2622,8 @@ elif step == 21:
         st.text_area(t("worsening_foods_lbl"), key="worsening_foods")
         st.text_area(t("gi_infections_lbl"), key="gi_infections")
         st.markdown("---")
-        _f21_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
-        _f21_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+        _f21_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True, type="primary")
+        _f21_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True, type="primary")
     if _f21_next:
         st.session_state["step"] += 1
         st.rerun()
@@ -2651,8 +2651,8 @@ elif step == 22:
             key="fluids",
         )
         st.markdown("---")
-        _f22_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
-        _f22_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+        _f22_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True, type="primary")
+        _f22_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True, type="primary")
     if _f22_next:
         st.session_state["step"] += 1
         st.rerun()
@@ -2671,8 +2671,8 @@ elif step == 23:
         st.text_area(t("joints_lbl"), key="joints")
         st.text_area(t("stiffness_lbl"), key="stiffness")
         st.markdown("---")
-        _f23_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
-        _f23_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+        _f23_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True, type="primary")
+        _f23_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True, type="primary")
     if _f23_next:
         st.session_state["step"] += 1
         st.rerun()
@@ -2696,8 +2696,8 @@ elif step == 24:
         yes_no(t("wound_healing_lbl"), key="wound_healing")
         st.text_area(t("wound_healing_details_lbl"), key="wound_healing_details")
         st.markdown("---")
-        _f24_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
-        _f24_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+        _f24_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True, type="primary")
+        _f24_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True, type="primary")
     if _f24_next:
         st.session_state["step"] += 1
         st.rerun()
@@ -2725,8 +2725,8 @@ elif step == 25:
         select_with_placeholder(t("psych_contact_lbl"), ["nie", "psycholog", "psychiatra", "oba"], key="psych_contact")
         st.text_area(t("psych_dx_lbl"), key="psych_dx")
         st.markdown("---")
-        _f25_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
-        _f25_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+        _f25_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True, type="primary")
+        _f25_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True, type="primary")
     if _f25_next:
         st.session_state["step"] += 1
         st.rerun()
@@ -2749,8 +2749,8 @@ elif step == 26:
         st.text_area(t("tingling_lbl"), key="tingling")
         st.text_area(t("varicose_lbl"), key="varicose")
         st.markdown("---")
-        _f26_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
-        _f26_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+        _f26_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True, type="primary")
+        _f26_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True, type="primary")
     if _f26_next:
         st.session_state["step"] += 1
         st.rerun()
@@ -2775,8 +2775,8 @@ elif step == 27:
         )
         st.text_input(t("anal_other_lbl"), key="anal_other")
         st.markdown("---")
-        _f27_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
-        _f27_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+        _f27_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True, type="primary")
+        _f27_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True, type="primary")
     if _f27_next:
         st.session_state["step"] += 1
         st.rerun()
@@ -2835,8 +2835,8 @@ elif step == 29:
         st.text_area(t("mat_grandfather_lbl"), key="maternal_grandfather")
         st.text_area(t("pat_grandfather_lbl"), key="paternal_grandfather")
         st.markdown("---")
-        _f29_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
-        _f29_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+        _f29_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True, type="primary")
+        _f29_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True, type="primary")
     if _f29_next:
         st.session_state["step"] += 1
         st.rerun()
@@ -2857,8 +2857,8 @@ elif step == 30:
         st.text_area(t("current_reason_lbl"), key="current_reason")
         st.text_area(t("key_question_lbl"), key="key_question")
         st.markdown("---")
-        _f30_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
-        _f30_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+        _f30_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True, type="primary")
+        _f30_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True, type="primary")
     if _f30_next:
         st.session_state["step"] += 1
         st.rerun()
@@ -2880,8 +2880,8 @@ elif step == 31:
         st.checkbox(t("consent_privacy"), key="consent_privacy")
         st.checkbox(t("contact_consent"), key="contact_consent")
         st.markdown("---")
-        _f31_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
-        _f31_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
+        _f31_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True, type="primary")
+        _f31_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True, type="primary")
     if _f31_next:
         _all_consents = (
             st.session_state.get("consent_true", False)
