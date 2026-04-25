@@ -2363,40 +2363,40 @@ elif step == 9:
 # =========================================================
 elif step == 10:
     _has_form_nav = True
-    _f10_back = False
-    with st.form("step_form_10"):
+    def _step10():
+        _lg = st.session_state.get("lang", "pl")
         st.subheader(t("sec_8"))
-        yes_no(t("travel_abroad_lbl"), key="travel_abroad")
-        st.text_input(t("travel_where_lbl"), key="travel_where")
+        _ta10 = yes_no(t("travel_abroad_lbl"), key="travel_abroad")
+        if _ta10 == "tak":
+            st.text_input(t("travel_where_lbl"), key="travel_where")
         st.markdown("---")
-        _f10_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True, type="primary")
-        _f10_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True, type="primary")
-    if _f10_next:
-        st.session_state["step"] += 1
-        st.rerun()
-    elif _f10_back:
-        st.session_state["step"] -= 1
-        st.rerun()
+        if st.button("Dalej →" if _lg == "pl" else "Next →", key="s10_next", use_container_width=True, type="primary"):
+            st.session_state["step"] += 1
+            st.rerun()
+        if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s10_back", use_container_width=True, type="primary"):
+            st.session_state["step"] -= 1
+            st.rerun()
+    _step10()
 
 # =========================================================
 # KROK 11 — Zwierzęta
 # =========================================================
 elif step == 11:
     _has_form_nav = True
-    _f11_back = False
-    with st.form("step_form_11"):
+    def _step11():
+        _lg = st.session_state.get("lang", "pl")
         st.subheader(t("sec_9"))
-        yes_no(t("animal_contact_lbl"), key="animal_contact")
-        st.text_area(t("animal_details_lbl"), key="animal_contact_details")
+        _ac11 = yes_no(t("animal_contact_lbl"), key="animal_contact")
+        if _ac11 == "tak":
+            st.text_area(t("animal_details_lbl"), key="animal_contact_details")
         st.markdown("---")
-        _f11_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True, type="primary")
-        _f11_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True, type="primary")
-    if _f11_next:
-        st.session_state["step"] += 1
-        st.rerun()
-    elif _f11_back:
-        st.session_state["step"] -= 1
-        st.rerun()
+        if st.button("Dalej →" if _lg == "pl" else "Next →", key="s11_next", use_container_width=True, type="primary"):
+            st.session_state["step"] += 1
+            st.rerun()
+        if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s11_back", use_container_width=True, type="primary"):
+            st.session_state["step"] -= 1
+            st.rerun()
+    _step11()
 
 # =========================================================
 # KROK 12 — Urazy
