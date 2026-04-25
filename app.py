@@ -1927,29 +1927,39 @@ st.progress(step / TOTAL_STEPS)
 # =========================================================
 # NAWIGACJA — szybki powrót do dowolnego poprzedniego kroku
 # =========================================================
+def _nav_toggle_cb():
+    st.session_state["_nav_open"] = not st.session_state.get("_nav_open", False)
+
+def _nav_go_cb(target_step: int):
+    st.session_state["step"] = target_step
+    st.session_state["_nav_open"] = False
+
 if not st.session_state.get("form_success"):
     _nav_is_open = st.session_state["_nav_open"]
-    _nav_arrow = "▲" if _nav_is_open else "▼"
-    _nav_btn_txt = (
-        f"{_nav_arrow}  Nawigacja kroków"
+    _nav_label = (
+        ("Zwiń nawigację" if _nav_is_open else "Rozwiń nawigację")
         if _lang == "pl"
-        else f"{_nav_arrow}  Step navigation"
+        else ("Close navigation" if _nav_is_open else "Open navigation")
     )
-    if st.button(_nav_btn_txt, key="_nav_toggle", use_container_width=True):
-        st.session_state["_nav_open"] = not _nav_is_open
-        st.rerun()
+    st.button(
+        _nav_label,
+        key="_nav_toggle",
+        on_click=_nav_toggle_cb,
+        use_container_width=True,
+    )
 
     if _nav_is_open:
-        for _ni in range(1, step):
-            _nsname = _step_names[_ni - 1]
-            if st.button(
-                f"✓  {_ni}. {_nsname}",
-                key=f"_nav_s{_ni}",
-                use_container_width=True,
-                type="primary",
-            ):
-                st.session_state["step"] = _ni
-                st.rerun()
+        if step > 1:
+            for _ni in range(1, step):
+                _nsname = _step_names[_ni - 1]
+                st.button(
+                    f"✓  {_ni}. {_nsname}",
+                    key=f"_nav_s{_ni}",
+                    on_click=_nav_go_cb,
+                    args=(_ni,),
+                    use_container_width=True,
+                    type="primary",
+                )
         st.markdown(
             f"<div style='background:#c9a84c;color:#132743;font-weight:700;"
             f"border-radius:8px;padding:8px 14px;font-size:0.9rem;margin-bottom:4px;'>"
