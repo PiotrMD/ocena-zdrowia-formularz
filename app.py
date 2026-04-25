@@ -544,8 +544,11 @@ components.html(
                         btn.style.setProperty('letter-spacing', '0.1em', 'important');
                         btn.style.setProperty('font-weight', '700', 'important');
                         btn.style.setProperty('white-space', 'nowrap', 'important');
-                        btn.style.setProperty('overflow', 'hidden', 'important');
-                        btn.style.setProperty('text-overflow', 'ellipsis', 'important');
+                        btn.style.setProperty('width', '60px', 'important');
+                        btn.style.setProperty('min-width', '60px', 'important');
+                        btn.style.setProperty('height', '36px', 'important');
+                        btn.style.setProperty('min-height', '36px', 'important');
+                        btn.style.setProperty('padding', '0', 'important');
                     }
                 });
             } catch (e) {}
