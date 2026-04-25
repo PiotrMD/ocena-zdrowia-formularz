@@ -2883,18 +2883,14 @@ elif step == 30:
 # =========================================================
 elif step == 31:
     _has_form_nav = True
-    _f31_back = False
-    with st.form("step_form_31"):
-        st.subheader(t("sec_27"))
-        st.markdown(t("org_info"))
-        st.checkbox(t("consent_true"), key="consent_true")
-        st.checkbox(t("consent_visit"), key="consent_visit")
-        st.checkbox(t("consent_privacy"), key="consent_privacy")
-        st.checkbox(t("contact_consent"), key="contact_consent")
-        st.markdown("---")
-        _f31_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True, type="primary")
-        _f31_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True, type="primary")
-    if _f31_next:
+    st.subheader(t("sec_27"))
+    st.markdown(t("org_info"))
+    st.checkbox(t("consent_true"), key="consent_true")
+    st.checkbox(t("consent_visit"), key="consent_visit")
+    st.checkbox(t("consent_privacy"), key="consent_privacy")
+    st.checkbox(t("contact_consent"), key="contact_consent")
+    st.markdown("---")
+    if st.button("Dalej →" if _lang == "pl" else "Next →", key="s31_next", use_container_width=True, type="primary"):
         _all_consents = (
             st.session_state.get("consent_true", False)
             and st.session_state.get("consent_visit", False)
@@ -2910,7 +2906,7 @@ elif step == 31:
                 if _lang == "pl"
                 else "Please check all consents before proceeding."
             )
-    elif _f31_back:
+    if st.button("← Wstecz" if _lang == "pl" else "← Back", key="s31_back", use_container_width=True, type="primary"):
         st.session_state["step"] -= 1
         st.rerun()
 
