@@ -2061,7 +2061,7 @@ elif step == 2:
         if st.button("Dalej →" if _lg == "pl" else "Next →", key="s2_next", use_container_width=True, type="primary"):
             st.session_state["step"] += 1
             st.rerun()
-        if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s2_back", use_container_width=True):
+        if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s2_back", use_container_width=True, type="primary"):
             st.session_state["step"] -= 1
             st.rerun()
     _step2()
@@ -2122,7 +2122,7 @@ elif step == 3:
         if st.button("Dalej →" if _lg == "pl" else "Next →", key="s3_next", use_container_width=True, type="primary"):
             st.session_state["step"] += 1
             st.rerun()
-        if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s3_back", use_container_width=True):
+        if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s3_back", use_container_width=True, type="primary"):
             st.session_state["step"] -= 1
             st.rerun()
     _step3()
@@ -2153,7 +2153,7 @@ elif step == 4:
         if st.button("Dalej →" if _lg == "pl" else "Next →", key="s4_next", use_container_width=True, type="primary"):
             st.session_state["step"] += 1
             st.rerun()
-        if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s4_back", use_container_width=True):
+        if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s4_back", use_container_width=True, type="primary"):
             st.session_state["step"] -= 1
             st.rerun()
     _step4()
@@ -2197,7 +2197,7 @@ elif step == 5:
         if st.button("Dalej →" if _lg == "pl" else "Next →", key="s5_next", use_container_width=True, type="primary"):
             st.session_state["step"] += 1
             st.rerun()
-        if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s5_back", use_container_width=True):
+        if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s5_back", use_container_width=True, type="primary"):
             st.session_state["step"] -= 1
             st.rerun()
     _step5()
@@ -2282,7 +2282,7 @@ elif step == 7:
         if st.button("Dalej →" if _lg == "pl" else "Next →", key="s7_next", use_container_width=True, type="primary"):
             st.session_state["step"] += 1
             st.rerun()
-        if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s7_back", use_container_width=True):
+        if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s7_back", use_container_width=True, type="primary"):
             st.session_state["step"] -= 1
             st.rerun()
     _step7()
@@ -2321,7 +2321,7 @@ elif step == 8:
         if st.button("Dalej →" if _lg == "pl" else "Next →", key="s8_next", use_container_width=True, type="primary"):
             st.session_state["step"] += 1
             st.rerun()
-        if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s8_back", use_container_width=True):
+        if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s8_back", use_container_width=True, type="primary"):
             st.session_state["step"] -= 1
             st.rerun()
     _step8()
@@ -2815,7 +2815,7 @@ elif step == 28:
         if st.button("Dalej →" if _lg == "pl" else "Next →", key="s28_next", use_container_width=True, type="primary"):
             st.session_state["step"] += 1
             st.rerun()
-        if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s28_back", use_container_width=True):
+        if st.button("← Wstecz" if _lg == "pl" else "← Back", key="s28_back", use_container_width=True, type="primary"):
             st.session_state["step"] -= 1
             st.rerun()
     _step28()
@@ -2883,8 +2883,21 @@ elif step == 31:
         _f31_next = st.form_submit_button("Dalej →" if _lang == "pl" else "Next →", use_container_width=True)
         _f31_back = st.form_submit_button("← Wstecz" if _lang == "pl" else "← Back", use_container_width=True)
     if _f31_next:
-        st.session_state["step"] += 1
-        st.rerun()
+        _all_consents = (
+            st.session_state.get("consent_true", False)
+            and st.session_state.get("consent_visit", False)
+            and st.session_state.get("consent_privacy", False)
+            and st.session_state.get("contact_consent", False)
+        )
+        if _all_consents:
+            st.session_state["step"] += 1
+            st.rerun()
+        else:
+            st.error(
+                "Proszę zaznaczyć wszystkie zgody przed przejściem dalej."
+                if _lang == "pl"
+                else "Please check all consents before proceeding."
+            )
     elif _f31_back:
         st.session_state["step"] -= 1
         st.rerun()
@@ -2917,7 +2930,7 @@ elif step == 32:
         st.markdown(f"**{_slbl}:** {_sval}")
     st.markdown("---")
 
-    if st.button("← Wstecz" if _lang == "pl" else "← Back", key="s32_back", use_container_width=True):
+    if st.button("← Wstecz" if _lang == "pl" else "← Back", key="s32_back", use_container_width=True, type="primary"):
         st.session_state["step"] -= 1
         st.rerun()
     send_clicked = st.button(t("send_btn"), key="send_button", use_container_width=True, type="primary")
@@ -3313,7 +3326,7 @@ if not _has_form_nav:
     _nav_l, _nav_r = st.columns(2)
     with _nav_l:
         if step > 1:
-            if st.button("← Wstecz" if _lang == "pl" else "← Back", key="btn_back"):
+            if st.button("← Wstecz" if _lang == "pl" else "← Back", key="btn_back", type="primary"):
                 st.session_state.field_errors = {}
                 st.session_state.scroll_target = None
                 st.session_state["step"] -= 1
