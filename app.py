@@ -3295,6 +3295,95 @@ Zgoda na kontakt organizacyjny: {"tak" if contact_consent_v else "nie"}
                 pdf_path=pdf_path,
                 filename=pdf_filename,
             )
+
+            # ── HealthIndex intake ──
+            try:
+                import requests as _req
+                _hi_url = os.environ.get("HEALTHINDEX_URL", "https://185.25.148.250/api/intake")
+                _hi_secret = os.environ.get("HEALTHINDEX_SECRET", "ocena-zdrowia-secret-2026")
+                _payload = {
+                    "first_name": first_name_clean, "last_name": last_name_clean,
+                    "phone": str(validated_phone or ""), "email": str(validated_email or ""),
+                    "birth_date": birth_date.isoformat() if birth_date else "",
+                    "sex": sex, "sex_other": sex_other,
+                    "nationality": nationality, "visit_type": _g("visit_type"),
+                    "current_status": current_status, "current_status_other": current_status_other,
+                    "profession": profession,
+                    "height_cm": str(height_cm) if height_cm is not None else "",
+                    "weight_kg": str(weight_kg) if weight_kg is not None else "",
+                    "physical_score": str(physical_score), "mental_score": str(mental_score),
+                    "weight_change": weight_change, "weight_change_amount": weight_change_amount,
+                    "performed_tests": performed_tests, "symptom_count": str(_scount),
+                    **{f"symptom_{_i}": _g(f"symptom_{_i}") for _i in range(1, _scount + 1)},
+                    **{f"symptom_{_i}_since": _g(f"symptom_{_i}_since") for _i in range(1, _scount + 1)},
+                    "additional_symptoms": additional_symptoms,
+                    "symptom_pattern": symptom_pattern, "symptom_periodicity": symptom_periodicity,
+                    "symptom_past": symptom_past,
+                    "worsening_factors": worsening_factors, "worsening_other": worsening_other,
+                    "improvement_factors": improvement_factors, "improvement_other": improvement_other,
+                    "health_timeline": health_timeline, "current_meds": current_meds,
+                    "lifestyle": lifestyle, "lifestyle_other": lifestyle_other,
+                    "stimulants": stimulants, "stimulants_other": stimulants_other,
+                    "sleep_hours": str(sleep_hours) if sleep_hours else "",
+                    "travel_abroad": travel_abroad, "travel_where": travel_where,
+                    "animal_contact": animal_contact, "animal_contact_details": animal_contact_details,
+                    "major_injuries": major_injuries,
+                    "covid": covid, "covid_details": covid_details, "strong_stress": strong_stress,
+                    "birth_delivery": birth_delivery, "birth_delivery_other": birth_delivery_other,
+                    "birth_timing": birth_timing, "birth_timing_other": birth_timing_other,
+                    "green_water": green_water, "birth_info_other": birth_info_other,
+                    "breastfeeding": breastfeeding,
+                    "childhood_diseases": childhood_diseases, "childhood_diseases_other": childhood_diseases_other,
+                    "fever_now": fever_now, "fever_details": fever_details,
+                    "headache_dizziness": headache_dizziness, "headache_dizziness_details": headache_dizziness_details,
+                    "headache_assoc": headache_assoc, "hearing_vision": hearing_vision,
+                    "attacks": attacks, "sinus_problems": sinus_problems, "nose_problems": nose_problems,
+                    "allergies": allergies, "herpes": herpes, "mouth_corners": mouth_corners,
+                    "fresh_food_reaction": fresh_food_reaction, "epilepsy": epilepsy,
+                    "smell_taste": smell_taste, "colds": colds,
+                    "throat_morning": throat_morning, "esophagus_burning": esophagus_burning,
+                    "asthma_dx": asthma_dx, "pneumonia": pneumonia, "pneumonia_details": pneumonia_details,
+                    "dyspnea": dyspnea, "night_breath": night_breath, "chest_heaviness": chest_heaviness,
+                    "breathing_type": breathing_type, "wheezing": wheezing, "cough": cough,
+                    "chest_pain": chest_pain, "pressure_type": pressure_type,
+                    "current_bp": current_bp, "current_hr": current_hr,
+                    "pain_press": pain_press, "pain_position": pain_position, "palpitations": palpitations,
+                    "gi_problem": gi_problem, "gi_symptoms": gi_symptoms,
+                    "worsening_foods": worsening_foods, "gi_infections": gi_infections,
+                    "urine_problems": urine_problems, "night_urination": night_urination,
+                    "fluids": str(fluids) if fluids else "",
+                    "joints": joints, "stiffness": stiffness,
+                    "skin_changes": skin_changes, "skin_itch": skin_itch,
+                    "acne": acne, "acne_details": acne_details,
+                    "skin_sensation": skin_sensation, "wound_healing": wound_healing,
+                    "wound_healing_details": wound_healing_details,
+                    "sleep_problem": sleep_problem, "sleep_problem_types": sleep_problem_types,
+                    "psych_contact": psych_contact, "psych_dx": psych_dx,
+                    "edema": edema, "edema_details": edema_details,
+                    "calf_pain": calf_pain, "cold_fingers": cold_fingers,
+                    "tingling": tingling, "varicose": varicose,
+                    "anal_problems": anal_problems, "anal_other": anal_other,
+                    "gyn_problems": gyn_problems, "menstruation": menstruation,
+                    "first_menses": first_menses, "last_menses_text": last_menses_text, "potency": potency,
+                    "mother_history": mother_history, "father_history": father_history,
+                    "maternal_grandmother": maternal_grandmother, "paternal_grandmother": paternal_grandmother,
+                    "maternal_grandfather": maternal_grandfather, "paternal_grandfather": paternal_grandfather,
+                    "own_diagnoses": own_diagnoses, "important_info": important_info,
+                    "current_reason": current_reason, "key_question": key_question,
+                    "submitted_at": submitted_at,
+                }
+                with open(pdf_path, "rb") as _pf:
+                    _pdf_bytes = _pf.read()
+                _req.post(
+                    _hi_url,
+                    data={"authorization": f"Bearer {_hi_secret}", "data": json.dumps(_payload)},
+                    files={"pdf": (pdf_filename, _pdf_bytes, "application/pdf")},
+                    timeout=15,
+                    verify=False,
+                )
+            except Exception:
+                pass
+
             _status.empty()
             st.session_state.field_errors = {}
             st.session_state.scroll_target = None
